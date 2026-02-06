@@ -158,26 +158,36 @@ export default function ProductGallery() {
                 </svg>
             </div>
             <div className="gallery-container" style={{ position: 'relative', zIndex: 1 }}>
-                <h2 className="gallery-title">🎂 Menu Bánh Ngọt</h2>
+                <h2 className="gallery-title">🎂 Mẫu Bánh</h2>
                 <p className="gallery-subtitle">Bánh ngọt handmade - Làm bằng cả trái tim 💕</p>
 
                 {allFilterableCategories.length > 0 && (
-                    <div className="filter-tabs">
-                        <button
-                            className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
-                            onClick={() => setFilter('All')}
-                        >
-                            🎂 Tất Cả
-                        </button>
-                        {allFilterableCategories.map(cat => (
-                            <button
-                                key={cat.id}
-                                className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
-                                onClick={() => setFilter(cat.name)}
-                            >
-                                #{cat.name}
-                            </button>
-                        ))}
+                    <div className={`category-picker-wrapper ${filter !== 'All' ? 'collapsed' : ''}`}>
+                        <div className="filter-tabs">
+                            {filter !== 'All' && (
+                                <button className="btn-change-category" onClick={() => setFilter('All')}>
+                                    ✨ Đổi chủ đề
+                                </button>
+                            )}
+
+                            <div className="tabs-content">
+                                <button
+                                    className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
+                                    onClick={() => setFilter('All')}
+                                >
+                                    🎂 Tất Cả
+                                </button>
+                                {allFilterableCategories.map(cat => (
+                                    <button
+                                        key={cat.id}
+                                        className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
+                                        onClick={() => setFilter(cat.name)}
+                                    >
+                                        #{cat.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -360,17 +370,7 @@ export default function ProductGallery() {
                         <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
                     )}
                 </div>
-                <div className="product-tags-row">
-                    {(product.tags || []).map(tagId => {
-                        const displayName = getCategoryName(tagId);
-                        // Hide cryptic IDs that couldn't be resolved
-                        if (!displayName || displayName.startsWith('cat_')) return null;
-
-                        return (
-                            <span key={tagId} className="product-tag-badge">#{displayName}</span>
-                        );
-                    })}
-                </div>
+                {/* Removed auto-visible hash tags per user request */}
                 <div className="product-info">
                     <h3 className="product-name">{product.name}</h3>
                     <p className="product-description">{product.description}</p>

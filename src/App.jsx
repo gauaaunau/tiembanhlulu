@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Hero from './components/Hero';
-import Features from './components/Features';
 import ProductGallery from './components/ProductGallery';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
@@ -12,7 +11,6 @@ function App() {
         <Route path="/" element={
           <div className="app">
             <Hero />
-            <Features />
             <ProductGallery />
           </div>
         } />

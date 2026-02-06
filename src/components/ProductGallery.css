@@ -18,25 +18,78 @@
 }
 
 .gallery-title {
-    text-align: center;
-    margin-bottom: 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.5rem);
     color: var(--dark-brown);
-    text-shadow: 2px 2px 0 var(--pink);
+    margin-bottom: 0.5rem;
+    font-weight: 800;
 }
 
 .gallery-subtitle {
-    text-align: center;
     font-size: 1.1rem;
     color: var(--brown);
-    margin-bottom: 2.5rem;
+    margin-bottom: 3rem;
+    opacity: 0.8;
+}
+
+/* STICKY COLLAPSIBLE PICKER */
+.category-picker-wrapper {
+    position: sticky;
+    top: 20px;
+    z-index: 1000;
+    margin-bottom: 4rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .filter-tabs {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 1rem;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    margin-bottom: 3rem;
     flex-wrap: wrap;
+    gap: 0.8rem;
+    border: 1px solid rgba(255, 179, 198, 0.2);
+    overflow: hidden;
+    max-height: 500px;
+    transition: all 0.4s ease;
+}
+
+.btn-change-category {
+    display: none;
+    background: var(--pink);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 107, 129, 0.3);
+    animation: fadeIn 0.3s ease;
+}
+
+.category-picker-wrapper.collapsed .tabs-content {
+    display: none;
+}
+
+.category-picker-wrapper.collapsed .btn-change-category {
+    display: block;
+}
+
+.category-picker-wrapper.collapsed .filter-tabs {
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.tabs-content {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
 }
 
 .filter-btn {

@@ -4,7 +4,7 @@ import './Hero.css';
 export default function Hero() {
   const [logoUrl, setLogoUrl] = useState('');
   const [distance, setDistance] = useState(null);
-  const bakeryCoords = { lat: 10.8180682, lng: 106.6339767 };
+  const bakeryCoords = { lat: 10.817505, lng: 106.634351 }; // Estimated coordinates for 66/17 Tổ 23 KP.2A
 
   useEffect(() => {
     // Tự động lấy logo từ Facebook Page
@@ -57,7 +57,7 @@ export default function Hero() {
           <div className="hero-location-box">
             <div className="location-item">
               <span className="icon">📍</span>
-              <span>74/11 Trần Thái Tông, P.15, Tân Bình</span>
+              <span>66/17 Tổ 23 KP.2A, P.15, Tân Bình</span>
             </div>
             {distance && (
               <div className="distance-info">
@@ -68,12 +68,12 @@ export default function Hero() {
           </div>
           <div className="hero-buttons">
             <a
-              href="https://www.google.com/maps/dir/?api=1&destination=10.8180682,106.6339767"
+              href="https://maps.app.goo.gl/PD18KjCzbMka5sBE9"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-primary btn-ripple"
+              className="btn btn-primary"
             >
-              🚀 Chỉ Đường Đến Tiệm
+              Chỉ Đường Đến Tiệm
             </a>
           </div>
         </div>
