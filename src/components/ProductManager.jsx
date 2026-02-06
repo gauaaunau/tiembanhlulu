@@ -411,6 +411,10 @@ export default function ProductManager() {
                         if (existingCat) {
                             realName = existingCat.name;
                             realId = existingCat.id;
+                        } else {
+                            // ORPHANED ID: If it looks like an ID but we can't find it, 
+                            // don't show it as a filter button.
+                            return;
                         }
                     }
 
@@ -1278,7 +1282,10 @@ export default function ProductManager() {
                                     {product.tags && product.tags.length > 0 && (
                                         <div className="product-tags-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
                                             {product.tags.map(tagId => {
-                                                const displayName = getCategoryName(tagId) || tagId;
+                                                const displayName = getCategoryName(tagId);
+                                                // Hide cryptic IDs that couldn't be resolved
+                                                if (!displayName || displayName.startsWith('cat_')) return null;
+
                                                 return (
                                                     <span key={tagId} style={{
                                                         fontSize: '0.7rem',

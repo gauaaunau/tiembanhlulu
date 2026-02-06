@@ -56,6 +56,10 @@ export default function ProductGallery() {
                         if (existingCat) {
                             realName = existingCat.name;
                             realId = existingCat.id;
+                        } else {
+                            // ORPHANED ID: If it looks like an ID but we can't find it, 
+                            // don't show it as a filter button.
+                            return;
                         }
                     }
 
@@ -171,9 +175,18 @@ export default function ProductGallery() {
                     ) : (
                         /* Grouped View for 'All' */
                         allFilterableCategories.map(cat => {
-                            const productsInCat = products.filter(p =>
-                                p.categoryId === cat.id || (p.tags || []).includes(cat.name)
-                            );
+                            const catNameLower = cat.name.toLowerCase();
+                            const productsInCat = products.filter(p => {
+                                // Match by primary category name OR any tag name
+                                const pCatName = getCategoryName(p.categoryId).toLowerCase();
+                                if (pCatName === catNameLower) return true;
+
+                                return (p.tags || []).some(t => {
+                                    const tName = t.startsWith('cat_') ? getCategoryName(t) : t;
+                                    return tName.toLowerCase() === catNameLower;
+                                });
+                            });
+
                             if (productsInCat.length === 0) return null;
 
                             return (
@@ -327,7 +340,10 @@ export default function ProductGallery() {
                 </div>
                 <div className="product-tags-row">
                     {(product.tags || []).map(tagId => {
-                        const displayName = getCategoryName(tagId) || tagId;
+                        const displayName = getCategoryName(tagId);
+                        // Hide cryptic IDs that couldn't be resolved
+                        if (!displayName || displayName.startsWith('cat_')) return null;
+
                         return (
                             <span key={tagId} className="product-tag-badge">#{displayName}</span>
                         );
