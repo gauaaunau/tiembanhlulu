@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, memo } from 'react';
 import './ProductGallery.css';
 import { getAllItems, subscribeToItems } from '../utils/db';
 import LoadingScreen from './LoadingScreen';
@@ -135,8 +135,8 @@ export default function ProductGallery() {
                 });
             });
             return { ...cat, items: productsInCat };
-        }).filter(cat => cat.items.length > 0);
-    }, [filter, products, allFilterableCategories]);
+        }).filter(cat => cat && cat.items && cat.items.length > 0);
+    }, [products, allFilterableCategories]); // Removed 'filter' dependency to pre-calculate correctly
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
@@ -374,8 +374,8 @@ export default function ProductGallery() {
         </section>
     );
 
-    // Sub-component for product card
-    function ProductCard({ product, index }) {
+    // Sub-component for product card - Memoized for performance
+    const ProductCard = memo(function ProductCard({ product, index }) {
         return (
             <div
                 key={product.id}
@@ -413,5 +413,5 @@ export default function ProductGallery() {
                 </div>
             </div>
         );
-    }
+    });
 }
