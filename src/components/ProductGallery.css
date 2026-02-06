@@ -451,8 +451,10 @@
     transition: transform 0.3s ease;
 }
 
-.carousel-card:hover .carousel-img {
-    transform: scale(2.2);
+@media (hover: hover) {
+    .carousel-card:hover .carousel-img {
+        transform: scale(2.2);
+    }
 }
 
 .carousel-external-info {
