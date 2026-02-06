@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ProductManager.css';
-import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems } from '../utils/db';
+import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems, addItemsBulk } from '../utils/db';
 
 export default function ProductManager() {
     const [products, setProducts] = useState([]);
@@ -430,12 +430,17 @@ export default function ProductManager() {
         const categoryNames = Object.keys(folderGroups);
         let processedCount = 0;
 
+        // Track items to save (Deltas)
+        const categoriesToSave = [];
+        const productsToSave = [];
+
         for (const catName of categoryNames) {
             // Find or create category
             let cat = newCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
             if (!cat) {
                 cat = { id: `cat_${Date.now()}_${Math.random()}`, name: catName, subCategories: [] };
                 newCategories.push(cat);
+                categoriesToSave.push(cat);
             }
 
             const catFiles = folderGroups[catName];
@@ -457,15 +462,19 @@ export default function ProductManager() {
                         continue;
                     }
 
-                    newProducts.push({
+                    const newProd = {
                         id: `prod_${Date.now()}_${Math.random()}`,
                         name: '', // Don't use messy filenames as names
                         categoryId: cat.id,
                         price: 'Liên hệ',
                         description: '', // Keep description empty for bulk import
                         images: [compressed],
-                        createdAt: Date.now()
-                    });
+                        createdAt: Date.now(),
+                        tags: [cat.id] // Auto-tag with category
+                    };
+
+                    newProducts.push(newProd);
+                    productsToSave.push(newProd);
                 } catch (err) {
                     console.error(`Lỗi xử lý file ${file.name}:`, err);
                 }
@@ -475,14 +484,14 @@ export default function ProductManager() {
             }
         }
 
-        // Save all at once
-        await saveAllItems('categories', newCategories);
-        await saveAllItems('products', newProducts);
+        // Save only the DELTAS (New items)
+        if (categoriesToSave.length > 0) await addItemsBulk('categories', categoriesToSave);
+        if (productsToSave.length > 0) await addItemsBulk('products', productsToSave);
 
         setCategories(newCategories);
         setProducts(newProducts);
         setImporting(false);
-        alert(`🎉 Thành công! Đã thêm ${categoryNames.length} thể loại và ${processedCount} sản phẩm.`);
+        alert(`🎉 Thành công! Đã thêm ${productsToSave.length} món mới (Bỏ qua ${processedCount - productsToSave.length} lặp).`);
     };
 
     const [adminFilter, setAdminFilter] = useState('All');

@@ -155,3 +155,79 @@ export const deleteItem = async (storeName, id) => {
         request.onerror = () => reject(request.error);
     });
 };
+
+export const addItemsBulk = async (storeName, items) => {
+    if (!items || items.length === 0) return;
+
+    // Save to Cloud (Batch)
+    if (isCloudEnabled && storeName !== 'drafts') {
+        try {
+            const batchSize = 400;
+            for (let i = 0; i < items.length; i += batchSize) {
+                const batch = writeBatch(firestore);
+                const chunk = items.slice(i, i + batchSize);
+
+                chunk.forEach(item => {
+                    batch.set(doc(firestore, storeName, item.id), item, { merge: true });
+                });
+
+                await batch.commit();
+                console.log(`Cloud bulk add for ${storeName}: ${i + chunk.length}/${items.length}`);
+                await new Promise(r => setTimeout(r, 100)); // Throttle
+            }
+        } catch (err) {
+            console.error(`Cloud bulk add failed for ${storeName}:`, err);
+        }
+    }
+
+    // Save to Local (Transaction)
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+
+        items.forEach(item => store.put(item));
+
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+    });
+};
+
+export const deleteAllItems = async (storeName) => {
+    // Delete from Cloud (Firestore)
+    if (isCloudEnabled && storeName !== 'drafts') {
+        try {
+            const q = query(collection(firestore, storeName));
+            // We need to fetch all docs to delete them
+            const snapshot = await getDocs(q);
+            const batchSize = 400; // Firestore limit is 500
+            const docs = snapshot.docs;
+
+            // Process in batches
+            for (let i = 0; i < docs.length; i += batchSize) {
+                const batch = writeBatch(firestore);
+                const chunk = docs.slice(i, i + batchSize);
+
+                chunk.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+                console.log(`Deleted batch of ${chunk.length} items from ${storeName}`);
+            }
+        } catch (err) {
+            console.error(`Cloud delete all failed for ${storeName}:`, err);
+        }
+    }
+
+    // Delete from Local (IndexedDB)
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.clear();
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+};
