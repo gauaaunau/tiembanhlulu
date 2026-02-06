@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ProductManager.css';
 import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems, addItemsBulk } from '../utils/db';
+import { uploadImage, base64ToBlob } from '../utils/storage';
 
 export default function ProductManager() {
     const [products, setProducts] = useState([]);
@@ -20,7 +21,9 @@ export default function ProductManager() {
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [activeAdminTab, setActiveAdminTab] = useState('add'); // 'add' or 'bulk-tag'
     const [isCloudEnabled] = useState(!!import.meta.env.VITE_FIREBASE_API_KEY);
+    const [isStorageEnabled] = useState(!!import.meta.env.VITE_FIREBASE_STORAGE_BUCKET);
     const [syncingCloud, setSyncingCloud] = useState(false);
+    const [uploadingImages, setUploadingImages] = useState(false);
     const [targetTagId, setTargetTagId] = useState('');
     const [bulkSelectedIds, setBulkSelectedIds] = useState([]);
     const [tagInputText, setTagInputText] = useState('');
@@ -184,6 +187,38 @@ export default function ProductManager() {
         setStagedImages(prev => prev.filter(img => img.id !== id));
     };
 
+    // Helper to process and upload a list of image data (Base64 or URL)
+    const processImagesForUpload = async (imageList) => {
+        // Force Storage use if available
+        if (!isStorageEnabled) {
+            console.warn("Storage not enabled, using Base64 (risky for large batches)");
+            return imageList;
+        }
+
+        const processed = [];
+        for (const imgData of imageList) {
+            if (imgData.startsWith('http')) {
+                processed.push(imgData); // Already a URL
+            } else if (imgData.startsWith('data:image')) {
+                try {
+                    const blob = await base64ToBlob(imgData);
+                    const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+                    const url = await uploadImage(file);
+                    console.log("Uploaded image:", url);
+                    processed.push(url);
+                } catch (e) {
+                    console.error("Critical Upload Error:", e);
+                    // Do NOT fallback to Base64 in bulk mode, it kills the DB connection
+                    // Just skip this image or throw to stop the process
+                    throw new Error("Không thể tải ảnh lên kho. Vui lòng kiểm tra lại 'Storage' trong Firebase đã bật chưa?");
+                }
+            } else {
+                processed.push(imgData);
+            }
+        }
+        return processed;
+    };
+
     const handleSubmit = async (e, forceBulkMode = false) => {
         if (e) e.preventDefault();
 
@@ -192,6 +227,8 @@ export default function ProductManager() {
             return;
         }
 
+        setUploadingImages(true); // Show spinner
+
         if (forceBulkMode) {
             try {
                 // Bulk Mode: Create one product per image
@@ -199,11 +236,15 @@ export default function ProductManager() {
 
                 for (let i = 0; i < stagedImages.length; i++) {
                     const img = stagedImages[i];
+
+                    // Upload image FIRST
+                    const [finalUrl] = await processImagesForUpload([img.data]);
+
                     const productData = {
                         ...formData,
                         id: `prod_${Date.now()}_${i}`,
                         name: stagedImages.length > 1 ? `${baseName} ${i + 1}` : baseName,
-                        images: [img.data],
+                        images: [finalUrl],
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
@@ -227,6 +268,8 @@ export default function ProductManager() {
             } catch (error) {
                 console.error('Bulk Save error:', error);
                 alert('❌ Lỗi lưu dữ liệu hàng loạt!');
+            } finally {
+                setUploadingImages(false);
             }
             return;
         }
@@ -234,18 +277,22 @@ export default function ProductManager() {
         const productImages = stagedImages.map(img => img.data);
         if (productImages.length === 0) {
             alert('Vui lòng chọn hoặc paste ít nhất 1 ảnh!');
+            setUploadingImages(false);
             return;
         }
 
-        const productData = {
-            ...formData,
-            id: editingId || `prod_${Date.now()}`,
-            price: formData.price,
-            images: productImages,
-            createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
-        };
-
         try {
+            // Upload all images
+            const finalImages = await processImagesForUpload(productImages);
+
+            const productData = {
+                ...formData,
+                id: editingId || `prod_${Date.now()}`,
+                price: formData.price,
+                images: finalImages,
+                createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
+            };
+
             await saveItem('products', productData);
 
             // Refresh local state
@@ -254,7 +301,7 @@ export default function ProductManager() {
 
             alert(editingId ? 'Đã cập nhật sản phẩm!' : 'Đã thêm sản phẩm mới!');
 
-            // Reset and also clear drafts in IndexedDB
+            // Reset and also clear drafts
             setEditingId(null);
             setFormData({
                 name: '',
@@ -270,6 +317,8 @@ export default function ProductManager() {
         } catch (error) {
             console.error('Save error:', error);
             alert('❌ Lỗi lưu dữ liệu!');
+        } finally {
+            setUploadingImages(false);
         }
     };
 
@@ -446,20 +495,33 @@ export default function ProductManager() {
             const catFiles = folderGroups[catName];
             for (const file of catFiles) {
                 try {
+                    // ... (previous file reading logic - removed to keep concise, but conceptually same) ...
                     const reader = new FileReader();
                     const imageData = await new Promise((resolve) => {
                         reader.onload = (re) => resolve(re.target.result);
                         reader.readAsDataURL(file);
                     });
-
                     const compressed = await compressImage(imageData);
 
-                    // Duplicate Detection: check if this IMAGE already exists
+                    // Duplicate Check (Base64 check still valid for local scope)
                     const isDuplicate = newProducts.some(p => p.images && p.images[0] === compressed);
                     if (isDuplicate) {
-                        console.log(`Skipping duplicate: ${file.name}`);
+                        // ...
                         processedCount++;
                         continue;
+                    }
+
+                    // UPLOAD TO STORAGE IMMEDIATELY
+                    let finalUrl = compressed;
+                    if (isStorageEnabled) {
+                        try {
+                            const blob = await base64ToBlob(compressed);
+                            const uploadFile = new File([blob], file.name || "image.jpg", { type: "image/jpeg" });
+                            finalUrl = await uploadImage(uploadFile);
+                        } catch (uErr) {
+                            console.error("Upload failed for imported file:", uErr);
+                            // Fallback to base64 if upload fails, but warn
+                        }
                     }
 
                     const newProd = {
@@ -468,9 +530,9 @@ export default function ProductManager() {
                         categoryId: cat.id,
                         price: 'Liên hệ',
                         description: '', // Keep description empty for bulk import
-                        images: [compressed],
+                        images: [finalUrl],
                         createdAt: Date.now(),
-                        tags: [cat.id] // Auto-tag with category
+                        tags: [cat.id, catName] // Auto-tag with category ID and NAME
                     };
 
                     newProducts.push(newProd);
