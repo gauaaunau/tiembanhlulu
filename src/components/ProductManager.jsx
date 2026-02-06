@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ProductManager.css';
-import { getAllItems, saveAllItems, saveItem, deleteItem } from '../utils/db';
+import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems } from '../utils/db';
 
 export default function ProductManager() {
     const [products, setProducts] = useState([]);
@@ -501,7 +501,7 @@ export default function ProductManager() {
         }
 
         try {
-            await saveAllItems('products', []);
+            await deleteAllItems('products');
             setProducts([]);
             alert('💥 Đã xóa sạch toàn bộ sản phẩm!');
         } catch (error) {
