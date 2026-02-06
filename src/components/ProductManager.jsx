@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-/* v2.1.0 - Optimized Bulk Tagging & Real-time Sync */
+import './ProductManager.css';
 import { subscribeToItems, saveItem, deleteItem, openDB, addItemsBulk, deleteAllItems, getAllItems, saveAllItems } from '../utils/db';
 import { uploadImage, base64ToBlob } from '../utils/storage';
 import LoadingScreen from './LoadingScreen';
