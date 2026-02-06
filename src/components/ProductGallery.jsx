@@ -100,6 +100,24 @@ export default function ProductGallery() {
         return Array.from(nameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [categories, products]);
 
+    // OPTIMIZATION: Pre-calculate grouped products for "All" view to avoid O(N^2) in render
+    const groupedProducts = useMemo(() => {
+        if (filter !== 'All') return [];
+
+        return allFilterableCategories.map(cat => {
+            const catNameLower = cat.name.toLowerCase();
+            const productsInCat = products.filter(p => {
+                const pCatName = getCategoryName(p.categoryId).toLowerCase();
+                if (pCatName === catNameLower) return true;
+                return (p.tags || []).some(t => {
+                    const tName = t.startsWith('cat_') ? getCategoryName(t) : t;
+                    return tName.toLowerCase() === catNameLower;
+                });
+            });
+            return { ...cat, items: productsInCat };
+        }).filter(cat => cat.items.length > 0);
+    }, [filter, products, allFilterableCategories]);
+
     const getCategoryName = (catId) => {
         const cat = allFilterableCategories.find(c => c.id === catId);
         return cat ? cat.name : (catId || '');
@@ -214,44 +232,28 @@ export default function ProductGallery() {
                             )}
                         </div>
                     ) : (
-                        /* Grouped View for 'All' */
-                        allFilterableCategories.map(cat => {
-                            const catNameLower = cat.name.toLowerCase();
-                            const productsInCat = products.filter(p => {
-                                // Match by primary category name OR any tag name
-                                const pCatName = getCategoryName(p.categoryId).toLowerCase();
-                                if (pCatName === catNameLower) return true;
-
-                                return (p.tags || []).some(t => {
-                                    const tName = t.startsWith('cat_') ? getCategoryName(t) : t;
-                                    return tName.toLowerCase() === catNameLower;
-                                });
-                            });
-
-                            if (productsInCat.length === 0) return null;
-
-                            return (
-                                <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
-                                    <h3 className="section-title" style={{
-                                        fontSize: '1.8rem',
-                                        color: 'var(--brown)',
-                                        marginBottom: '1.5rem',
-                                        paddingLeft: '1rem',
-                                        borderLeft: '5px solid var(--pink)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '10px'
-                                    }}>
-                                        ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({productsInCat.length})</span>
-                                    </h3>
-                                    <div className="products-grid">
-                                        {productsInCat.map((product, index) => (
-                                            <ProductCard key={product.id} product={product} index={index} />
-                                        ))}
-                                    </div>
+                        /* Optimized Grouped View */
+                        groupedProducts.map((cat, groupIndex) => (
+                            <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
+                                <h3 className="section-title" style={{
+                                    fontSize: '1.8rem',
+                                    color: 'var(--brown)',
+                                    marginBottom: '1.5rem',
+                                    paddingLeft: '1rem',
+                                    borderLeft: '5px solid var(--pink)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({cat.items.length})</span>
+                                </h3>
+                                <div className="products-grid">
+                                    {cat.items.map((product, index) => (
+                                        <ProductCard key={product.id} product={product} index={index} />
+                                    ))}
                                 </div>
-                            );
-                        })
+                            </div>
+                        ))
                     )}
 
                     {products.length === 0 && (
@@ -363,7 +365,7 @@ export default function ProductGallery() {
             <div
                 key={product.id}
                 className="product-card cute-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={{ animationDelay: `${index * 0.05}s` }}
                 onClick={() => openLightbox(product)}
             >
                 <div
