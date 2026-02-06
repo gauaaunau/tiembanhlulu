@@ -75,21 +75,22 @@ export default function Hero() {
             </a>
           </div>
 
-          <div className="scroll-indicator" onClick={() => {
-            const gallery = document.querySelector('.gallery');
-            if (gallery) {
-              gallery.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}>
-            <span className="scroll-text">Xem mẫu bánh</span>
-            <div className="mouse-wheel">
-              <div className="wheel"></div>
-            </div>
-            <div className="arrow-down">
-              <span></span>
-              <span></span>
-            </div>
-          </div>
+        </div>
+      </div>
+
+      <div className="scroll-indicator" onClick={() => {
+        const gallery = document.querySelector('.gallery');
+        if (gallery) {
+          gallery.scrollIntoView({ behavior: 'smooth' });
+        }
+      }}>
+        <span className="scroll-text">Xem mẫu bánh</span>
+        <div className="mouse-wheel">
+          <div className="wheel"></div>
+        </div>
+        <div className="arrow-down">
+          <span></span>
+          <span></span>
         </div>
       </div>
     </section>

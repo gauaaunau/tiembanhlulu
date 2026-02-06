@@ -129,7 +129,7 @@
 /* Scroll Indicator */
 .scroll-indicator {
     position: absolute;
-    bottom: 2rem;
+    bottom: 3.5rem;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -137,7 +137,7 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20;
     transition: all 0.3s ease;
 }
 
