@@ -554,6 +554,12 @@ export default function ProductManager() {
             console.log(`Saving ${productsToSave.length} products sequentially to avoid overload...`);
             for (let i = 0; i < productsToSave.length; i++) {
                 await saveItem('products', productsToSave[i]);
+                // Update progress to show actual save count
+                setImportStats(prev => ({
+                    ...prev,
+                    current: processedCount + i + 1,
+                    status: `Đã lưu ${i + 1}/${productsToSave.length}`
+                }));
                 // 300ms delay after EVERY save to prevent stream exhaustion
                 await new Promise(r => setTimeout(r, 300));
             }
