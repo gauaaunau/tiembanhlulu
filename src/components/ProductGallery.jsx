@@ -132,9 +132,12 @@ export default function ProductGallery() {
                                 </div>
                                 <div className="product-tags-row">
                                     <span className="product-tag-badge primary">#{getCategoryName(product.categoryId)}</span>
-                                    {(product.tags || []).map(tagId => (
-                                        <span key={tagId} className="product-tag-badge">#{getCategoryName(tagId)}</span>
-                                    ))}
+                                    {(product.tags || []).map(tagId => {
+                                        const displayName = getCategoryName(tagId) || tagId;
+                                        return (
+                                            <span key={tagId} className="product-tag-badge">#{displayName}</span>
+                                        );
+                                    })}
                                 </div>
                                 <div className="product-info">
                                     <h3 className="product-name">{product.name}</h3>
