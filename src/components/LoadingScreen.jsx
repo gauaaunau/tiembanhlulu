@@ -13,12 +13,12 @@ const LoadingScreen = () => {
                 </div>
                 <div className="loading-text">
                     <span className="dot-blink">Đợi</span>
-                    <span className="dot-blink" style={{ animationDelay: '0.2s' }}> xíu</span>
-                    <span className="dot-blink" style={{ animationDelay: '0.4s' }}> đang</span>
-                    <span className="dot-blink" style={{ animationDelay: '0.6s' }}> tải</span>
-                    <span className="dot-blink" style={{ animationDelay: '0.8s' }}> trang</span>
+                    <span className="dot-blink" style={{ animationDelay: '0.2s' }}> tiệm</span>
+                    <span className="dot-blink" style={{ animationDelay: '0.4s' }}> xíu</span>
                     <div className="loading-dots">
-                        <span>.</span><span>.</span><span>.</span>
+                        <span className="dot-blink" style={{ animationDelay: '0.6s' }}>.</span>
+                        <span className="dot-blink" style={{ animationDelay: '0.8s' }}>.</span>
+                        <span className="dot-blink" style={{ animationDelay: '1.0s' }}>.</span>
                     </div>
                 </div>
             </div>
