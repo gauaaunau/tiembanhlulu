@@ -161,9 +161,7 @@ export default function ProductGallery() {
     const groupedProducts = useMemo(() => {
         if (filter !== 'All') return [];
 
-        // ONLY group by formal categories from the DB for the "All" summary
-        // to avoid having a section for every minor tag.
-        return categories.map(cat => {
+        return allFilterableCategories.map(cat => {
             const catNameLower = cat.name.toLowerCase();
             const productsInCat = products.filter(p => {
                 const pCatName = getCategoryName(p.categoryId).toLowerCase();
@@ -175,7 +173,7 @@ export default function ProductGallery() {
             });
             return { ...cat, items: productsInCat };
         }).filter(cat => cat && cat.items && cat.items.length > 0);
-    }, [products, categories]); // Group by original categories only
+    }, [products, allFilterableCategories]); // Use allFilterableCategories to ensure no product is hidden
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
@@ -241,7 +239,7 @@ export default function ProductGallery() {
                         <div className="filter-tabs">
                             {!isExpanded && (
                                 <button className="btn-change-category" onClick={() => setIsExpanded(true)}>
-                                    {filter === 'All' ? '✨ Chọn chủ đề bánh' : `✨ #${filter} ➜ Đổi chủ đề`}
+                                    {filter === 'All' ? '✨ Tất cả ➜ Chọn chủ đề' : `✨ #${filter} ➜ Đổi chủ đề`}
                                 </button>
                             )}
 
