@@ -690,20 +690,26 @@ export default function ProductManager() {
             const tagObj = allFilterableCategories.find(c => c.id === targetTagId);
             const tagName = tagObj ? tagObj.name : targetTagId;
 
-            const updatedProducts = products.map(p => {
+            const modifiedProducts = [];
+            const newAllProducts = products.map(p => {
                 if (bulkSelectedIds.includes(p.id)) {
                     const currentTags = p.tags || [];
                     // Ensure we don't add duplicates by name
                     if (!currentTags.includes(tagName)) {
-                        return { ...p, tags: [...currentTags, tagName] };
+                        const updated = { ...p, tags: [...currentTags, tagName] };
+                        modifiedProducts.push(updated);
+                        return updated;
                     }
                 }
                 return p;
             });
 
-            // Save all updated products
-            await saveAllItems('products', updatedProducts);
-            setProducts(updatedProducts);
+            if (modifiedProducts.length > 0) {
+                // Save ONLY modified products
+                await addItemsBulk('products', modifiedProducts);
+                setProducts(newAllProducts);
+            }
+
             setBulkSelectedIds([]);
             alert(`🎉 Đã gắn Tag cho ${bulkSelectedIds.length} sản phẩm!`);
         } catch (error) {
