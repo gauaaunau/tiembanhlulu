@@ -394,12 +394,15 @@ export default function ProductManager() {
                 name: tagName.trim(),
                 subCategories: []
             };
+            // Optimistic update: Update local state IMMEDIATELY
+            setCategories(prev => [...prev, category]);
+
             try {
                 await saveItem('categories', category);
-                setCategories(prev => [...prev, category]);
             } catch (err) {
-                console.error('Error creating category:', err);
-                return;
+                console.error('Error saving category to DB (but verified locally):', err);
+                // We do NOT revert local state because local work should continue.
+                // It will be retried on next sync or restart.
             }
         }
 
@@ -550,7 +553,11 @@ export default function ProductManager() {
             console.log(`Saving ${categoriesToSave.length} categories separately...`);
             // Save categories sequentially to ensure they exist for filtering
             for (const cat of categoriesToSave) {
-                await saveItem('categories', cat);
+                try {
+                    await saveItem('categories', cat);
+                } catch (err) {
+                    console.warn(`Failed to save category ${cat.name}, but continuing locally.`, err);
+                }
             }
         }
 
