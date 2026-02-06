@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 /* v2.1.0 - Optimized Bulk Tagging & Real-time Sync */
-import { subscribeToItems, saveItem, deleteItem, openDB, addItemsBulk, deleteAllItems } from '../utils/db';
+import { subscribeToItems, saveItem, deleteItem, openDB, addItemsBulk, deleteAllItems, getAllItems, saveAllItems } from '../utils/db';
 import { uploadImage, base64ToBlob } from '../utils/storage';
+import LoadingScreen from './LoadingScreen';
 
 export default function ProductManager() {
     const [products, setProducts] = useState([]);
@@ -30,8 +31,10 @@ export default function ProductManager() {
     const [showTagSuggestions, setShowTagSuggestions] = useState(false);
     const [typedTag, setTypedTag] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        console.log("🛠️ ProductManager v2.2.0 - Live");
         // 1. Initial Migration Check (only once)
         const checkMigration = async () => {
             const dbProducts = await getAllItems('products');
@@ -72,6 +75,7 @@ export default function ProductManager() {
         // 2. Setup Real-time Listeners
         const unsubProducts = subscribeToItems('products', (items) => {
             if (items) setProducts(items);
+            setIsLoading(false); // Stop loading after first batch
         });
 
         const unsubCategories = subscribeToItems('categories', (items) => {
@@ -765,6 +769,8 @@ export default function ProductManager() {
             return (tName || '').toLowerCase() === targetName;
         });
     });
+
+    if (isLoading) return <LoadingScreen />;
 
     return (
         <div className="product-manager">

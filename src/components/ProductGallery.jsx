@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import './ProductGallery.css';
 import { getAllItems, subscribeToItems } from '../utils/db';
+import LoadingScreen from './LoadingScreen';
 
 export default function ProductGallery() {
     const [filter, setFilter] = useState('All');
@@ -9,11 +10,19 @@ export default function ProductGallery() {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [currentImgIndex, setCurrentImgIndex] = useState(0);
     const [showContactOptions, setShowContactOptions] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        console.log("🌸 ProductGallery v2.2.0 - Live");
         // Real-time synchronization for products and categories
-        const unsubProducts = subscribeToItems('products', setProducts);
-        const unsubCategories = subscribeToItems('categories', setCategories);
+        const unsubProducts = subscribeToItems('products', (items) => {
+            setProducts(items);
+            setIsLoading(false); // Stop loading after first batch (even if empty)
+        });
+        const unsubCategories = subscribeToItems('categories', (items) => {
+            setCategories(items);
+            // Categories usually load fast, but products are more critical for the "empty" message
+        });
 
         return () => {
             unsubProducts();
@@ -132,6 +141,8 @@ export default function ProductGallery() {
         setCurrentImgIndex(index);
         setShowContactOptions(false); // Reset reveal when changing image
     };
+
+    if (isLoading) return <LoadingScreen />;
 
     return (
         <section className="gallery">
