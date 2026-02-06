@@ -161,7 +161,7 @@ export default function ProductGallery() {
     }, [rawCategories, catSearch]);
 
     const getCategoryName = (catId) => {
-        const cat = allFilterableCategories.find(c => c.id === catId);
+        const cat = rawCategories.find(c => c.id === catId);
         return cat ? cat.name : (catId || '');
     };
 
@@ -169,19 +169,20 @@ export default function ProductGallery() {
     const groupedProducts = useMemo(() => {
         if (filter !== 'All') return [];
 
-        return allFilterableCategories.map(cat => {
+        return rawCategories.map(cat => {
             const catNameLower = cat.name.toLowerCase();
             const productsInCat = products.filter(p => {
                 const pCatName = getCategoryName(p.categoryId).toLowerCase();
                 if (pCatName === catNameLower) return true;
                 return (p.tags || []).some(t => {
-                    const tName = t.startsWith('cat_') ? getCategoryName(t) : t;
-                    return tName.toLowerCase() === catNameLower;
+                    // Normalize tag for comparison
+                    const tClean = t.replace(/^(#)/, '').trim().toLowerCase();
+                    return tClean === catNameLower;
                 });
             });
             return { ...cat, items: productsInCat };
         }).filter(cat => cat && cat.items && cat.items.length > 0);
-    }, [products, allFilterableCategories]); // Use allFilterableCategories to ensure no product is hidden
+    }, [products, rawCategories]); // Products grouped by ALL categories, search NO LONGER filters this
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
