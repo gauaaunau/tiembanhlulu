@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './ProductManager.css';
 import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems, addItemsBulk } from '../utils/db';
 import { uploadImage, base64ToBlob } from '../utils/storage';
@@ -376,11 +376,6 @@ export default function ProductManager() {
         return cat ? cat.subCategories : [];
     };
 
-    const getCategoryName = (catId) => {
-        const cat = categories.find(c => c.id === catId);
-        return cat ? cat.name : '';
-    };
-
     const getSubCategoryName = (catId, subId) => {
         const cat = categories.find(c => c.id === catId);
         if (!cat) return '';
@@ -395,16 +390,50 @@ export default function ProductManager() {
         return [...new Set(descriptions)];
     };
 
-    const handleAddSmartTag = async (tagName) => {
-        if (!tagName.trim()) return;
+    // DYNAMIC CATEGORY RECOVERY: Ensures categories never appear empty if products exist
+    const allFilterableCategories = useMemo(() => {
+        const catMap = new Map();
 
-        let category = categories.find(c => c.name.toLowerCase() === tagName.toLowerCase().trim());
+        // 1. Add known categories from state
+        categories.forEach(c => {
+            if (c && c.id) catMap.set(c.id, c);
+        });
+
+        // 2. Discover missing categories/tags from products
+        products.forEach(p => {
+            if (p.categoryId && !catMap.has(p.categoryId)) {
+                // Try to find a name from tags or just use the ID/Placeholder
+                const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Chưa phân loại';
+                catMap.set(p.categoryId, { id: p.categoryId, name: guessedName, subCategories: [] });
+            }
+
+            // Also treat every tag as a filterable category
+            (p.tags || []).forEach(tag => {
+                if (tag && !catMap.has(tag)) {
+                    catMap.set(tag, { id: tag, name: tag, subCategories: [] });
+                }
+            });
+        });
+
+        return Array.from(catMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [categories, products]);
+
+    const getCategoryName = (catId) => {
+        const cat = allFilterableCategories.find(c => c.id === catId);
+        return cat ? cat.name : (catId || '');
+    };
+
+    const handleAddSmartTag = async (tagName) => {
+        if (!tagName || !tagName.trim()) return;
+        const cleanName = tagName.trim();
+
+        let category = allFilterableCategories.find(c => c.name.toLowerCase() === cleanName.toLowerCase());
 
         if (!category) {
             // Create new category on the fly
             category = {
                 id: `cat_${Date.now()}_${Math.random()}`,
-                name: tagName.trim(),
+                name: cleanName,
                 subCategories: []
             };
             // Optimistic update: Update local state IMMEDIATELY
@@ -414,19 +443,15 @@ export default function ProductManager() {
                 await saveItem('categories', category);
             } catch (err) {
                 console.error('Error saving category to DB (but verified locally):', err);
-                // We do NOT revert local state because local work should continue.
-                // It will be retried on next sync or restart.
             }
         }
 
         // Add tag to product if not already present
-        // Use Name for tags to keep display clean (consistent with Import logic)
         if (!formData.tags.includes(category.name)) {
             const nextTags = [...formData.tags, category.name];
             setFormData(prev => ({
                 ...prev,
                 tags: nextTags,
-                // Automatically set primary category to the first tag (ID is required for primary)
                 categoryId: prev.categoryId || category.id
             }));
         }
@@ -435,7 +460,7 @@ export default function ProductManager() {
     };
 
     const handleTagInputKeyDown = (e) => {
-        const filtered = categories.filter(cat =>
+        const filtered = allFilterableCategories.filter(cat =>
             cat.name.toLowerCase().includes(tagInputText.toLowerCase())
         );
 
@@ -481,10 +506,11 @@ export default function ProductManager() {
         // Group files by subfolder
         const folderGroups = {};
         files.forEach(file => {
-            const pathParts = file.webkitRelativePath.split('/');
+            const pathParts = file.webkitRelativePath.split(/[/\\]/);
             if (pathParts.length < 3) return; // Skip files in root or empty folders
 
             const catName = pathParts[1]; // Subfolder name
+            if (!catName) return;
             if (!folderGroups[catName]) folderGroups[catName] = [];
             folderGroups[catName].push(file);
         });
@@ -498,7 +524,7 @@ export default function ProductManager() {
 
         for (const catName of categoryNames) {
             // Find or create category
-            let cat = newCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+            let cat = allFilterableCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
             if (!cat) {
                 cat = { id: `cat_${Date.now()}_${Math.random()}`, name: catName, subCategories: [] };
                 newCategories.push(cat);
@@ -854,7 +880,7 @@ export default function ProductManager() {
                                                 boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                                                 marginTop: '-5px'
                                             }}>
-                                                {categories
+                                                {allFilterableCategories
                                                     .filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase()))
                                                     .map((cat, idx) => (
                                                         <div
@@ -873,7 +899,7 @@ export default function ProductManager() {
                                                             📁 {cat.name}
                                                         </div>
                                                     ))}
-                                                {categories.filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase())).length === 0 && (
+                                                {allFilterableCategories.filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase())).length === 0 && (
                                                     <div style={{ padding: '10px 15px', color: '#888', fontStyle: 'italic' }}>
                                                         ✨ Nhấn Enter để tạo mới: "{tagInputText}"
                                                     </div>
@@ -1070,7 +1096,7 @@ export default function ProductManager() {
                             }}
                         >
                             <option value="">-- Chọn Tag muốn gán --</option>
-                            {categories.map(cat => (
+                            {allFilterableCategories.map(cat => (
                                 <option key={cat.id} value={cat.id}>🏷️ {cat.name}</option>
                             ))}
                         </select>
@@ -1170,7 +1196,7 @@ export default function ProductManager() {
                                 <option value="All">🌈 Tất cả sản phẩm</option>
                                 <option value="newest" style={{ fontWeight: 'bold', color: 'var(--pink)' }}>🔥 Mới nhất (24h)</option>
                                 <optgroup label="📂 Theo Thể loại">
-                                    {categories.map(cat => (
+                                    {allFilterableCategories.map(cat => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
                                 </optgroup>

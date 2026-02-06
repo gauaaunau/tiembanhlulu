@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './ProductGallery.css';
 import { getAllItems } from '../utils/db';
 
@@ -34,9 +34,37 @@ export default function ProductGallery() {
         return () => window.removeEventListener('keydown', handleEsc);
     }, [selectedProduct]);
 
+    // DYNAMIC CATEGORY RECOVERY: Ensures categories never appear empty if products exist
+    const allFilterableCategories = useMemo(() => {
+        const catMap = new Map();
+
+        // 1. Add known categories from state
+        categories.forEach(c => {
+            if (c && c.id) catMap.set(c.id, c);
+        });
+
+        // 2. Discover missing categories/tags from products
+        products.forEach(p => {
+            if (p.categoryId && !catMap.has(p.categoryId)) {
+                // Try to find a name from tags or just use the ID/Placeholder
+                const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Chưa phân loại';
+                catMap.set(p.categoryId, { id: p.categoryId, name: guessedName, subCategories: [] });
+            }
+
+            // Also treat every tag as a filterable category
+            (p.tags || []).forEach(tag => {
+                if (tag && !catMap.has(tag)) {
+                    catMap.set(tag, { id: tag, name: tag, subCategories: [] });
+                }
+            });
+        });
+
+        return Array.from(catMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [categories, products]);
+
     const getCategoryName = (catId) => {
-        const cat = categories.find(c => c.id === catId);
-        return cat ? cat.name : '';
+        const cat = allFilterableCategories.find(c => c.id === catId);
+        return cat ? cat.name : (catId || '');
     };
 
     const handleMouseMove = (e) => {
@@ -52,8 +80,8 @@ export default function ProductGallery() {
         ? products
         : products.filter(p => {
             const primaryCatName = getCategoryName(p.categoryId);
-            const tagCatNames = (p.tags || []).map(tagId => getCategoryName(tagId));
-            return primaryCatName === filter || tagCatNames.includes(filter);
+            // Check both the primary category name and the tags (which are now names)
+            return primaryCatName === filter || (p.tags || []).includes(filter);
         });
 
     const openLightbox = (product, startRevealed = false) => {
@@ -81,7 +109,7 @@ export default function ProductGallery() {
                 <h2 className="gallery-title">🎂 Menu Bánh Ngọt</h2>
                 <p className="gallery-subtitle">Bánh ngọt handmade - Làm bằng cả trái tim 💕</p>
 
-                {categories.length > 0 && (
+                {allFilterableCategories.length > 0 && (
                     <div className="filter-tabs">
                         <button
                             className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
@@ -89,7 +117,7 @@ export default function ProductGallery() {
                         >
                             🎂 Tất Cả
                         </button>
-                        {categories.map(cat => (
+                        {allFilterableCategories.map(cat => (
                             <button
                                 key={cat.id}
                                 className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
