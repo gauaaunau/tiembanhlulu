@@ -4,7 +4,7 @@ import './Hero.css';
 export default function Hero() {
   const [logoUrl, setLogoUrl] = useState('');
   const [distance, setDistance] = useState(null);
-  const bakeryCoords = { lat: 10.8143, lng: 106.6353 };
+  const bakeryCoords = { lat: 10.8180682, lng: 106.6339767 };
 
   useEffect(() => {
     // Tự động lấy logo từ Facebook Page
@@ -68,7 +68,7 @@ export default function Hero() {
           </div>
           <div className="hero-buttons">
             <a
-              href="https://www.google.com/maps/dir/?api=1&destination=10.8143,106.6353"
+              href="https://www.google.com/maps/dir/?api=1&destination=10.8180682,106.6339767"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary btn-ripple"
