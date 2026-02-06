@@ -123,7 +123,7 @@ export default function ProductGallery() {
                                 className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
                                 onClick={() => setFilter(cat.name)}
                             >
-                                {cat.name}
+                                #{cat.name}
                             </button>
                         ))}
                     </div>
@@ -159,7 +159,7 @@ export default function ProductGallery() {
                                     )}
                                 </div>
                                 <div className="product-tags-row">
-                                    <span className="product-tag-badge primary">#{getCategoryName(product.categoryId)}</span>
+                                    {/* Primary category badge removed as requested - using tags only */}
                                     {(product.tags || []).map(tagId => {
                                         const displayName = getCategoryName(tagId) || tagId;
                                         return (

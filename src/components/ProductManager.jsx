@@ -231,8 +231,8 @@ export default function ProductManager() {
     const handleSubmit = async (e, forceBulkMode = false) => {
         if (e) e.preventDefault();
 
-        if (!formData.categoryId) {
-            alert('Vui lòng chọn thể loại!');
+        if (formData.tags.length === 0) {
+            alert('Vui lòng gán ít nhất 1 Tag!');
             return;
         }
 
@@ -847,7 +847,7 @@ export default function ProductManager() {
                             <div className="form-row full-width" style={{ gridColumn: 'span 2' }}>
                                 <div className="smart-tag-container">
                                     <label className="form-label" style={{ fontWeight: '600', color: 'var(--brown)', display: 'block', marginBottom: '0.5rem' }}>
-                                        📁 Thể loại / Tags (Nhập tên & nhấn Enter):
+                                        🏷️ Gán Tags (Nhập tên & nhấn Enter):
                                     </label>
                                     <div className="tags-input-wrapper" style={{ position: 'relative' }}>
                                         <input
@@ -1195,7 +1195,7 @@ export default function ProductManager() {
                             >
                                 <option value="All">🌈 Tất cả sản phẩm</option>
                                 <option value="newest" style={{ fontWeight: 'bold', color: 'var(--pink)' }}>🔥 Mới nhất (24h)</option>
-                                <optgroup label="📂 Theo Thể loại">
+                                <optgroup label="🏷️ Lọc theo Tags">
                                     {allFilterableCategories.map(cat => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
@@ -1234,7 +1234,7 @@ export default function ProductManager() {
                                 </div>
                                 <div className="product-item-info">
                                     <h4 style={{ display: 'none' }}>{product.name}</h4>
-                                    <p className="product-category">
+                                    <p className="product-category" style={{ display: 'none' }}>
                                         📁 {getCategoryName(product.categoryId)}
                                     </p>
                                     {product.tags && product.tags.length > 0 && (
