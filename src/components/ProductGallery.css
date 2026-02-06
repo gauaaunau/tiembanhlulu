@@ -51,9 +51,19 @@
     flex-wrap: wrap;
     gap: 0.8rem;
     border: 1px solid rgba(255, 179, 198, 0.2);
-    overflow: hidden;
-    max-height: 500px;
+    overflow-y: auto;
+    max-height: 50vh;
     transition: all 0.4s ease;
+    -webkit-overflow-scrolling: touch;
+}
+
+.filter-tabs::-webkit-scrollbar {
+    width: 4px;
+}
+
+.filter-tabs::-webkit-scrollbar-thumb {
+    background: var(--pink);
+    border-radius: 10px;
 }
 
 .btn-change-category {

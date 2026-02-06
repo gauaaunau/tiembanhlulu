@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import './ProductGallery.css';
 import { getAllItems, subscribeToItems } from '../utils/db';
 import LoadingScreen from './LoadingScreen';
@@ -11,7 +11,8 @@ export default function ProductGallery() {
     const [currentImgIndex, setCurrentImgIndex] = useState(0);
     const [showContactOptions, setShowContactOptions] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const galleryRef = useRef(null);
 
     useEffect(() => {
         console.log("🌸 ProductGallery v2.2.0 - Live");
@@ -38,6 +39,20 @@ export default function ProductGallery() {
         window.addEventListener('keydown', handleEsc);
         return () => window.removeEventListener('keydown', handleEsc);
     }, [selectedProduct]);
+
+    // AUTO-SCROLL TO TOP ON FILTER CHANGE
+    useEffect(() => {
+        if (!isLoading && galleryRef.current) {
+            const headerOffset = 100; // Offset for sticky header/spacing
+            const elementPosition = galleryRef.current.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    }, [filter]);
 
     // DYNAMIC CATEGORY RECOVERY: Ensures categories never appear empty if products exist
     const allFilterableCategories = useMemo(() => {
@@ -169,7 +184,7 @@ export default function ProductGallery() {
     if (isLoading) return <LoadingScreen />;
 
     return (
-        <section className="gallery">
+        <section className="gallery" ref={galleryRef}>
             <div className="wave-top">
                 <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '60px' }}>
                     <path
