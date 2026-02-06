@@ -1152,51 +1152,57 @@ export default function ProductManager() {
                 </>
             ) : (
                 <div className="manager-section" style={{ background: 'var(--white)', padding: '2rem', borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                    <h3>🏷️ Gán Nhãn Tag Cho Nhiều Sản Phẩm</h3>
-                    <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-                        Chọn một Tag, sau đó chọn tất cả những sản phẩm bạn muốn gán thêm Tag đó.
-                    </p>
+                    <div className="bulk-tagging-header">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div>
+                                <h3>🏷️ Gán Nhãn Tag Nhanh</h3>
+                                <p style={{ color: '#666', margin: 0, fontSize: '0.9rem' }}>
+                                    Chọn Tag và tick chọn sản phẩm để cập nhật tức thì.
+                                </p>
+                            </div>
+                            <div className="bulk-tag-controls">
+                                <select
+                                    className="form-select"
+                                    style={{ margin: 0, minWidth: '220px', height: '50px' }}
+                                    value={targetTagId}
+                                    onChange={(e) => {
+                                        setTargetTagId(e.target.value);
+                                        setBulkSelectedIds([]);
+                                    }}
+                                >
+                                    <option value="">-- Chọn Tag muốn gán --</option>
+                                    {allFilterableCategories.map(cat => (
+                                        <option key={cat.id} value={cat.id}>🏷️ {cat.name}</option>
+                                    ))}
+                                </select>
 
-                    <div className="bulk-tag-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                        <select
-                            className="form-select"
-                            style={{ margin: 0, minWidth: '250px' }}
-                            value={targetTagId}
-                            onChange={(e) => {
-                                setTargetTagId(e.target.value);
-                                setBulkSelectedIds([]);
-                            }}
-                        >
-                            <option value="">-- Chọn Tag muốn gán --</option>
-                            {allFilterableCategories.map(cat => (
-                                <option key={cat.id} value={cat.id}>🏷️ {cat.name}</option>
-                            ))}
-                        </select>
+                                <button
+                                    onClick={() => {
+                                        if (bulkSelectedIds.length === productsForBulkTagging.length) {
+                                            setBulkSelectedIds([]);
+                                        } else {
+                                            setBulkSelectedIds(productsForBulkTagging.map(p => p.id));
+                                        }
+                                    }}
+                                    className="secondary-btn"
+                                    style={{ padding: '0.6rem 1.2rem', background: 'var(--beige)', border: '2px solid var(--pink)', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                                    disabled={!targetTagId || productsForBulkTagging.length === 0}
+                                >
+                                    {bulkSelectedIds.length === productsForBulkTagging.length && productsForBulkTagging.length > 0 ? '🚫 Bỏ chọn hết' : '✅ Chọn hết'}
+                                </button>
 
-                        <button
-                            onClick={() => {
-                                if (bulkSelectedIds.length === productsForBulkTagging.length) {
-                                    setBulkSelectedIds([]);
-                                } else {
-                                    setBulkSelectedIds(productsForBulkTagging.map(p => p.id));
-                                }
-                            }}
-                            className="secondary-btn"
-                            style={{ padding: '0.8rem 1.5rem', background: 'var(--beige)', border: '2px solid var(--pink)', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}
-                            disabled={!targetTagId || productsForBulkTagging.length === 0}
-                        >
-                            {bulkSelectedIds.length === productsForBulkTagging.length && productsForBulkTagging.length > 0 ? '🚫 Bỏ chọn tất cả' : '✅ Chọn tất cả'}
-                        </button>
-
-                        <button
-                            onClick={handleBulkTagUpdate}
-                            className="primary-btn"
-                            style={{ padding: '0.8rem 2rem', borderRadius: '15px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-                            disabled={bulkSelectedIds.length === 0}
-                        >
-                            🚀 Cập nhật cho {bulkSelectedIds.length} bánh
-                        </button>
+                                <button
+                                    onClick={handleBulkTagUpdate}
+                                    className="primary-btn"
+                                    style={{ padding: '0.7rem 1.5rem', borderRadius: '15px', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '180px' }}
+                                    disabled={bulkSelectedIds.length === 0}
+                                >
+                                    🚀 Cập nhật ({bulkSelectedIds.length})
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
 
                     {targetTagId ? (
                         <>
