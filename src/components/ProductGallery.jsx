@@ -105,6 +105,9 @@ export default function ProductGallery() {
     };
 
     const handleMouseMove = (e) => {
+        // Disable zoom on mobile/touch devices to prevent "cấn" behavior
+        if (window.matchMedia("(pointer: coarse)").matches) return;
+
         const card = e.currentTarget;
         const img = card.querySelector('.cake-image');
         const rect = card.getBoundingClientRect();

@@ -8,7 +8,7 @@ const LoadingScreen = () => {
         <div className="loading-overlay">
             <div className="loading-content">
                 <div className="logo-container">
-                    <img src={logoUrl} alt="LuluCake Logo" className="bouncing-logo" />
+                    <img src={logoUrl} alt="LuluCake Logo" className="bouncing-logo-circular" />
                     <div className="logo-shadow"></div>
                 </div>
                 <div className="loading-text">
