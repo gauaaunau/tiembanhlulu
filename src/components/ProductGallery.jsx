@@ -100,6 +100,11 @@ export default function ProductGallery() {
         return Array.from(nameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [categories, products]);
 
+    const getCategoryName = (catId) => {
+        const cat = allFilterableCategories.find(c => c.id === catId);
+        return cat ? cat.name : (catId || '');
+    };
+
     // OPTIMIZATION: Pre-calculate grouped products for "All" view to avoid O(N^2) in render
     const groupedProducts = useMemo(() => {
         if (filter !== 'All') return [];
@@ -117,11 +122,6 @@ export default function ProductGallery() {
             return { ...cat, items: productsInCat };
         }).filter(cat => cat.items.length > 0);
     }, [filter, products, allFilterableCategories]);
-
-    const getCategoryName = (catId) => {
-        const cat = allFilterableCategories.find(c => c.id === catId);
-        return cat ? cat.name : (catId || '');
-    };
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
