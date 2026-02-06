@@ -67,6 +67,7 @@ export default function ProductGallery() {
     const [showContactOptions, setShowContactOptions] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [catSearch, setCatSearch] = useState('');
     const galleryRef = useRef(null);
 
     useEffect(() => {
@@ -176,8 +177,16 @@ export default function ProductGallery() {
             }
         });
 
-        return Array.from(nameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-    }, [categories, products]);
+        // 3. Convert to array and SORT ALPHABETICALLY A-Z
+        const catList = Array.from(nameMap.values()).sort((a, b) =>
+            a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
+        );
+
+        // 4. Apply search filter
+        if (!catSearch.trim()) return catList;
+        const searchLower = catSearch.toLowerCase().trim();
+        return catList.filter(c => c.name.toLowerCase().includes(searchLower));
+    }, [products, categories, catSearch]); // Added catSearch to deps, products]);
 
     const getCategoryName = (catId) => {
         const cat = allFilterableCategories.find(c => c.id === catId);
@@ -285,19 +294,40 @@ export default function ProductGallery() {
 
                         <div className={`category-picker-wrapper ${!isExpanded ? 'collapsed' : ''}`}>
                             <div className="filter-tabs">
+                                <div className="category-search-box">
+                                    <span className="search-icon">🔍</span>
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm chủ đề (ví dụ: Cá, Bé trai...)"
+                                        value={catSearch}
+                                        onChange={(e) => setCatSearch(e.target.value)}
+                                        onFocus={(e) => e.stopPropagation()}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    {catSearch && (
+                                        <button className="clear-search" onClick={(e) => {
+                                            e.stopPropagation();
+                                            setCatSearch('');
+                                        }}>✕</button>
+                                    )}
+                                </div>
                                 <div className="tabs-content">
-                                    {allFilterableCategories.map(cat => (
-                                        <button
-                                            key={cat.id}
-                                            className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
-                                            onClick={() => {
-                                                setFilter(cat.name);
-                                                setIsExpanded(false);
-                                            }}
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    ))}
+                                    {allFilterableCategories.length === 0 ? (
+                                        <p className="no-search-results">Không tìm thấy chủ đề nào 🍰</p>
+                                    ) : (
+                                        allFilterableCategories.map(cat => (
+                                            <button
+                                                key={cat.id}
+                                                className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    setFilter(cat.name);
+                                                    setIsExpanded(false);
+                                                }}
+                                            >
+                                                {cat.name}
+                                            </button>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>
