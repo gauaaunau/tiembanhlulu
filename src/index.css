@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Kawaii Palette - Bright & Cute */
+  --beige: #FFF8E8;
+  --light-pink: #FFE4E9;
+  --pink: #FFB3C6;
+  --soft-blue: #C9E4F5;
+  --mint: #D4F1D4;
+  --peach: #FFCCB3;
+  --brown: #8B5A3C;
+  --dark-brown: #5C3A21;
+  --white: #FFFFFF;
+
+  /* Typography - Cute & Rounded */
+  --font-display: 'Quicksand', sans-serif;
+  --font-body: 'Quicksand', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--beige);
+  color: var(--dark-brown);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Dashed Border Utility */
+.dashed-border {
+  border: 3px dashed var(--brown);
+  border-radius: 30px;
+  padding: 2rem;
+}
+
+.dashed-circle {
+  border: 3px dashed var(--brown);
+  border-radius: 50%;
+}
+
+/* Cute Card */
+.cute-card {
+  background: var(--white);
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.cute-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+}
+
+/* Decorative Elements */
+.hearts::before,
+.hearts::after {
+  content: '♥';
+  color: var(--pink);
+  font-size: 1.5rem;
+  position: absolute;
+  animation: float 3s ease-in-out infinite;
+}
+
+.hearts::before {
+  left: -2rem;
+  animation-delay: 0s;
+}
+
+.hearts::after {
+  right: -2rem;
+  animation-delay: 1.5s;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.3s ease-out;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+}
+
+.btn-primary {
+  background: var(--pink);
+  color: var(--white);
+  border: 3px solid var(--dark-brown);
+  box-shadow: 0 5px 0 var(--dark-brown);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 0 var(--dark-brown);
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--dark-brown);
+}
+
+.btn-outline {
+  background: var(--white);
+  border: 3px solid var(--brown);
+  color: var(--brown);
+  box-shadow: 0 5px 0 var(--brown);
+}
+
+.btn-outline:hover {
+  background: var(--light-pink);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 0 var(--brown);
+}
