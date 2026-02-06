@@ -694,9 +694,24 @@ export default function ProductManager() {
             const newAllProducts = products.map(p => {
                 if (bulkSelectedIds.includes(p.id)) {
                     const currentTags = p.tags || [];
-                    // Ensure we don't add duplicates by name
-                    if (!currentTags.includes(tagName)) {
-                        const updated = { ...p, tags: [...currentTags, tagName] };
+                    const tagNameLower = tagName.toLowerCase();
+
+                    // 1. CLEANUP: Remove any cryptic IDs that resolve to this tagName
+                    // and also just generally deduplicate by name.
+                    const filteredTags = currentTags.filter(t => {
+                        const tName = t.startsWith('cat_') ? getCategoryName(t) : t;
+                        return tName.toLowerCase() !== tagNameLower;
+                    });
+
+                    // 2. Add the unique Tag Name
+                    const updatedTags = [...filteredTags, tagName];
+
+                    // 3. Compare to see if we actually changed anything
+                    // (either by cleanup or by adding the name)
+                    const isChanged = JSON.stringify(currentTags.sort()) !== JSON.stringify(updatedTags.sort());
+
+                    if (isChanged) {
+                        const updated = { ...p, tags: updatedTags };
                         modifiedProducts.push(updated);
                         return updated;
                     }
@@ -737,9 +752,19 @@ export default function ProductManager() {
     }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); // Always show newest first in admin
 
     // Products that DON'T have the target tag yet
-    const productsForBulkTagging = products.filter(p =>
-        targetTagId && p.categoryId !== targetTagId && !(p.tags || []).includes(targetTagId)
-    );
+    const productsForBulkTagging = products.filter(p => {
+        if (!targetTagId) return false;
+        const targetName = getCategoryName(targetTagId).toLowerCase();
+
+        // Already matched by primary category ID
+        if (p.categoryId === targetTagId) return false;
+
+        // Check if normalized tag names contain the target name
+        return !(p.tags || []).some(t => {
+            const tName = t.startsWith('cat_') ? getCategoryName(t) : t;
+            return (tName || '').toLowerCase() === targetName;
+        });
+    });
 
     return (
         <div className="product-manager">
