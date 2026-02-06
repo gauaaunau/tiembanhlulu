@@ -250,7 +250,7 @@ export default function ProductGallery() {
                 </svg>
             </div>
             <div className="gallery-container" style={{ position: 'relative', zIndex: 1 }}>
-                <h2 className="gallery-title">🎂 Mẫu Bánh</h2>
+                <h2 className="gallery-title">Mẫu Bánh</h2>
                 <p className="gallery-subtitle">Bánh ngọt handmade - Làm bằng cả trái tim 💕</p>
 
                 {allFilterableCategories.length > 0 && (
@@ -271,7 +271,7 @@ export default function ProductGallery() {
                                         setTimeout(() => setFilter('All'), 10);
                                     }}
                                 >
-                                    🎂 Tất Cả
+                                    Tất Cả
                                 </button>
                                 {allFilterableCategories.map(cat => (
                                     <button

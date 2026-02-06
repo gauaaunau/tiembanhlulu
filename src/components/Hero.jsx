@@ -56,7 +56,6 @@ export default function Hero() {
           </p>
           <div className="hero-location-box">
             <div className="location-item">
-              <span className="icon">📍</span>
               <span>74/11 Trần Thái Tông, P.15, Tân Bình, Ho Chi Minh City, Vietnam</span>
             </div>
             {distance && (
