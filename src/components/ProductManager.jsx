@@ -528,7 +528,7 @@ export default function ProductManager() {
                         description: '',
                         images: [finalUrl],
                         createdAt: Date.now(),
-                        tags: [cat.id, catName] // Auto-tag with category ID and NAME
+                        tags: [catName] // Only folder name, no ID
                     };
 
                     newProducts.push(newProd);
