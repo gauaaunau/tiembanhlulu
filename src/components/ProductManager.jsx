@@ -145,18 +145,24 @@ export default function ProductManager() {
     };
 
     const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        files.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const compressed = await compressImage(reader.result);
-                setStagedImages(prev => [...prev, {
-                    id: `img_${Date.now()}_${Math.random()}`,
-                    data: compressed
-                }]);
+                setStagedImages(prev => {
+                    const isDuplicate = prev.some(img => img.data === compressed);
+                    if (isDuplicate) return prev; // Silent skip for duplicates during multi-upload
+                    return [...prev, {
+                        id: `img_${Date.now()}_${Math.random()}`,
+                        data: compressed
+                    }];
+                });
             };
             reader.readAsDataURL(file);
-        }
+        });
     };
 
     const handlePaste = (e) => {
@@ -1059,6 +1065,7 @@ export default function ProductManager() {
                                     <input
                                         type="file"
                                         accept="image/*"
+                                        multiple
                                         onChange={handleImageUpload}
                                         style={{ display: 'none' }}
                                     />
