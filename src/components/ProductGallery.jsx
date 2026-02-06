@@ -11,6 +11,7 @@ export default function ProductGallery() {
     const [currentImgIndex, setCurrentImgIndex] = useState(0);
     const [showContactOptions, setShowContactOptions] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(true);
 
     useEffect(() => {
         console.log("🌸 ProductGallery v2.2.0 - Live");
@@ -162,18 +163,21 @@ export default function ProductGallery() {
                 <p className="gallery-subtitle">Bánh ngọt handmade - Làm bằng cả trái tim 💕</p>
 
                 {allFilterableCategories.length > 0 && (
-                    <div className={`category-picker-wrapper ${filter !== 'All' ? 'collapsed' : ''}`}>
+                    <div className={`category-picker-wrapper ${!isExpanded ? 'collapsed' : ''}`}>
                         <div className="filter-tabs">
-                            {filter !== 'All' && (
-                                <button className="btn-change-category" onClick={() => setFilter('All')}>
-                                    ✨ Đổi chủ đề
+                            {!isExpanded && (
+                                <button className="btn-change-category" onClick={() => setIsExpanded(true)}>
+                                    {filter === 'All' ? '✨ Chọn chủ đề bánh' : `✨ #${filter} ➜ Đổi chủ đề`}
                                 </button>
                             )}
 
                             <div className="tabs-content">
                                 <button
                                     className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
-                                    onClick={() => setFilter('All')}
+                                    onClick={() => {
+                                        setFilter('All');
+                                        setIsExpanded(false);
+                                    }}
                                 >
                                     🎂 Tất Cả
                                 </button>
@@ -181,7 +185,10 @@ export default function ProductGallery() {
                                     <button
                                         key={cat.id}
                                         className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
-                                        onClick={() => setFilter(cat.name)}
+                                        onClick={() => {
+                                            setFilter(cat.name);
+                                            setIsExpanded(false);
+                                        }}
                                     >
                                         #{cat.name}
                                     </button>
