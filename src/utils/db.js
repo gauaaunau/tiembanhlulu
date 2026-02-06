@@ -6,7 +6,8 @@ import {
     doc,
     deleteDoc,
     query,
-    orderBy
+    orderBy,
+    writeBatch
 } from "firebase/firestore";
 
 const DB_NAME = 'LuluCakeDB';
@@ -74,10 +75,26 @@ const syncLocal = async (storeName, items) => {
 };
 
 export const saveAllItems = async (storeName, items) => {
-    // Save to Cloud
+    // Save to Cloud - Using Batching to avoid rate limits
     if (isCloudEnabled && storeName !== 'drafts') {
-        for (const item of items) {
-            await setDoc(doc(firestore, storeName, item.id), item);
+        try {
+            // Firestore batches allow up to 500 operations
+            const batchSize = 400; // conservative
+            for (let i = 0; i < items.length; i += batchSize) {
+                const batch = writeBatch(firestore);
+                const chunk = items.slice(i, i + batchSize);
+
+                chunk.forEach(item => {
+                    batch.set(doc(firestore, storeName, item.id), item);
+                });
+
+                await batch.commit();
+                console.log(`Cloud batch for ${storeName} committed: ${i + chunk.length}/${items.length}`);
+                // Tiny rest between batches
+                await new Promise(r => setTimeout(r, 100));
+            }
+        } catch (err) {
+            console.error(`Cloud batch commit failed for ${storeName}:`, err);
         }
     }
 

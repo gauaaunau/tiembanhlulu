@@ -276,13 +276,9 @@ export default function ProductManager() {
         setSyncingCloud(true);
         try {
             // Push Categories first
-            for (const cat of categories) {
-                await saveItem('categories', cat);
-            }
+            await saveAllItems('categories', categories);
             // Push Products
-            for (const prod of products) {
-                await saveItem('products', prod);
-            }
+            await saveAllItems('products', products);
             alert('🎉 Chúc mừng! Toàn bộ bánh trái đã được đưa lên Đám mây thành công!');
         } catch (err) {
             console.error('Migration error:', err);

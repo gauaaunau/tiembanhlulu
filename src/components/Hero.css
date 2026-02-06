@@ -21,7 +21,7 @@
 .logo-image {
     width: 150px;
     height: 150px;
-    border-radius: 50%;
+    border-radius: 20px;
     border: 3px dashed var(--brown);
     padding: 8px;
     background: var(--white);
