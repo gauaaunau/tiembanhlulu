@@ -546,8 +546,11 @@ export default function ProductManager() {
         // We do NOT use addItemsBulk here because it's too fast for Base64 payload.
 
         if (categoriesToSave.length > 0) {
-            console.log("Saving categories...");
-            await addItemsBulk('categories', categoriesToSave); // Categories are light, bulk is fine
+            console.log(`Saving ${categoriesToSave.length} categories separately...`);
+            // Save categories sequentially to ensure they exist for filtering
+            for (const cat of categoriesToSave) {
+                await saveItem('categories', cat);
+            }
         }
 
         if (productsToSave.length > 0) {
