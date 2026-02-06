@@ -1182,19 +1182,22 @@ export default function ProductManager() {
                                     </p>
                                     {product.tags && product.tags.length > 0 && (
                                         <div className="product-tags-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
-                                            {product.tags.map(tagId => (
-                                                <span key={tagId} style={{
-                                                    fontSize: '0.7rem',
-                                                    background: '#fff0f5',
-                                                    color: 'var(--pink)',
-                                                    padding: '2px 8px',
-                                                    borderRadius: '10px',
-                                                    border: '1px solid var(--pink)',
-                                                    opacity: 0.8
-                                                }}>
-                                                    #{getCategoryName(tagId)}
-                                                </span>
-                                            ))}
+                                            {product.tags.map(tagId => {
+                                                const displayName = getCategoryName(tagId) || tagId;
+                                                return (
+                                                    <span key={tagId} style={{
+                                                        fontSize: '0.7rem',
+                                                        background: '#fff0f5',
+                                                        color: 'var(--pink)',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '10px',
+                                                        border: '1px solid var(--pink)',
+                                                        opacity: 0.8
+                                                    }}>
+                                                        #{displayName}
+                                                    </span>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                     <p className="product-price">{product.price}</p>
