@@ -1,6 +1,8 @@
 .features {
     padding: 4rem 2rem;
-    background: var(--white);
+    background: linear-gradient(180deg,
+            var(--beige) 0%,
+            var(--peach) 100%);
 }
 
 .features-container {

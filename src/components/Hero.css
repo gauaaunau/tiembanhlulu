@@ -6,8 +6,7 @@
     justify-content: center;
     background: linear-gradient(180deg,
             var(--light-pink) 0%,
-            var(--beige) 50%,
-            var(--peach) 100%);
+            var(--beige) 100%);
     overflow: hidden;
     padding: 2rem;
 }

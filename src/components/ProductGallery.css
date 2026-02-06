@@ -1,6 +1,8 @@
 .gallery {
     padding: 5rem 2rem;
-    background: var(--beige);
+    background: linear-gradient(180deg,
+            var(--peach) 0%,
+            var(--light-pink) 100%);
 }
 
 .gallery-container {
