@@ -98,22 +98,19 @@ export default function ProductGallery() {
     // AUTO-SCROLL TO TOP ON FILTER CHANGE
     useEffect(() => {
         if (!isLoading && galleryRef.current) {
-            // Use setTimeout to ensure the DOM has updated with new products
-            // and use scrollIntoView for better reliability
-            setTimeout(() => {
-                galleryRef.current.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            // Give a bit more time for React to settle the DOM after heavy renders
+            const timer = setTimeout(() => {
+                const headerOffset = 100; // Account for the sticky category picker
+                const elementPosition = galleryRef.current.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
-                // Fine-tune if needed (e.g. if sticky header overlaps)
-                setTimeout(() => {
-                    const scrolledY = window.scrollY;
-                    if (scrolledY > 0) {
-                        window.scrollBy(0, -80);
-                    }
-                }, 600);
-            }, 100);
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }, 250);
+
+            return () => clearTimeout(timer);
         }
     }, [filter]);
 
