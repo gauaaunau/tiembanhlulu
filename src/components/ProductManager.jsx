@@ -392,30 +392,51 @@ export default function ProductManager() {
 
     // DYNAMIC CATEGORY RECOVERY: Ensures categories never appear empty if products exist
     const allFilterableCategories = useMemo(() => {
-        const catMap = new Map();
+        const nameMap = new Map(); // Key: name.toLowerCase(), Value: { id, name }
 
-        // 1. Add known categories from state
+        // 1. Add known categories from state (Primary source for IDs)
         categories.forEach(c => {
-            if (c && c.id) catMap.set(c.id, c);
+            if (c && c.name) {
+                const key = c.name.toLowerCase().trim();
+                if (!nameMap.has(key)) {
+                    nameMap.set(key, { id: c.id, name: c.name.trim(), subCategories: [] });
+                }
+            }
         });
 
         // 2. Discover missing categories/tags from products
         products.forEach(p => {
-            if (p.categoryId && !catMap.has(p.categoryId)) {
-                // Try to find a name from tags or just use the ID/Placeholder
-                const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Chưa phân loại';
-                catMap.set(p.categoryId, { id: p.categoryId, name: guessedName, subCategories: [] });
-            }
-
-            // Also treat every tag as a filterable category
+            // Treat every tag as a filterable category
             (p.tags || []).forEach(tag => {
-                if (tag && !catMap.has(tag)) {
-                    catMap.set(tag, { id: tag, name: tag, subCategories: [] });
+                if (tag && tag.trim()) {
+                    const key = tag.toLowerCase().trim();
+                    if (!nameMap.has(key)) {
+                        // Tag itself is the ID and Name
+                        nameMap.set(key, { id: tag.trim(), name: tag.trim(), subCategories: [] });
+                    }
                 }
             });
+
+            // If product has a categoryID not yet in our name map (via the ID's name)
+            if (p.categoryId) {
+                const existing = categories.find(c => c.id === p.categoryId);
+                if (existing) {
+                    const key = existing.name.toLowerCase().trim();
+                    if (!nameMap.has(key)) {
+                        nameMap.set(key, { id: existing.id, name: existing.name.trim(), subCategories: [] });
+                    }
+                } else {
+                    // Orphaned ID: guest a name or use ID
+                    const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : p.categoryId;
+                    const key = String(guessedName).toLowerCase().trim();
+                    if (!nameMap.has(key)) {
+                        nameMap.set(key, { id: p.categoryId, name: String(guessedName).trim(), subCategories: [] });
+                    }
+                }
+            }
         });
 
-        return Array.from(catMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+        return Array.from(nameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [categories, products]);
 
     const getCategoryName = (catId) => {
@@ -890,13 +911,13 @@ export default function ProductManager() {
                                                             style={{
                                                                 padding: '10px 15px',
                                                                 cursor: 'pointer',
-                                                                background: idx === selectedIndex ? 'var(--soft-pink)' : 'transparent',
+                                                                background: idx === selectedIndex ? '#fff0f5' : 'transparent',
                                                                 color: 'var(--brown)',
                                                                 fontWeight: '600',
                                                                 borderBottom: '1px solid #eee'
                                                             }}
                                                         >
-                                                            📁 {cat.name}
+                                                            🏷️ {cat.name}
                                                         </div>
                                                     ))}
                                                 {allFilterableCategories.filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase())).length === 0 && (
@@ -908,7 +929,7 @@ export default function ProductManager() {
                                         )}
                                     </div>
 
-                                    <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '1rem' }}>
                                         {formData.tags?.map(tagId => (
                                             <div key={tagId} className="tag-chip active" style={{
                                                 display: 'flex',
@@ -927,8 +948,7 @@ export default function ProductManager() {
                                                         const nextTags = formData.tags.filter(id => id !== tagId);
                                                         setFormData({
                                                             ...formData,
-                                                            tags: nextTags,
-                                                            categoryId: nextTags[0] || ''
+                                                            tags: nextTags
                                                         });
                                                     }}
                                                     style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.3)', width: '18px', height: '18px', borderRadius: '50%', textAlign: 'center', lineHeight: '16px' }}
@@ -938,7 +958,7 @@ export default function ProductManager() {
                                             </div>
                                         ))}
                                     </div>
-                                    <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.8rem' }}>💡 Nhập tên Thể loại mới và nhấn Enter để lưu ngay!</p>
+                                    <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.8rem' }}>💡 Nhập tên Tag và nhấn Enter để lưu!</p>
                                 </div>
                             </div>
 
@@ -1080,9 +1100,9 @@ export default function ProductManager() {
                 </>
             ) : (
                 <div className="manager-section" style={{ background: 'var(--white)', padding: '2rem', borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                    <h3>🏷️ Gán Tag Thể Loại Cho Nhiều Ảnh</h3>
+                    <h3>🏷️ Gán Nhãn Tag Cho Nhiều Sản Phẩm</h3>
                     <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-                        Chọn một thể loại, sau đó chọn tất cả những ảnh bạn muốn gán thêm vào thể loại đó.
+                        Chọn một Tag, sau đó chọn tất cả những sản phẩm bạn muốn gán thêm Tag đó.
                     </p>
 
                     <div className="bulk-tag-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
@@ -1122,59 +1142,65 @@ export default function ProductManager() {
                             style={{ padding: '0.8rem 2rem', borderRadius: '15px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                             disabled={bulkSelectedIds.length === 0}
                         >
-                            🚀 Cập nhật cho {bulkSelectedIds.length} ảnh
+                            🚀 Cập nhật cho {bulkSelectedIds.length} bánh
                         </button>
                     </div>
 
                     {targetTagId ? (
-                        <div className="bulk-tag-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
-                            {productsForBulkTagging.length === 0 ? (
-                                <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: '#888' }}>
-                                    Mọi sản phẩm đều đã có Tag này hoặc không có ảnh nào để gán! ✨
-                                </p>
-                            ) : (
-                                productsForBulkTagging.map(product => (
-                                    <div
-                                        key={product.id}
-                                        className={`bulk-item ${bulkSelectedIds.includes(product.id) ? 'selected' : ''}`}
-                                        onClick={() => toggleBulkSelection(product.id)}
-                                        style={{
-                                            position: 'relative',
-                                            borderRadius: '15px',
-                                            overflow: 'hidden',
-                                            cursor: 'pointer',
-                                            border: bulkSelectedIds.includes(product.id) ? '4px solid var(--pink)' : '2px solid #eee',
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        <img
-                                            src={product.images?.[0] || product.image}
-                                            style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover' }}
-                                        />
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '5px',
-                                            right: '5px',
-                                            width: '24px',
-                                            height: '24px',
-                                            background: bulkSelectedIds.includes(product.id) ? 'var(--pink)' : 'white',
-                                            borderRadius: '50%',
-                                            border: '2px solid white',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontSize: '14px'
-                                        }}>
-                                            {bulkSelectedIds.includes(product.id) ? '✓' : ''}
+                        <>
+                            <h4 style={{ marginBottom: '1rem', color: 'var(--pink)' }}>
+                                📌 Sản phẩm CHƯA có nhãn "{getCategoryName(targetTagId)}":
+                            </h4>
+                            <div className="bulk-tag-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+                                {productsForBulkTagging.length === 0 ? (
+                                    <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: '#888' }}>
+                                        Mọi sản phẩm đều đã có nhãn này! ✨
+                                    </p>
+                                ) : (
+                                    productsForBulkTagging.map(product => (
+                                        <div
+                                            key={product.id}
+                                            className={`bulk-item ${bulkSelectedIds.includes(product.id) ? 'selected' : ''}`}
+                                            onClick={() => toggleBulkSelection(product.id)}
+                                            style={{
+                                                position: 'relative',
+                                                borderRadius: '15px',
+                                                overflow: 'hidden',
+                                                cursor: 'pointer',
+                                                border: bulkSelectedIds.includes(product.id) ? '4px solid var(--pink)' : '2px solid #eee',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <img
+                                                src={product.images?.[0] || product.image}
+                                                style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover' }}
+                                                alt="Bulk Select"
+                                            />
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '5px',
+                                                right: '5px',
+                                                width: '24px',
+                                                height: '24px',
+                                                background: bulkSelectedIds.includes(product.id) ? 'var(--pink)' : 'white',
+                                                borderRadius: '50%',
+                                                border: '2px solid white',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'white',
+                                                fontSize: '14px'
+                                            }}>
+                                                {bulkSelectedIds.includes(product.id) ? '✓' : ''}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
                     ) : (
                         <div style={{ textAlign: 'center', padding: '3rem', color: '#888', background: '#f9f9f9', borderRadius: '15px' }}>
-                            ☝️ Vui lòng chọn một Thể loại ở trên để bắt đầu gán Tag!
+                            ☝️ Vui lòng chọn một Nhãn ở trên để bắt đầu!
                         </div>
                     )}
                 </div>
@@ -1201,7 +1227,8 @@ export default function ProductManager() {
                                     ))}
                                 </optgroup>
                             </select>
-                        </div>          <button
+                        </div>
+                        <button
                             className="btn-delete-all"
                             onClick={handleDeleteAll}
                             style={{

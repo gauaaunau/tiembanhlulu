@@ -36,30 +36,47 @@ export default function ProductGallery() {
 
     // DYNAMIC CATEGORY RECOVERY: Ensures categories never appear empty if products exist
     const allFilterableCategories = useMemo(() => {
-        const catMap = new Map();
+        const nameMap = new Map(); // Key: name.toLowerCase(), Value: { id, name }
 
         // 1. Add known categories from state
         categories.forEach(c => {
-            if (c && c.id) catMap.set(c.id, c);
+            if (c && c.name) {
+                const key = c.name.toLowerCase().trim();
+                if (!nameMap.has(key)) {
+                    nameMap.set(key, { id: c.id, name: c.name.trim(), subCategories: [] });
+                }
+            }
         });
 
         // 2. Discover missing categories/tags from products
         products.forEach(p => {
-            if (p.categoryId && !catMap.has(p.categoryId)) {
-                // Try to find a name from tags or just use the ID/Placeholder
-                const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Chưa phân loại';
-                catMap.set(p.categoryId, { id: p.categoryId, name: guessedName, subCategories: [] });
-            }
-
-            // Also treat every tag as a filterable category
             (p.tags || []).forEach(tag => {
-                if (tag && !catMap.has(tag)) {
-                    catMap.set(tag, { id: tag, name: tag, subCategories: [] });
+                if (tag && tag.trim()) {
+                    const key = tag.toLowerCase().trim();
+                    if (!nameMap.has(key)) {
+                        nameMap.set(key, { id: tag.trim(), name: tag.trim(), subCategories: [] });
+                    }
                 }
             });
+
+            if (p.categoryId) {
+                const existing = categories.find(c => c.id === p.categoryId);
+                if (existing) {
+                    const key = existing.name.toLowerCase().trim();
+                    if (!nameMap.has(key)) {
+                        nameMap.set(key, { id: existing.id, name: existing.name.trim(), subCategories: [] });
+                    }
+                } else {
+                    const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : p.categoryId;
+                    const key = String(guessedName).toLowerCase().trim();
+                    if (!nameMap.has(key)) {
+                        nameMap.set(key, { id: p.categoryId, name: String(guessedName).trim(), subCategories: [] });
+                    }
+                }
+            }
         });
 
-        return Array.from(catMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+        return Array.from(nameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [categories, products]);
 
     const getCategoryName = (catId) => {
@@ -80,7 +97,7 @@ export default function ProductGallery() {
         ? products
         : products.filter(p => {
             const primaryCatName = getCategoryName(p.categoryId);
-            // Check both the primary category name and the tags (which are now names)
+            // Check name equality directly for tags
             return primaryCatName === filter || (p.tags || []).includes(filter);
         });
 
@@ -129,61 +146,58 @@ export default function ProductGallery() {
                     </div>
                 )}
 
-                <div className="products-grid">
-                    {filteredProducts.length === 0 ? (
+                <div className="products-grid-container">
+                    {filter !== 'All' ? (
+                        <div className="products-grid">
+                            {filteredProducts.length === 0 ? (
+                                <div className="empty-state">
+                                    <p>🎂 Chưa có sản phẩm cho mục này</p>
+                                </div>
+                            ) : (
+                                filteredProducts.map((product, index) => (
+                                    <ProductCard key={product.id} product={product} index={index} />
+                                ))
+                            )}
+                        </div>
+                    ) : (
+                        /* Grouped View for 'All' */
+                        allFilterableCategories.map(cat => {
+                            const productsInCat = products.filter(p =>
+                                p.categoryId === cat.id || (p.tags || []).includes(cat.name)
+                            );
+                            if (productsInCat.length === 0) return null;
+
+                            return (
+                                <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
+                                    <h3 className="section-title" style={{
+                                        fontSize: '1.8rem',
+                                        color: 'var(--brown)',
+                                        marginBottom: '1.5rem',
+                                        paddingLeft: '1rem',
+                                        borderLeft: '5px solid var(--pink)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px'
+                                    }}>
+                                        ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({productsInCat.length})</span>
+                                    </h3>
+                                    <div className="products-grid">
+                                        {productsInCat.map((product, index) => (
+                                            <ProductCard key={product.id} product={product} index={index} />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+
+                    {products.length === 0 && (
                         <div className="empty-state">
                             <p>🎂 Chưa có sản phẩm nào</p>
                             <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
                                 Admin vui lòng vào <a href="/AdminLulucake" style={{ color: 'var(--pink)', fontWeight: '600' }}>trang quản trị</a> để thêm sản phẩm
                             </p>
                         </div>
-                    ) : (
-                        filteredProducts.map((product, index) => (
-                            <div
-                                key={product.id}
-                                className="product-card cute-card"
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                                onClick={() => openLightbox(product)}
-                            >
-                                <div
-                                    className="product-image"
-                                    onMouseMove={handleMouseMove}
-                                >
-                                    <img
-                                        src={product.images ? product.images[0] : product.image}
-                                        alt={product.name}
-                                        className="cake-image"
-                                    />
-                                    {product.images && product.images.length > 1 && (
-                                        <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
-                                    )}
-                                </div>
-                                <div className="product-tags-row">
-                                    {/* Primary category badge removed as requested - using tags only */}
-                                    {(product.tags || []).map(tagId => {
-                                        const displayName = getCategoryName(tagId) || tagId;
-                                        return (
-                                            <span key={tagId} className="product-tag-badge">#{displayName}</span>
-                                        );
-                                    })}
-                                </div>
-                                <div className="product-info">
-                                    <h3 className="product-name">{product.name}</h3>
-                                    <p className="product-description">{product.description}</p>
-                                    <div className="product-footer">
-                                        {(product.price && product.price !== 'Liên hệ') && (
-                                            <span className="product-price">{product.price}</span>
-                                        )}
-                                        <span className="btn-add" onClick={(e) => {
-                                            e.stopPropagation();
-                                            openLightbox(product, true);
-                                        }}>
-                                            ✨ Đặt bánh
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
                     )}
                 </div>
             </div>
@@ -279,4 +293,53 @@ export default function ProductGallery() {
             )}
         </section>
     );
+
+    // Sub-component for product card
+    function ProductCard({ product, index }) {
+        return (
+            <div
+                key={product.id}
+                className="product-card cute-card"
+                style={{ animationDelay: `${index * 0.1}s` }}
+                onClick={() => openLightbox(product)}
+            >
+                <div
+                    className="product-image"
+                    onMouseMove={handleMouseMove}
+                >
+                    <img
+                        src={product.images ? product.images[0] : product.image}
+                        alt={product.name}
+                        className="cake-image"
+                    />
+                    {product.images && product.images.length > 1 && (
+                        <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
+                    )}
+                </div>
+                <div className="product-tags-row">
+                    {(product.tags || []).map(tagId => {
+                        const displayName = getCategoryName(tagId) || tagId;
+                        return (
+                            <span key={tagId} className="product-tag-badge">#{displayName}</span>
+                        );
+                    })}
+                </div>
+                <div className="product-info">
+                    <h3 className="product-name">{product.name}</h3>
+                    <p className="product-description">{product.description}</p>
+                    <div className="product-footer">
+                        {(product.price && product.price !== 'Liên hệ') && (
+                            <span className="product-price">{product.price}</span>
+                        )}
+                        <span className="btn-add" onClick={(e) => {
+                            e.stopPropagation();
+                            openLightbox(product, true);
+                        }}>
+                            ✨ Đặt bánh
+                        </span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 }
