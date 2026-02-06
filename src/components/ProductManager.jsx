@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import './ProductManager.css';
-import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems, addItemsBulk, subscribeToItems } from '../utils/db';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+/* v2.1.0 - Optimized Bulk Tagging & Real-time Sync */
+import { subscribeToItems, saveItem, deleteItem, openDB, addItemsBulk, deleteAllItems } from '../utils/db';
 import { uploadImage, base64ToBlob } from '../utils/storage';
 
 export default function ProductManager() {
