@@ -1,8 +1,15 @@
 .gallery {
-    padding: 5rem 2rem;
+    padding: 0 0 5rem 0;
     background: linear-gradient(180deg,
-            var(--peach) 0%,
-            var(--light-pink) 100%);
+            var(--beige) 0%,
+            var(--peach) 100%);
+    position: relative;
+}
+
+.gallery .wave-top {
+    width: 100%;
+    line-height: 0;
+    margin-bottom: 3rem;
 }
 
 .gallery-container {
