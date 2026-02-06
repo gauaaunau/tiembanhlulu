@@ -189,28 +189,24 @@ export default function ProductManager() {
 
     // Helper to process and upload a list of image data (Base64 or URL)
     const processImagesForUpload = async (imageList) => {
-        // Force Storage use if available
-        if (!isStorageEnabled) {
-            console.warn("Storage not enabled, using Base64 (risky for large batches)");
-            return imageList;
-        }
+        // Fallback to Base64 for Free Tier stability
+        // We only upload if explicitly enabled and working, otherwise Base64 is fine
+        // provided we save sequentially.
+        if (!isStorageEnabled) return imageList;
 
         const processed = [];
         for (const imgData of imageList) {
             if (imgData.startsWith('http')) {
-                processed.push(imgData); // Already a URL
+                processed.push(imgData);
             } else if (imgData.startsWith('data:image')) {
                 try {
                     const blob = await base64ToBlob(imgData);
                     const file = new File([blob], "image.jpg", { type: "image/jpeg" });
                     const url = await uploadImage(file);
-                    console.log("Uploaded image:", url);
                     processed.push(url);
                 } catch (e) {
-                    console.error("Critical Upload Error:", e);
-                    // Do NOT fallback to Base64 in bulk mode, it kills the DB connection
-                    // Just skip this image or throw to stop the process
-                    throw new Error("Không thể tải ảnh lên kho. Vui lòng kiểm tra lại 'Storage' trong Firebase đã bật chưa?");
+                    console.warn("Storage upload failed (likely payment required). Using Base64 fallback.", e);
+                    processed.push(imgData); // Fallback to Base64
                 }
             } else {
                 processed.push(imgData);
@@ -495,7 +491,7 @@ export default function ProductManager() {
             const catFiles = folderGroups[catName];
             for (const file of catFiles) {
                 try {
-                    // ... (previous file reading logic - removed to keep concise, but conceptually same) ...
+
                     const reader = new FileReader();
                     const imageData = await new Promise((resolve) => {
                         reader.onload = (re) => resolve(re.target.result);
@@ -506,7 +502,7 @@ export default function ProductManager() {
                     // Duplicate Check (Base64 check still valid for local scope)
                     const isDuplicate = newProducts.some(p => p.images && p.images[0] === compressed);
                     if (isDuplicate) {
-                        // ...
+                        console.log(`Bỏ qua ảnh trùng: ${file.name}`);
                         processedCount++;
                         continue;
                     }
@@ -519,8 +515,8 @@ export default function ProductManager() {
                             const uploadFile = new File([blob], file.name || "image.jpg", { type: "image/jpeg" });
                             finalUrl = await uploadImage(uploadFile);
                         } catch (uErr) {
-                            console.error("Upload failed for imported file:", uErr);
-                            // Fallback to base64 if upload fails, but warn
+                            console.warn("Storage upload failed (payment required?), using Base64 fallback.", uErr);
+                            // Fallback to base64 if upload fails
                         }
                     }
 
@@ -529,7 +525,7 @@ export default function ProductManager() {
                         name: '', // Don't use messy filenames as names
                         categoryId: cat.id,
                         price: 'Liên hệ',
-                        description: '', // Keep description empty for bulk import
+                        description: '',
                         images: [finalUrl],
                         createdAt: Date.now(),
                         tags: [cat.id, catName] // Auto-tag with category ID and NAME
@@ -546,14 +542,27 @@ export default function ProductManager() {
             }
         }
 
-        // Save only the DELTAS (New items)
-        if (categoriesToSave.length > 0) await addItemsBulk('categories', categoriesToSave);
-        if (productsToSave.length > 0) await addItemsBulk('products', productsToSave);
+        // SEQUENTIAL SAVE (Crucial for Free Tier Base64)
+        // We do NOT use addItemsBulk here because it's too fast for Base64 payload.
+
+        if (categoriesToSave.length > 0) {
+            console.log("Saving categories...");
+            await addItemsBulk('categories', categoriesToSave); // Categories are light, bulk is fine
+        }
+
+        if (productsToSave.length > 0) {
+            console.log(`Saving ${productsToSave.length} products sequentially to avoid overload...`);
+            for (let i = 0; i < productsToSave.length; i++) {
+                await saveItem('products', productsToSave[i]);
+                // Tiny rest to keep UI responsive and let Firestore breath
+                if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
+            }
+        }
 
         setCategories(newCategories);
         setProducts(newProducts);
         setImporting(false);
-        alert(`🎉 Thành công! Đã thêm ${productsToSave.length} món mới (Bỏ qua ${processedCount - productsToSave.length} lặp).`);
+        alert(`🎉 Thành công! Đã thêm ${productsToSave.length} món mới.`);
     };
 
     const [adminFilter, setAdminFilter] = useState('All');
