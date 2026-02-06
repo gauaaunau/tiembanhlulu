@@ -874,7 +874,7 @@ export default function ProductManager() {
                                                 fontSize: '0.9rem',
                                                 fontWeight: '600'
                                             }}>
-                                                #{getCategoryName(tagId)}
+                                                #{getCategoryName(tagId) || tagId}
                                                 <span
                                                     onClick={() => {
                                                         const nextTags = formData.tags.filter(id => id !== tagId);
