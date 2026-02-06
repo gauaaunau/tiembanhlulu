@@ -78,8 +78,9 @@ export const saveAllItems = async (storeName, items) => {
     // Save to Cloud - Using Batching to avoid rate limits
     if (isCloudEnabled && storeName !== 'drafts') {
         try {
-            // Firestore batches allow up to 500 operations
-            const batchSize = 400; // conservative
+            // Firestore batches allow up to 500 operations, but max payload is 10MB
+            // Products have images (heavy), so we use a much smaller batch size
+            const batchSize = storeName === 'products' ? 20 : 400;
             for (let i = 0; i < items.length; i += batchSize) {
                 const batch = writeBatch(firestore);
                 const chunk = items.slice(i, i + batchSize);
@@ -162,7 +163,8 @@ export const addItemsBulk = async (storeName, items) => {
     // Save to Cloud (Batch)
     if (isCloudEnabled && storeName !== 'drafts') {
         try {
-            const batchSize = 400;
+            // Smaller batch size for products to avoid 10MB payload limit
+            const batchSize = storeName === 'products' ? 20 : 400;
             for (let i = 0; i < items.length; i += batchSize) {
                 const batch = writeBatch(firestore);
                 const chunk = items.slice(i, i + batchSize);
