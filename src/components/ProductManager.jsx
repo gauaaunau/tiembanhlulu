@@ -31,33 +31,36 @@ export default function ProductManager() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // 1. Migration Logic: Check localStorage first - only if current DB is empty
-                const localProductsRaw = localStorage.getItem('lulu_products');
-                const localCategoriesRaw = localStorage.getItem('lulu_categories');
+                // 1. Load from DB (Cloud/IndexedDB) FIRST - This is the source of truth
+                const dbProducts = await getAllItems('products');
+                const dbCategories = await getAllItems('categories');
 
-                if (localProductsRaw || localCategoriesRaw) {
-                    const dbProductsCheck = await getAllItems('products');
-                    // Only migrate if DB is empty to prevent accidental overwrites
-                    if (!dbProductsCheck || dbProductsCheck.length === 0) {
-                        console.log('Migrating data to IndexedDB...');
+                // 2. Only check for localStorage migration if DB is empty
+                if ((!dbProducts || dbProducts.length === 0) && (!dbCategories || dbCategories.length === 0)) {
+                    const localProductsRaw = localStorage.getItem('lulu_products');
+                    const localCategoriesRaw = localStorage.getItem('lulu_categories');
+
+                    if (localProductsRaw || localCategoriesRaw) {
+                        console.log('Migrating legacy localStorage data...');
                         if (localCategoriesRaw) {
-                            await saveAllItems('categories', JSON.parse(localCategoriesRaw));
-                            localStorage.removeItem('lulu_categories');
+                            const parsedCats = JSON.parse(localCategoriesRaw);
+                            await saveAllItems('categories', parsedCats);
+                            setCategories(parsedCats);
                         }
                         if (localProductsRaw) {
-                            await saveAllItems('products', JSON.parse(localProductsRaw));
-                            localStorage.removeItem('lulu_products');
+                            const parsedProds = JSON.parse(localProductsRaw);
+                            await saveAllItems('products', parsedProds);
+                            setProducts(parsedProds);
                         }
-                    } else {
-                        // DB already has data, clear migration flags to stop trying
-                        localStorage.removeItem('lulu_products');
+                        // Clear legacy after successful migration
                         localStorage.removeItem('lulu_categories');
+                        localStorage.removeItem('lulu_products');
+                        return; // Data loaded via migration
                     }
                 }
 
-                // 2. Load from IndexedDB
-                const dbProducts = await getAllItems('products');
-                const dbCategories = await getAllItems('categories');
+                setProducts(dbProducts || []);
+                setCategories(dbCategories || []);
 
                 if (dbProducts) setProducts(dbProducts);
                 if (dbCategories) setCategories(dbCategories);
