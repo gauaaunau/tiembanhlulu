@@ -48,7 +48,7 @@ export default function Hero() {
           )}
 
           <p className="hero-subtitle">
-            🎂 Tiệm bánh ngọt xinh yêu của mẹ 🍰
+            Tiệm bánh ngọt xinh yêu
           </p>
           <p className="hero-description">
             Bánh ít ngọt phù hợp cho bé và gia đình. Đặt mới làm - Bánh mới mỗi ngày

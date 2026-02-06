@@ -262,7 +262,6 @@ export default function ProductGallery() {
             </div>
             <div className="gallery-container" style={{ position: 'relative', zIndex: 1 }}>
                 <h2 className="gallery-title">Mẫu Bánh</h2>
-                <p className="gallery-subtitle">Bánh ngọt handmade - Làm bằng cả trái tim 💕</p>
 
                 {allFilterableCategories.length > 0 && (
                     <div className={`category-picker-wrapper ${!isExpanded ? 'collapsed' : ''}`}>
