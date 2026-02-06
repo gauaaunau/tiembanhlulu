@@ -161,7 +161,9 @@ export default function ProductGallery() {
     const groupedProducts = useMemo(() => {
         if (filter !== 'All') return [];
 
-        return allFilterableCategories.map(cat => {
+        // ONLY group by formal categories from the DB for the "All" summary
+        // to avoid having a section for every minor tag.
+        return categories.map(cat => {
             const catNameLower = cat.name.toLowerCase();
             const productsInCat = products.filter(p => {
                 const pCatName = getCategoryName(p.categoryId).toLowerCase();
@@ -173,7 +175,7 @@ export default function ProductGallery() {
             });
             return { ...cat, items: productsInCat };
         }).filter(cat => cat && cat.items && cat.items.length > 0);
-    }, [products, allFilterableCategories]); // Removed 'filter' dependency to pre-calculate correctly
+    }, [products, categories]); // Group by original categories only
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
@@ -247,8 +249,9 @@ export default function ProductGallery() {
                                 <button
                                     className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
                                     onClick={() => {
-                                        setFilter('All');
+                                        // Dispatch transition for immediate UI response
                                         setIsExpanded(false);
+                                        setTimeout(() => setFilter('All'), 10);
                                     }}
                                 >
                                     🎂 Tất Cả
