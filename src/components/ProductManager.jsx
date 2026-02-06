@@ -62,11 +62,21 @@ export default function ProductManager() {
                     }
                 }
 
-                setProducts(dbProducts || []);
-                setCategories(dbCategories || []);
-
                 if (dbProducts) setProducts(dbProducts);
-                if (dbCategories) setCategories(dbCategories);
+
+                // RESILIENT CATEGORY SYNC: Don't overwrite with empty if we have local data and it's likely a sync lag
+                if (dbCategories && dbCategories.length > 0) {
+                    setCategories(dbCategories);
+                    localStorage.setItem('cached_categories', JSON.stringify(dbCategories));
+                } else if (!dbCategories || dbCategories.length === 0) {
+                    // If DB is empty, check if we have cached categories to prevent flicker/loss
+                    const cached = localStorage.getItem('cached_categories');
+                    if (cached) {
+                        setCategories(JSON.parse(cached));
+                    } else if (dbCategories) {
+                        setCategories([]);
+                    }
+                }
 
                 // 3. Load drafts separately (non-blocking)
                 try {
@@ -79,6 +89,9 @@ export default function ProductManager() {
                 }
             } catch (err) {
                 console.error('Lỗi tải dữ liệu:', err);
+                // Fallback to cache on error
+                const cached = localStorage.getItem('cached_categories');
+                if (cached) setCategories(JSON.parse(cached));
             }
         };
 
@@ -577,6 +590,7 @@ export default function ProductManager() {
         }
 
         setCategories(newCategories);
+        localStorage.setItem('cached_categories', JSON.stringify(newCategories));
         setProducts(newProducts);
         setImporting(false);
         alert(`🎉 Thành công! Đã thêm ${productsToSave.length} món mới.`);
