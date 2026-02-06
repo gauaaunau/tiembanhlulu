@@ -208,7 +208,7 @@ export default function ProductGallery() {
                                                                 </div>
                                                                 <span className="contact-label">Zalo</span>
                                                             </a>
-                                                            <a href="https://www.facebook.com/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="contact-item">
+                                                            <a href="https://m.me/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="contact-item">
                                                                 <div className="contact-logo-container facebook">
                                                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1200px-Facebook_Logo_%282019%29.png" alt="Facebook" />
                                                                 </div>

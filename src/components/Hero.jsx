@@ -44,7 +44,7 @@ export default function Hero() {
           </div>
           <div className="hero-buttons">
             <a href="tel:0798341868" className="btn btn-primary">📞 Gọi Đặt Bánh</a>
-            <a href="https://www.facebook.com/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="btn btn-outline">💬 Nhắn Facebook</a>
+            <a href="https://m.me/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="btn btn-outline">💬 Nhắn Facebook</a>
           </div>
         </div>
       </div>
