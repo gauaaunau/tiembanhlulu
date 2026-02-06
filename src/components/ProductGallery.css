@@ -9,8 +9,10 @@
 .gallery .wave-top {
     width: 100%;
     line-height: 0;
-    margin-top: -1px;
-    /* Ensure no white line gap */
+    margin-top: -5px;
+    /* Deeper overlap for shadow handling */
+    position: relative;
+    z-index: 5;
 }
 
 .gallery-container {

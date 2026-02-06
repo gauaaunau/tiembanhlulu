@@ -115,86 +115,50 @@ export default function ProductGallery() {
         }
     }, [filter]);
 
-    // DYNAMIC CATEGORY RECOVERY: Ensures categories never appear empty if products exist
-    const allFilterableCategories = useMemo(() => {
-        const nameMap = new Map(); // Key: name.toLowerCase(), Value: { id, name }
+    // 1. Detect ALL unique categories/tags present in products
+    const rawCategories = useMemo(() => {
+        const nameMap = new Map();
 
-        // 1. Add known categories from state
-        categories.forEach(c => {
-            if (c && c.name) {
-                const key = c.name.toLowerCase().trim();
-                if (!nameMap.has(key)) {
-                    nameMap.set(key, { id: c.id, name: c.name.trim(), subCategories: [] });
-                }
-            }
-        });
-
-        // 2. Discover missing categories/tags from products
         products.forEach(p => {
-            (p.tags || []).forEach(tag => {
-                if (tag && tag.trim()) {
-                    // HIDE INTERNAL IDs from filter tabs
-                    if (tag.includes('_') && !isNaN(tag.split('_')[0])) return;
-                    if (!isNaN(tag) && tag.length > 8) return;
-
-                    let realName = tag.trim();
-                    let realId = tag.trim();
-
-                    // SANITY CHECK: If this tag is actually an ID string, try to recover the name
-                    if (tag.startsWith('cat_')) {
-                        const existingCat = categories.find(c => c.id === tag);
-                        if (existingCat) {
-                            realName = existingCat.name;
-                            realId = existingCat.id;
-                        } else {
-                            // ORPHANED ID: If it looks like an ID but we can't find it, 
-                            // don't show it as a filter button.
-                            return;
-                        }
-                    }
-
-                    const key = realName.toLowerCase().trim();
-                    if (!nameMap.has(key)) {
-                        nameMap.set(key, { id: realId, name: realName, subCategories: [] });
-                    }
-                }
-            });
-
             if (p.categoryId) {
                 const existing = categories.find(c => c.id === p.categoryId);
                 if (existing) {
                     const key = existing.name.toLowerCase().trim();
                     if (!nameMap.has(key)) {
-                        nameMap.set(key, { id: existing.id, name: existing.name.trim(), subCategories: [] });
-                    }
-                } else {
-                    const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : p.categoryId;
-                    const key = String(guessedName).toLowerCase().trim();
-                    if (!nameMap.has(key)) {
-                        nameMap.set(key, { id: p.categoryId, name: String(guessedName).trim(), subCategories: [] });
+                        nameMap.set(key, { id: existing.id, name: existing.name.trim() });
                     }
                 }
             }
+            if (p.tags && p.tags.length > 0) {
+                p.tags.forEach(tag => {
+                    const tagClean = tag.replace(/^(#)/, '').trim();
+                    if (tagClean && !tagClean.includes('_')) { // Skip ID-like tags
+                        const key = tagClean.toLowerCase();
+                        if (!nameMap.has(key)) {
+                            nameMap.set(key, { id: `tag_${tagClean}`, name: tagClean });
+                        }
+                    }
+                });
+            }
         });
 
-        // 3. Convert to array and SORT ALPHABETICALLY A-Z
-        const catList = Array.from(nameMap.values()).sort((a, b) =>
+        return Array.from(nameMap.values()).sort((a, b) =>
             a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
         );
+    }, [products, categories]);
 
-        // 4. Apply search filter
-        if (!catSearch || !catSearch.trim()) return catList;
+    // 2. Filter categories based on search
+    const allFilterableCategories = useMemo(() => {
+        if (!catSearch.trim()) return rawCategories;
 
-        try {
-            const searchLower = catSearch.toLowerCase().trim();
-            return catList.filter(c =>
-                c && c.name && c.name.toLowerCase().includes(searchLower)
-            );
-        } catch (err) {
-            console.error("Search error:", err);
-            return catList;
-        }
-    }, [products, categories, catSearch]);
+        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const searchNormalized = normalize(catSearch);
+
+        return rawCategories.filter(cat =>
+            normalize(cat.name).includes(searchNormalized) ||
+            cat.name.toLowerCase().includes(catSearch.toLowerCase().trim())
+        );
+    }, [rawCategories, catSearch]);
 
     const getCategoryName = (catId) => {
         const cat = allFilterableCategories.find(c => c.id === catId);
@@ -278,7 +242,7 @@ export default function ProductGallery() {
                 <h2 className="gallery-title">Mẫu Bánh</h2>
                 <div className="gallery-divider"></div>
 
-                {allFilterableCategories.length > 0 && (
+                {rawCategories.length > 0 && (
                     <div className="category-picker-container">
                         <div className="picker-main-actions">
                             <button
