@@ -37,75 +37,102 @@
     display: none;
 }
 
-/* STICKY COLLAPSIBLE PICKER */
-.category-picker-wrapper {
+/* SPLIT CATEGORY PICKER */
+.category-picker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+}
+
+.picker-main-actions {
+    display: flex;
+    gap: 1rem;
     position: sticky;
     top: 20px;
-    z-index: 1000;
-    margin-bottom: 4rem;
+    z-index: 1001;
+}
+
+.btn-filter-all,
+.btn-toggle-themes {
+    padding: 0.8rem 1.8rem;
+    border-radius: 50px;
+    border: 2px solid var(--pink);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: var(--white);
+    color: var(--pink);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.btn-filter-all.active {
+    background: var(--pink);
+    color: white;
+    box-shadow: 0 8px 25px rgba(255, 126, 179, 0.4);
+}
+
+.btn-toggle-themes {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.btn-toggle-themes.active {
+    background: var(--dark-brown);
+    border-color: var(--dark-brown);
+    color: white;
+}
+
+.btn-toggle-themes .arrow {
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-toggle-themes .arrow.up {
+    transform: rotate(180deg);
+}
+
+/* STICKY COLLAPSIBLE PICKER */
+.category-picker-wrapper {
+    width: 100%;
+    max-width: 800px;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.category-picker-wrapper.collapsed {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    margin-bottom: -10rem;
+    /* Hide space when collapsed */
+    height: 0;
+    overflow: hidden;
 }
 
 .filter-tabs {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    padding: 1rem;
-    border-radius: 50px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    padding: 1.5rem;
+    border-radius: 30px;
+    box-shadow: 0 15px 40px rgba(255, 126, 179, 0.15);
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
     gap: 0.8rem;
-    border: 1px solid rgba(255, 179, 198, 0.2);
+    border: 2px solid var(--pink);
     overflow-y: auto;
     max-height: 50vh;
-    transition: all 0.4s ease;
-    -webkit-overflow-scrolling: touch;
 }
 
-.filter-tabs::-webkit-scrollbar {
-    width: 4px;
-}
-
-.filter-tabs::-webkit-scrollbar-thumb {
-    background: var(--pink);
-    border-radius: 10px;
-}
-
-.btn-change-category {
-    display: none;
-    background: var(--pink);
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border-radius: 50px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(255, 107, 129, 0.3);
-    animation: fadeIn 0.3s ease;
-}
-
-.category-picker-wrapper.collapsed .tabs-content {
-    display: none;
-}
-
-.category-picker-wrapper.collapsed .btn-change-category {
-    display: block;
-}
-
-.category-picker-wrapper.collapsed .filter-tabs {
-    padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 179, 198, 0.1);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
-    backdrop-filter: blur(5px);
-}
-
-.tabs-content {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.8rem;
+flex-wrap: wrap;
+gap: 0.8rem;
 }
 
 .filter-btn {

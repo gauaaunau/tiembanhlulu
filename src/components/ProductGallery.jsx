@@ -262,37 +262,43 @@ export default function ProductGallery() {
                 <div className="gallery-divider"></div>
 
                 {allFilterableCategories.length > 0 && (
-                    <div className={`category-picker-wrapper ${!isExpanded ? 'collapsed' : ''}`}>
-                        <div className="filter-tabs">
-                            {!isExpanded && (
-                                <button className="btn-change-category" onClick={() => setIsExpanded(true)}>
-                                    {filter === 'All' ? '✨ Tất cả ➜ Chọn chủ đề' : `✨ #${filter} ➜ Đổi chủ đề`}
-                                </button>
-                            )}
+                    <div className="category-picker-container">
+                        <div className="picker-main-actions">
+                            <button
+                                className={`btn-filter-all ${filter === 'All' ? 'active' : ''}`}
+                                onClick={() => {
+                                    setFilter('All');
+                                    setIsExpanded(false);
+                                }}
+                            >
+                                Tất Cả
+                            </button>
 
-                            <div className="tabs-content">
-                                <button
-                                    className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        // Dispatch transition for immediate UI response
-                                        setIsExpanded(false);
-                                        setTimeout(() => setFilter('All'), 10);
-                                    }}
-                                >
-                                    Tất Cả
-                                </button>
-                                {allFilterableCategories.map(cat => (
-                                    <button
-                                        key={cat.id}
-                                        className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setFilter(cat.name);
-                                            setIsExpanded(false);
-                                        }}
-                                    >
-                                        #{cat.name}
-                                    </button>
-                                ))}
+                            <button
+                                className={`btn-toggle-themes ${filter !== 'All' ? 'active' : ''}`}
+                                onClick={() => setIsExpanded(!isExpanded)}
+                            >
+                                {filter === 'All' ? 'Chọn Chủ Đề' : `#${filter}`}
+                                <span className={`arrow ${isExpanded ? 'up' : 'down'}`}>▼</span>
+                            </button>
+                        </div>
+
+                        <div className={`category-picker-wrapper ${!isExpanded ? 'collapsed' : ''}`}>
+                            <div className="filter-tabs">
+                                <div className="tabs-content">
+                                    {allFilterableCategories.map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            className={`filter-btn ${filter === cat.name ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setFilter(cat.name);
+                                                setIsExpanded(false);
+                                            }}
+                                        >
+                                            {cat.name}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
