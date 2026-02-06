@@ -183,10 +183,18 @@ export default function ProductGallery() {
         );
 
         // 4. Apply search filter
-        if (!catSearch.trim()) return catList;
-        const searchLower = catSearch.toLowerCase().trim();
-        return catList.filter(c => c.name.toLowerCase().includes(searchLower));
-    }, [products, categories, catSearch]); // Added catSearch to deps, products]);
+        if (!catSearch || !catSearch.trim()) return catList;
+
+        try {
+            const searchLower = catSearch.toLowerCase().trim();
+            return catList.filter(c =>
+                c && c.name && c.name.toLowerCase().includes(searchLower)
+            );
+        } catch (err) {
+            console.error("Search error:", err);
+            return catList;
+        }
+    }, [products, categories, catSearch]);
 
     const getCategoryName = (catId) => {
         const cat = allFilterableCategories.find(c => c.id === catId);
@@ -261,7 +269,7 @@ export default function ProductGallery() {
             <div className="wave-top">
                 <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '60px' }}>
                     <path
-                        fill="var(--beige)"
+                        fill="white"
                         d="M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,58.7C672,43,768,21,864,16C960,11,1056,21,1152,37.3C1248,53,1344,75,1392,85.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
                     ></path>
                 </svg>

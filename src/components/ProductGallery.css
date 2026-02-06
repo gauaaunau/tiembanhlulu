@@ -9,7 +9,8 @@
 .gallery .wave-top {
     width: 100%;
     line-height: 0;
-    margin-bottom: 3rem;
+    margin-top: -1px;
+    /* Ensure no white line gap */
 }
 
 .gallery-container {
