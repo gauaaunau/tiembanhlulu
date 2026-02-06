@@ -44,14 +44,16 @@
     align-items: center;
     gap: 1.5rem;
     margin-bottom: 4rem;
+    position: sticky;
+    top: 20px;
+    z-index: 1001;
+    padding: 0.5rem 0;
+    /* Padding to prevent clipping on some browsers */
 }
 
 .picker-main-actions {
     display: flex;
     gap: 1rem;
-    position: sticky;
-    top: 20px;
-    z-index: 1001;
 }
 
 .btn-filter-all,
