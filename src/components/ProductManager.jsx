@@ -554,8 +554,8 @@ export default function ProductManager() {
             console.log(`Saving ${productsToSave.length} products sequentially to avoid overload...`);
             for (let i = 0; i < productsToSave.length; i++) {
                 await saveItem('products', productsToSave[i]);
-                // Tiny rest to keep UI responsive and let Firestore breath
-                if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
+                // 300ms delay after EVERY save to prevent stream exhaustion
+                await new Promise(r => setTimeout(r, 300));
             }
         }
 
