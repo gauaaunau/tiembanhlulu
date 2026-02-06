@@ -135,6 +135,10 @@ export default function ProductGallery() {
         products.forEach(p => {
             (p.tags || []).forEach(tag => {
                 if (tag && tag.trim()) {
+                    // HIDE INTERNAL IDs from filter tabs
+                    if (tag.includes('_') && !isNaN(tag.split('_')[0])) return;
+                    if (!isNaN(tag) && tag.length > 8) return;
+
                     let realName = tag.trim();
                     let realId = tag.trim();
 
