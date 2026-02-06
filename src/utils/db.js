@@ -7,7 +7,8 @@ import {
     deleteDoc,
     query,
     orderBy,
-    writeBatch
+    writeBatch,
+    onSnapshot
 } from "firebase/firestore";
 
 const DB_NAME = 'LuluCakeDB';
@@ -64,6 +65,29 @@ export const getAllItems = async (storeName) => {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
+};
+
+export const subscribeToItems = (storeName, callback) => {
+    // 1. Initial Local Load
+    getAllItems(storeName).then(callback);
+
+    // 2. Setup Cloud Listener if enabled
+    if (isCloudEnabled && storeName !== 'drafts') {
+        const q = query(collection(firestore, storeName), orderBy("createdAt", "desc"));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const items = querySnapshot.docs.map(doc => doc.data());
+            // Sync current cloud data to local for offline use
+            syncLocal(storeName, items);
+            // Trigger callback for UI update
+            callback(items);
+        }, (err) => {
+            console.error(`Real-time subscription failed for ${storeName}:`, err);
+        });
+        return unsubscribe;
+    }
+
+    // Return dummy unsubscribe if cloud not enabled
+    return () => { };
 };
 
 const syncLocal = async (storeName, items) => {

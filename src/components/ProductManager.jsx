@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import './ProductManager.css';
-import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems, addItemsBulk } from '../utils/db';
+import { getAllItems, saveAllItems, saveItem, deleteItem, deleteAllItems, addItemsBulk, subscribeToItems } from '../utils/db';
 import { uploadImage, base64ToBlob } from '../utils/storage';
 
 export default function ProductManager() {
@@ -32,73 +32,66 @@ export default function ProductManager() {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     useEffect(() => {
-        const loadData = async () => {
+        // 1. Initial Migration Check (only once)
+        const checkMigration = async () => {
+            const dbProducts = await getAllItems('products');
+            const dbCategories = await getAllItems('categories');
+
+            if ((!dbProducts || dbProducts.length === 0) && (!dbCategories || dbCategories.length === 0)) {
+                const localProductsRaw = localStorage.getItem('lulu_products');
+                const localCategoriesRaw = localStorage.getItem('lulu_categories');
+
+                if (localProductsRaw || localCategoriesRaw) {
+                    console.log('Migrating legacy localStorage data...');
+                    if (localCategoriesRaw) {
+                        const parsedCats = JSON.parse(localCategoriesRaw);
+                        await saveAllItems('categories', parsedCats);
+                    }
+                    if (localProductsRaw) {
+                        const parsedProds = JSON.parse(localProductsRaw);
+                        await saveAllItems('products', parsedProds);
+                    }
+                    localStorage.removeItem('lulu_categories');
+                    localStorage.removeItem('lulu_products');
+                }
+            }
+
+            // Initial load for drafts (non-real-time usually fine for drafts)
             try {
-                // 1. Load from DB (Cloud/IndexedDB) FIRST - This is the source of truth
-                const dbProducts = await getAllItems('products');
-                const dbCategories = await getAllItems('categories');
-
-                // 2. Only check for localStorage migration if DB is empty
-                if ((!dbProducts || dbProducts.length === 0) && (!dbCategories || dbCategories.length === 0)) {
-                    const localProductsRaw = localStorage.getItem('lulu_products');
-                    const localCategoriesRaw = localStorage.getItem('lulu_categories');
-
-                    if (localProductsRaw || localCategoriesRaw) {
-                        console.log('Migrating legacy localStorage data...');
-                        if (localCategoriesRaw) {
-                            const parsedCats = JSON.parse(localCategoriesRaw);
-                            await saveAllItems('categories', parsedCats);
-                            setCategories(parsedCats);
-                        }
-                        if (localProductsRaw) {
-                            const parsedProds = JSON.parse(localProductsRaw);
-                            await saveAllItems('products', parsedProds);
-                            setProducts(parsedProds);
-                        }
-                        // Clear legacy after successful migration
-                        localStorage.removeItem('lulu_categories');
-                        localStorage.removeItem('lulu_products');
-                        return; // Data loaded via migration
-                    }
+                const dbDrafts = await getAllItems('drafts');
+                if (dbDrafts && dbDrafts.length > 0) {
+                    setStagedImages(dbDrafts);
                 }
-
-                if (dbProducts) setProducts(dbProducts);
-
-                // RESILIENT CATEGORY SYNC: Don't overwrite with empty if we have local data and it's likely a sync lag
-                if (dbCategories && dbCategories.length > 0) {
-                    setCategories(dbCategories);
-                    localStorage.setItem('cached_categories', JSON.stringify(dbCategories));
-                } else if (!dbCategories || dbCategories.length === 0) {
-                    // If DB is empty, check if we have cached categories to prevent flicker/loss
-                    const cached = localStorage.getItem('cached_categories');
-                    if (cached) {
-                        setCategories(JSON.parse(cached));
-                    } else if (dbCategories) {
-                        setCategories([]);
-                    }
-                }
-
-                // 3. Load drafts separately (non-blocking)
-                try {
-                    const dbDrafts = await getAllItems('drafts');
-                    if (dbDrafts && dbDrafts.length > 0) {
-                        setStagedImages(dbDrafts);
-                    }
-                } catch (draftErr) {
-                    console.warn('Drafts not available yet:', draftErr);
-                }
-            } catch (err) {
-                console.error('Lỗi tải dữ liệu:', err);
-                // Fallback to cache on error
-                const cached = localStorage.getItem('cached_categories');
-                if (cached) setCategories(JSON.parse(cached));
+            } catch (draftErr) {
+                console.warn('Drafts not available yet:', draftErr);
             }
         };
 
-        loadData();
+        checkMigration();
 
-        const interval = setInterval(loadData, 5000); // Check for external changes every 5s
-        return () => clearInterval(interval);
+        // 2. Setup Real-time Listeners
+        const unsubProducts = subscribeToItems('products', (items) => {
+            if (items) setProducts(items);
+        });
+
+        const unsubCategories = subscribeToItems('categories', (items) => {
+            if (items && items.length > 0) {
+                setCategories(items);
+                localStorage.setItem('cached_categories', JSON.stringify(items));
+            } else if (!items || items.length === 0) {
+                const cached = localStorage.getItem('cached_categories');
+                if (cached) {
+                    setCategories(JSON.parse(cached));
+                } else if (items) { // If items is explicitly empty array from DB
+                    setCategories([]);
+                }
+            }
+        });
+
+        return () => {
+            unsubProducts();
+            unsubCategories();
+        };
     }, []);
 
     // AUTO-SAVE DRAFTS: Keep staged images safe even if page refreshes
@@ -409,10 +402,21 @@ export default function ProductManager() {
             // Treat every tag as a filterable category
             (p.tags || []).forEach(tag => {
                 if (tag && tag.trim()) {
-                    const key = tag.toLowerCase().trim();
+                    let realName = tag.trim();
+                    let realId = tag.trim();
+
+                    // SANITY CHECK: If this tag is actually an ID string, try to recover the name
+                    if (tag.startsWith('cat_')) {
+                        const existingCat = categories.find(c => c.id === tag);
+                        if (existingCat) {
+                            realName = existingCat.name;
+                            realId = existingCat.id;
+                        }
+                    }
+
+                    const key = realName.toLowerCase().trim();
                     if (!nameMap.has(key)) {
-                        // Tag itself is the ID and Name
-                        nameMap.set(key, { id: tag.trim(), name: tag.trim(), subCategories: [] });
+                        nameMap.set(key, { id: realId, name: realName, subCategories: [] });
                     }
                 }
             });
@@ -426,7 +430,7 @@ export default function ProductManager() {
                         nameMap.set(key, { id: existing.id, name: existing.name.trim(), subCategories: [] });
                     }
                 } else {
-                    // Orphaned ID: guest a name or use ID
+                    // Orphaned ID: guess a name or use ID
                     const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : p.categoryId;
                     const key = String(guessedName).toLowerCase().trim();
                     if (!nameMap.has(key)) {
@@ -679,11 +683,15 @@ export default function ProductManager() {
         }
 
         try {
+            const tagObj = allFilterableCategories.find(c => c.id === targetTagId);
+            const tagName = tagObj ? tagObj.name : targetTagId;
+
             const updatedProducts = products.map(p => {
                 if (bulkSelectedIds.includes(p.id)) {
                     const currentTags = p.tags || [];
-                    if (!currentTags.includes(targetTagId)) {
-                        return { ...p, tags: [...currentTags, targetTagId] };
+                    // Ensure we don't add duplicates by name
+                    if (!currentTags.includes(tagName)) {
+                        return { ...p, tags: [...currentTags, tagName] };
                     }
                 }
                 return p;
@@ -712,7 +720,10 @@ export default function ProductManager() {
             const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
             return p.createdAt && p.createdAt > oneDayAgo;
         }
-        return p.categoryId === adminFilter || (p.tags || []).includes(adminFilter);
+
+        const filterName = getCategoryName(adminFilter).toLowerCase();
+        return p.categoryId === adminFilter ||
+            (p.tags || []).some(t => t.toLowerCase() === filterName);
     }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); // Always show newest first in admin
 
     // Products that DON'T have the target tag yet

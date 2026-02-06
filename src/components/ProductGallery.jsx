@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import './ProductGallery.css';
-import { getAllItems } from '../utils/db';
+import { getAllItems, subscribeToItems } from '../utils/db';
 
 export default function ProductGallery() {
     const [filter, setFilter] = useState('All');
@@ -11,19 +11,14 @@ export default function ProductGallery() {
     const [showContactOptions, setShowContactOptions] = useState(false);
 
     useEffect(() => {
-        const loadData = async () => {
-            const dbProducts = await getAllItems('products');
-            const dbCategories = await getAllItems('categories');
+        // Real-time synchronization for products and categories
+        const unsubProducts = subscribeToItems('products', setProducts);
+        const unsubCategories = subscribeToItems('categories', setCategories);
 
-            setProducts(dbProducts || []);
-            setCategories(dbCategories || []);
+        return () => {
+            unsubProducts();
+            unsubCategories();
         };
-
-        loadData();
-
-        // Check for updates
-        const interval = setInterval(loadData, 2000);
-        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -52,9 +47,21 @@ export default function ProductGallery() {
         products.forEach(p => {
             (p.tags || []).forEach(tag => {
                 if (tag && tag.trim()) {
-                    const key = tag.toLowerCase().trim();
+                    let realName = tag.trim();
+                    let realId = tag.trim();
+
+                    // SANITY CHECK: If this tag is actually an ID string, try to recover the name
+                    if (tag.startsWith('cat_')) {
+                        const existingCat = categories.find(c => c.id === tag);
+                        if (existingCat) {
+                            realName = existingCat.name;
+                            realId = existingCat.id;
+                        }
+                    }
+
+                    const key = realName.toLowerCase().trim();
                     if (!nameMap.has(key)) {
-                        nameMap.set(key, { id: tag.trim(), name: tag.trim(), subCategories: [] });
+                        nameMap.set(key, { id: realId, name: realName, subCategories: [] });
                     }
                 }
             });
@@ -96,9 +103,11 @@ export default function ProductGallery() {
     const filteredProducts = filter === 'All'
         ? products
         : products.filter(p => {
-            const primaryCatName = getCategoryName(p.categoryId);
-            // Check name equality directly for tags
-            return primaryCatName === filter || (p.tags || []).includes(filter);
+            const filterName = filter.toLowerCase();
+            const primaryCatName = getCategoryName(p.categoryId).toLowerCase();
+
+            return primaryCatName === filterName ||
+                (p.tags || []).some(t => t.toLowerCase() === filterName);
         });
 
     const openLightbox = (product, startRevealed = false) => {
