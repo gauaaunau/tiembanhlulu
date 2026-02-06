@@ -3,6 +3,43 @@ import './ProductGallery.css';
 import { getAllItems, subscribeToItems } from '../utils/db';
 import LoadingScreen from './LoadingScreen';
 
+// Sub-component for product card - Memoized for performance
+const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }) {
+    return (
+        <div
+            className="product-card cute-card"
+            style={{ animationDelay: `${index * 0.05}s` }}
+            onClick={() => onOpenLightbox(product)}
+        >
+            <div className="product-image">
+                <img
+                    src={product.images ? product.images[0] : product.image}
+                    alt={product.name}
+                    className="cake-image"
+                />
+                {product.images && product.images.length > 1 && (
+                    <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
+                )}
+            </div>
+            <div className="product-info">
+                <h3 className="product-name">{product.name}</h3>
+                <p className="product-description">{product.description}</p>
+                <div className="product-footer">
+                    {(product.price && product.price !== 'Liên hệ') && (
+                        <span className="product-price">{product.price}</span>
+                    )}
+                    <span className="btn-add" onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenLightbox(product, true);
+                    }}>
+                        ✨ Đặt bánh
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+});
+
 export default function ProductGallery() {
     const [filter, setFilter] = useState('All');
     const [products, setProducts] = useState([]);
@@ -242,7 +279,12 @@ export default function ProductGallery() {
                                 </div>
                             ) : (
                                 filteredProducts.map((product, index) => (
-                                    <ProductCard key={product.id} product={product} index={index} />
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        index={index}
+                                        onOpenLightbox={openLightbox}
+                                    />
                                 ))
                             )}
                         </div>
@@ -264,7 +306,12 @@ export default function ProductGallery() {
                                 </h3>
                                 <div className="products-grid">
                                     {cat.items.map((product, index) => (
-                                        <ProductCard key={product.id} product={product} index={index} />
+                                        <ProductCard
+                                            key={product.id}
+                                            product={product}
+                                            index={index}
+                                            onOpenLightbox={openLightbox}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -374,44 +421,5 @@ export default function ProductGallery() {
         </section>
     );
 
-    // Sub-component for product card - Memoized for performance
-    const ProductCard = memo(function ProductCard({ product, index }) {
-        return (
-            <div
-                key={product.id}
-                className="product-card cute-card"
-                style={{ animationDelay: `${index * 0.05}s` }}
-                onClick={() => openLightbox(product)}
-            >
-                <div
-                    className="product-image"
-                >
-                    <img
-                        src={product.images ? product.images[0] : product.image}
-                        alt={product.name}
-                        className="cake-image"
-                    />
-                    {product.images && product.images.length > 1 && (
-                        <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
-                    )}
-                </div>
-                {/* Removed auto-visible hash tags per user request */}
-                <div className="product-info">
-                    <h3 className="product-name">{product.name}</h3>
-                    <p className="product-description">{product.description}</p>
-                    <div className="product-footer">
-                        {(product.price && product.price !== 'Liên hệ') && (
-                            <span className="product-price">{product.price}</span>
-                        )}
-                        <span className="btn-add" onClick={(e) => {
-                            e.stopPropagation();
-                            openLightbox(product, true);
-                        }}>
-                            ✨ Đặt bánh
-                        </span>
-                    </div>
-                </div>
-            </div>
-        );
-    });
+
 }
