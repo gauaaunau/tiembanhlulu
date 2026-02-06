@@ -21,6 +21,17 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
                     <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
                 )}
             </div>
+            {/* RESTORED TAGS PER USER REQUEST */}
+            <div className="product-tags-row">
+                {product.categoryId && (
+                    <span className="product-tag-badge primary">
+                        #{product.categoryId.replace('cat_', '')}
+                    </span>
+                )}
+                {(product.tags || []).map((tag, i) => (
+                    <span key={i} className="product-tag-badge">#{tag}</span>
+                ))}
+            </div>
             <div className="product-info">
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-description">{product.description}</p>
@@ -80,14 +91,22 @@ export default function ProductGallery() {
     // AUTO-SCROLL TO TOP ON FILTER CHANGE
     useEffect(() => {
         if (!isLoading && galleryRef.current) {
-            const headerOffset = 100; // Offset for sticky header/spacing
-            const elementPosition = galleryRef.current.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            // Use setTimeout to ensure the DOM has updated with new products
+            // and use scrollIntoView for better reliability
+            setTimeout(() => {
+                galleryRef.current.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
+                // Fine-tune if needed (e.g. if sticky header overlaps)
+                setTimeout(() => {
+                    const scrolledY = window.scrollY;
+                    if (scrolledY > 0) {
+                        window.scrollBy(0, -80);
+                    }
+                }, 600);
+            }, 100);
         }
     }, [filter]);
 
