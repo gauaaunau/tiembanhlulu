@@ -404,12 +404,13 @@ export default function ProductManager() {
         }
 
         // Add tag to product if not already present
-        if (!formData.tags.includes(category.id)) {
-            const nextTags = [...formData.tags, category.id];
+        // Use Name for tags to keep display clean (consistent with Import logic)
+        if (!formData.tags.includes(category.name)) {
+            const nextTags = [...formData.tags, category.name];
             setFormData(prev => ({
                 ...prev,
                 tags: nextTags,
-                // Automatically set primary category to the first tag
+                // Automatically set primary category to the first tag (ID is required for primary)
                 categoryId: prev.categoryId || category.id
             }));
         }
