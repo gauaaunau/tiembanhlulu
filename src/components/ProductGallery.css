@@ -189,9 +189,10 @@
 }
 
 
-.product-card:hover .cake-image {
+/* Card zoom disabled per user request */
+/* .product-card:hover .cake-image {
     transform: scale(1.5);
-}
+} */
 
 
 .product-badge {
@@ -447,6 +448,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.carousel-card:hover .carousel-img {
+    transform: scale(2.2);
 }
 
 .carousel-external-info {

@@ -109,9 +109,11 @@ export default function ProductGallery() {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
         if (window.matchMedia("(pointer: coarse)").matches) return;
 
-        const card = e.currentTarget;
-        const img = card.querySelector('.cake-image');
-        const rect = card.getBoundingClientRect();
+        const container = e.currentTarget;
+        const img = container.querySelector('img');
+        if (!img) return;
+
+        const rect = container.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
         img.style.transformOrigin = `${x}% ${y}%`;
@@ -287,7 +289,7 @@ export default function ProductGallery() {
                                     }}
                                 >
                                     <div className="carousel-card-wrapper" onClick={(e) => e.stopPropagation()}>
-                                        <div className="carousel-card">
+                                        <div className="carousel-card" onMouseMove={handleMouseMove}>
                                             <img src={img} alt={`${selectedProduct.name} ${i}`} className="carousel-img" />
                                         </div>
 
@@ -366,7 +368,6 @@ export default function ProductGallery() {
             >
                 <div
                     className="product-image"
-                    onMouseMove={handleMouseMove}
                 >
                     <img
                         src={product.images ? product.images[0] : product.image}
