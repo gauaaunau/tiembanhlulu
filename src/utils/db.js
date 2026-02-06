@@ -78,9 +78,8 @@ export const saveAllItems = async (storeName, items) => {
     // Save to Cloud - Using Batching to avoid rate limits
     if (isCloudEnabled && storeName !== 'drafts') {
         try {
-            // Firestore batches allow up to 500 operations, but max payload is 10MB
-            // Products have images (heavy), so we use a much smaller batch size
-            const batchSize = storeName === 'products' ? 20 : 400;
+            // Products have images (heavy), so we use a TINY batch size to be safe
+            const batchSize = storeName === 'products' ? 5 : 400;
             for (let i = 0; i < items.length; i += batchSize) {
                 const batch = writeBatch(firestore);
                 const chunk = items.slice(i, i + batchSize);
@@ -91,8 +90,8 @@ export const saveAllItems = async (storeName, items) => {
 
                 await batch.commit();
                 console.log(`Cloud batch for ${storeName} committed: ${i + chunk.length}/${items.length}`);
-                // Tiny rest between batches
-                await new Promise(r => setTimeout(r, 100));
+                // Long rest between batches to let the stream drain
+                await new Promise(r => setTimeout(r, 1000));
             }
         } catch (err) {
             console.error(`Cloud batch commit failed for ${storeName}:`, err);
@@ -164,7 +163,7 @@ export const addItemsBulk = async (storeName, items) => {
     if (isCloudEnabled && storeName !== 'drafts') {
         try {
             // Smaller batch size for products to avoid 10MB payload limit
-            const batchSize = storeName === 'products' ? 20 : 400;
+            const batchSize = storeName === 'products' ? 5 : 400;
             for (let i = 0; i < items.length; i += batchSize) {
                 const batch = writeBatch(firestore);
                 const chunk = items.slice(i, i + batchSize);
@@ -175,7 +174,7 @@ export const addItemsBulk = async (storeName, items) => {
 
                 await batch.commit();
                 console.log(`Cloud bulk add for ${storeName}: ${i + chunk.length}/${items.length}`);
-                await new Promise(r => setTimeout(r, 100)); // Throttle
+                await new Promise(r => setTimeout(r, 1000)); // Throttle 1s
             }
         } catch (err) {
             console.error(`Cloud bulk add failed for ${storeName}:`, err);
