@@ -21,7 +21,7 @@ export default function ProductManager() {
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [activeAdminTab, setActiveAdminTab] = useState('add'); // 'add' or 'bulk-tag'
     const [isCloudEnabled] = useState(!!import.meta.env.VITE_FIREBASE_API_KEY);
-    const [isStorageEnabled] = useState(!!import.meta.env.VITE_FIREBASE_STORAGE_BUCKET);
+    const [isStorageEnabled] = useState(false); // Disabled: Free tier doesn't support Storage
     const [syncingCloud, setSyncingCloud] = useState(false);
     const [uploadingImages, setUploadingImages] = useState(false);
     const [targetTagId, setTargetTagId] = useState('');
