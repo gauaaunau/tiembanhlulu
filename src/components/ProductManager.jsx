@@ -32,15 +32,11 @@ export default function ProductManager() {
     const [typedTag, setTypedTag] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const repairExecutedRef = useRef(false);
-    const [isRepairing, setIsRepairing] = useState(false);
-    const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
-    const [visualSensitivity, setVisualSensitivity] = useState(15);
-    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null, lastMatchedImage: null });
+    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0 });
     const statusTimeoutRef = useRef(null);
 
     useEffect(() => {
-        console.log("🛠️ ProductManager v2.2.0 - Live");
+        console.log("🛠️ ProductManager v4.2.1 - Live");
         // 1. Initial Migration Check (only once)
         const checkMigration = async () => {
             const dbProducts = await getAllItems('products');
@@ -122,127 +118,7 @@ export default function ProductManager() {
         saveDrafts();
     }, [stagedImages]);
 
-    const calculatePHash = (imgSource) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous"; // Crucial for cloud images
-            img.src = imgSource;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = 8;
-                canvas.height = 8;
-                const ctx = canvas.getContext('2d');
-                ctx.imageSmoothingEnabled = false; // Higher consistency
-                ctx.drawImage(img, 0, 0, 8, 8);
-                const data = ctx.getImageData(0, 0, 8, 8).data;
 
-                let gray = [];
-                for (let i = 0; i < data.length; i += 4) {
-                    gray.push(Math.floor((data[i] + data[i + 1] + data[i + 2]) / 3));
-                }
-
-                const avg = gray.reduce((a, b) => a + b, 0) / 64;
-                const bits = gray.map(p => (p >= avg ? '1' : '0')).join('');
-
-                // Convert 64-bit string to hex for storage
-                let hex = '';
-                for (let i = 0; i < 64; i += 4) {
-                    hex += parseInt(bits.substr(i, 4), 2).toString(16);
-                }
-                resolve({ hex, bits });
-            };
-            img.onerror = (e) => {
-                console.error("pHash Load Error:", e);
-                resolve(null);
-            };
-        });
-    };
-
-    const handleManualRepair = async () => {
-        const toRepair = products.filter(p => p.visualVersion !== 2 || !p.visualBits);
-        if (toRepair.length === 0) {
-            alert("✨ Mọi sản phẩm đều đã có dữ liệu thị giác!");
-            return;
-        }
-
-        if (!confirm(`Hệ thống sẽ "học" ${toRepair.length} sản phẩm cũ. Quá trình này có thể mất vài phút. Bạn đồng ý chứ?`)) return;
-
-        setIsRepairing(true);
-        setRepairStats({ current: 0, total: toRepair.length });
-
-        // Process in larger chunks but save in one bulk operation to avoid stream exhaustion
-        const chunkSize = 10;
-        for (let i = 0; i < toRepair.length; i += chunkSize) {
-            const chunk = toRepair.slice(i, i + chunkSize);
-            const batchResults = [];
-
-            // Process images sequentially within the chunk to be safe on memory/canvas
-            for (const p of chunk) {
-                try {
-                    const imgUrl = (p.images && p.images[0]) || p.image;
-                    if (!imgUrl) continue;
-
-                    const vHash = await calculatePHash(imgUrl);
-                    if (vHash) {
-                        batchResults.push({ ...p, visualHash: vHash.hex, visualBits: vHash.bits, visualVersion: 2 });
-                    }
-                } catch (err) {
-                    console.error("Repair failed for:", p.id, err);
-                }
-            }
-
-            if (batchResults.length > 0) {
-                await addItemsBulk('products', batchResults);
-            }
-
-            setRepairStats(prev => ({ ...prev, current: Math.min(i + chunkSize, toRepair.length) }));
-            // Artificial delay between chunks to prevent Firestore exhaustion
-            await new Promise(r => setTimeout(r, 1500));
-        }
-
-        setIsRepairing(false);
-        alert("🎉 Đã cập nhật dữ liệu thị giác thành công! Giờ đây hệ thống sẽ chặn trùng cực kỳ chính xác.");
-    };
-
-    const getHammingDistance = (bits1, bits2) => {
-        if (!bits1 || !bits2 || bits1.length !== bits2.length) return 999;
-        let dist = 0;
-        for (let i = 0; i < bits1.length; i++) {
-            if (bits1[i] !== bits2[i]) dist++;
-        }
-        return dist;
-    };
-
-    const findVisualDuplicate = (newHashBits, listToSearch, threshold = visualSensitivity, context = "Search") => {
-        if (!newHashBits || !listToSearch) return null;
-        return listToSearch.find(item => {
-            const targetBits = item.visualBits || item.vBits || item.visualHash;
-            if (!targetBits) return false;
-            const dist = getHammingDistance(newHashBits, targetBits);
-            const similarity = Math.round((1 - dist / 64) * 100);
-
-            if (dist <= threshold) {
-                console.log(`[Mắt Thần - ${context}] 🚩 Match Found! Similarity: ${similarity}% (Dist: ${dist} <= ${threshold}) - Item: ${item.name || item.id}`);
-                return true;
-            }
-            return false;
-        });
-    };
-
-    const calculateDataHash = async (base64OrBlob) => {
-        let buffer;
-        if (typeof base64OrBlob === 'string' && base64OrBlob.startsWith('data:')) {
-            const res = await fetch(base64OrBlob);
-            buffer = await res.arrayBuffer();
-        } else if (base64OrBlob instanceof Blob) {
-            buffer = await base64OrBlob.arrayBuffer();
-        } else {
-            return null;
-        }
-        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    };
 
     const compressImage = (base64Str, maxWidth = 1600, maxHeight = 1600) => {
         return new Promise((resolve) => {
@@ -276,69 +152,31 @@ export default function ProductManager() {
 
     const isImageDuplicate = (imageData) => {
         if (!imageData) return false;
-        // Check current staged batch
-        const stagedDup = stagedImages.some(img => img.data === imageData);
-        if (stagedDup) return true;
-
-        // Check global products list
-        const globalDup = products.some(p => (p.images || [p.image] || []).some(img => img === imageData));
-        return globalDup;
+        // Check current staged batch (Literal check only)
+        return stagedImages.some(img => img.data === imageData);
     };
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        setUploadStatus({ total: files.length, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null, lastMatchedImage: null });
+        setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
         files.forEach(async (file) => {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const imageData = reader.result;
-                const vHash = await calculatePHash(imageData);
 
-                // Fuzzy Match (HAMMING DISTANCE)
-                // 1. Check against DB
-                const dupProduct = findVisualDuplicate(vHash?.bits, products, visualSensitivity, "DATABASE");
-                if (dupProduct) {
-                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits || dupProduct.visualHash);
-                    const similarity = Math.round((1 - dist / 64) * 100);
-
-                    setUploadStatus(prev => ({
-                        ...prev,
-                        duplicates: prev.duplicates + 1,
-                        processed: prev.processed + 1,
-                        lastMatch: similarity,
-                        lastMatchedName: dupProduct.name || dupProduct.id,
-                        lastMatchedImage: (dupProduct.images && dupProduct.images[0]) || dupProduct.image || null
-                    }));
-
-                    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
-                    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
-                    statusTimeoutRef.current = setTimeout(() => {
-                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null, lastMatchedImage: null });
-                    }, 10000);
-                    return;
-                }
-
-                // 2. Add to staged list IMMEDIATELY
+                // Add to staged list IMMEDIATELY
                 const newImg = {
                     id: `img_${Date.now()}_${Math.random()}`,
-                    data: imageData,
-                    vHash: vHash?.hex,
-                    vBits: vHash?.bits
+                    data: imageData
                 };
 
-                setStagedImages(prev => {
-                    // Check against current batch
-                    const batchDup = findVisualDuplicate(vHash?.bits, prev, visualSensitivity, "CURRENT_BATCH");
-                    if (batchDup) return prev;
-                    return [...prev, newImg];
-                });
+                setStagedImages(prev => [...prev, newImg]);
+                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1, added: prev.added + 1 }));
 
-                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1 }));
-
-                // 3. Compress in background and update
+                // Compress in background and update
                 const compressed = await compressImage(imageData);
                 setStagedImages(prev => prev.map(img =>
                     img.id === newImg.id ? { ...img, data: compressed } : img
@@ -362,55 +200,23 @@ export default function ProductManager() {
         if (images.length === 0) return;
         e.preventDefault();
 
-        setUploadStatus({ total: images.length, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null, lastMatchedImage: null });
+        setUploadStatus({ total: images.length, processed: 0, added: 0 });
 
         images.forEach(async (file) => {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const imageData = reader.result;
-                const vHash = await calculatePHash(imageData);
 
-                // Fuzzy Match (Hamming Distance)
-                // 1. Check against DB
-                const dupProduct = findVisualDuplicate(vHash?.bits, products, visualSensitivity, "DATABASE");
-                if (dupProduct) {
-                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits || dupProduct.visualHash);
-                    const similarity = Math.round((1 - dist / 64) * 100);
-
-                    setUploadStatus(prev => ({
-                        ...prev,
-                        duplicates: prev.duplicates + 1,
-                        processed: prev.processed + 1,
-                        lastMatch: similarity,
-                        lastMatchedName: dupProduct.name || dupProduct.id,
-                        lastMatchedImage: (dupProduct.images && dupProduct.images[0]) || dupProduct.image || null
-                    }));
-
-                    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
-                    statusTimeoutRef.current = setTimeout(() => {
-                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null, lastMatchedImage: null });
-                    }, 10000);
-                    return;
-                }
-
-                // 2. Add to staged list IMMEDIATELY
+                // Add to staged list IMMEDIATELY
                 const newImg = {
                     id: `img_paste_${Date.now()}_${Math.random()}`,
-                    data: imageData,
-                    vHash: vHash?.hex,
-                    vBits: vHash?.bits
+                    data: imageData
                 };
 
-                setStagedImages(prev => {
-                    // Check against current batch
-                    const batchDup = findVisualDuplicate(vHash?.bits, prev, visualSensitivity, "CURRENT_BATCH");
-                    if (batchDup) return prev;
-                    return [...prev, newImg];
-                });
+                setStagedImages(prev => [...prev, newImg]);
+                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1, added: prev.added + 1 }));
 
-                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1 }));
-
-                // 3. Compress and update
+                // Compress and update
                 const compressed = await compressImage(imageData);
                 setStagedImages(prev => prev.map(img =>
                     img.id === newImg.id ? { ...img, data: compressed } : img
@@ -455,9 +261,10 @@ export default function ProductManager() {
     const handleSubmit = async (e, forceBulkMode = false) => {
         if (e) e.preventDefault();
 
+        // New requirement (v4.2.1): Tag validation prompt
         if (formData.tags.length === 0) {
-            alert('Vui lòng gán ít nhất 1 Tag!');
-            return;
+            const confirmNoTags = window.confirm("Bạn chưa gắn tag ảnh, bạn có muốn tiếp tục đăng không?");
+            if (!confirmNoTags) return;
         }
 
         setUploadingImages(true); // Show spinner
@@ -478,10 +285,6 @@ export default function ProductManager() {
                         id: `prod_${Date.now()}_${i}`,
                         name: stagedImages.length > 1 ? `${baseName} ${i + 1}` : baseName,
                         images: [finalUrl],
-                        imageHash: img.hash || null,
-                        visualHash: img.vHash || null,
-                        visualBits: img.vBits || null, // SAVING BITS FOR FUZZY MATCH
-                        visualVersion: 2,
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
@@ -527,10 +330,6 @@ export default function ProductManager() {
                 id: editingId || `prod_${Date.now()}`,
                 price: formData.price,
                 images: finalImages,
-                imageHash: stagedImages[0]?.hash || null, // Hash from first image
-                visualHash: stagedImages[0]?.vHash || null,
-                visualBits: stagedImages[0]?.vBits || null,
-                visualVersion: 2,
                 createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
             };
 
@@ -767,7 +566,7 @@ export default function ProductManager() {
 
         setImporting(true);
         setImportStats({ current: 0, total: files.length });
-        setUploadStatus({ total: files.length, processed: 0, duplicates: 0, lastMatch: null });
+        setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
         const newCategories = [...categories];
         const newProducts = [...products];
@@ -1103,97 +902,6 @@ export default function ProductManager() {
                 </button>
             </div>
 
-            {activeAdminTab === 'system' && (
-                <div className="manager-section shadow-hover" style={{
-                    background: 'white',
-                    padding: '2rem',
-                    borderRadius: '20px',
-                    marginBottom: '2rem',
-                    animation: 'fadeIn 0.3s ease'
-                }}>
-                    <h3 style={{ borderBottom: '2px solid var(--pink)', paddingBottom: '10px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        ⚙️ Quản Trị Hệ Thống
-                    </h3>
-
-                    <div style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <div>
-                                <h4 style={{ margin: 0, color: 'var(--brown)' }}>🧿 Cập nhật Dữ liệu Thị giác (pHash)</h4>
-                                <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#888' }}>
-                                    Giúp "Mắt Thần" học lại các hình ảnh cũ để ngăn chặn nhân viên upload trùng mẫu.
-                                </p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ marginBottom: '5px', fontWeight: 'bold', color: 'var(--pink)' }}>
-                                    {products.filter(p => p.visualVersion !== 2 || !p.visualBits).length} ảnh cần học
-                                </div>
-                                <button
-                                    onClick={handleManualRepair}
-                                    disabled={isRepairing || products.filter(p => p.visualVersion !== 2 || !p.visualBits).length === 0}
-                                    className="primary-btn"
-                                    style={{
-                                        padding: '10px 25px',
-                                        borderRadius: '12px',
-                                        opacity: isRepairing || products.filter(p => p.visualVersion !== 2 || !p.visualBits).length === 0 ? 0.5 : 1
-                                    }}
-                                >
-                                    {isRepairing ? '⏳ Đang học...' : '🚀 Bắt đầu ngay'}
-                                </button>
-                            </div>
-                        </div>
-
-                        {isRepairing && (
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <div style={{ height: '8px', background: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div style={{
-                                        height: '100%',
-                                        background: 'linear-gradient(90deg, var(--pink), #FFB6C1)',
-                                        width: `${(repairStats.current / (repairStats.total || 1)) * 100}%`,
-                                        transition: 'width 0.4s ease'
-                                    }}></div>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--pink)' }}>
-                                    <span>Đã xử lý: {repairStats.current} / {repairStats.total} sản phẩm</span>
-                                    <span>{Math.round((repairStats.current / (repairStats.total || 1)) * 100)}%</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
-                        <h4 style={{ margin: 0, color: 'var(--brown)', marginBottom: '0.5rem' }}>🎯 Độ nhạy Mắt Thần</h4>
-                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#888' }}>
-                            Điều chỉnh mức độ "khắt khe" khi phát hiện ảnh trùng.
-                        </p>
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                            {[10, 12, 15, 18].map((val) => (
-                                <button
-                                    key={val}
-                                    onClick={() => setVisualSensitivity(val)}
-                                    style={{
-                                        padding: '8px 15px',
-                                        borderRadius: '10px',
-                                        border: `2px solid ${visualSensitivity === val ? 'var(--pink)' : '#eee'}`,
-                                        background: visualSensitivity === val ? '#fff5f8' : 'white',
-                                        color: visualSensitivity === val ? 'var(--pink)' : '#666',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.2s',
-                                        fontSize: '0.85rem'
-                                    }}
-                                >
-                                    {val === 10 ? '🔒 Cao (15%)' : val === 12 ? '⚖️ Vừa (18%)' : val === 15 ? '🧿 Rộng (23%)' : '🔓 Cực rộng (28%)'}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div style={{ padding: '1rem', borderLeft: '4px solid var(--pink)', background: '#fff5f8', borderRadius: '0 15px 15px 0', fontSize: '0.85rem', color: '#666' }}>
-                        💡 <strong>Mẹo:</strong> Bạn chỉ cần chạy công cụ này <strong>MỘT LẦN DUY NHẤT</strong> cho các ảnh cũ. Các ảnh upload mới từ nay về sau sẽ tự động được học ngay lập tức!
-                    </div>
-                </div>
-            )}
-
             {isCloudEnabled && (
                 <div className="manager-section cloud-sync-bar" style={{
                     background: 'linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%)',
@@ -1230,378 +938,330 @@ export default function ProductManager() {
             )}
 
             {activeAdminTab === 'add' ? (
-                <>
+                <div className="manager-section">
+                    <h3>{editingId ? '✏️ Sửa Sản Phẩm' : '➕ Thêm Sản Phẩm Mới'}</h3>
+                    <form className="product-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={(e) => handleSubmit(e, false)}>
+                        {/* Section 1: Thông tin cơ bản */}
+                        <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                            <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>📝 Thông tin cơ bản</h4>
+                            <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Tên bánh (Tùy chọn)"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="form-input"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Giá (VD: 250k, 500k...)"
+                                    value={formData.price}
+                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
+                        </div>
 
-
-                    <div className="manager-section">
-                        <h3>{editingId ? '✏️ Sửa Sản Phẩm' : '➕ Thêm Sản Phẩm Mới'}</h3>
-
-
-
-                        <form className="product-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            {/* Section 1: Thông tin cơ bản */}
-                            <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
-                                <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>📝 Thông tin cơ bản</h4>
-                                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        {/* Section 2: Phân loại & Tags */}
+                        <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                            <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🏷️ Phân loại & Tags</h4>
+                            <div className="smart-tag-container">
+                                <div className="tags-input-wrapper" style={{ position: 'relative' }}>
                                     <input
                                         type="text"
-                                        placeholder="Tên bánh (Tùy chọn)"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Gán Tag Thể loại (Ví dụ: Bánh Rồng, Baby...)"
+                                        value={tagInputText}
+                                        onChange={(e) => {
+                                            setTagInputText(e.target.value);
+                                            setShowTagSuggestions(true);
+                                            setSelectedIndex(0);
+                                        }}
+                                        onFocus={() => setShowTagSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                                        onKeyDown={handleTagInputKeyDown}
                                         className="form-input"
                                     />
-                                    <input
-                                        type="text"
-                                        placeholder="Giá (VD: 250k, 500k...)"
-                                        value={formData.price}
-                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                        className="form-input"
-                                    />
-                                </div>
-                            </div>
 
-                            {/* Section 2: Phân loại & Tags */}
-                            <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
-                                <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🏷️ Phân loại & Tags</h4>
-                                <div className="smart-tag-container">
-                                    <div className="tags-input-wrapper" style={{ position: 'relative' }}>
-                                        <input
-                                            type="text"
-                                            placeholder="Gán Tag Thể loại (Ví dụ: Bánh Rồng, Baby...)"
-                                            value={tagInputText}
-                                            onChange={(e) => {
-                                                setTagInputText(e.target.value);
-                                                setShowTagSuggestions(true);
-                                                setSelectedIndex(0);
-                                            }}
-                                            onFocus={() => setShowTagSuggestions(true)}
-                                            onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
-                                            onKeyDown={handleTagInputKeyDown}
-                                            className="form-input"
-                                        />
-
-                                        {showTagSuggestions && tagInputText && (
-                                            <div className="custom-suggestions" style={{
-                                                position: 'absolute',
-                                                top: '100%',
-                                                left: 0,
-                                                right: 0,
-                                                background: 'white',
-                                                border: '2px solid var(--pink)',
-                                                borderRadius: '12px',
-                                                zIndex: 1000,
-                                                maxHeight: '200px',
-                                                overflowY: 'auto',
-                                                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                                                marginTop: '-5px'
-                                            }}>
-                                                {allFilterableCategories
-                                                    .filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase()))
-                                                    .map((cat, idx) => (
-                                                        <div
-                                                            key={cat.id}
-                                                            onClick={() => handleAddSmartTag(cat.name)}
-                                                            className={`suggestion-item ${idx === selectedIndex ? 'active' : ''}`}
-                                                            style={{
-                                                                padding: '10px 15px',
-                                                                cursor: 'pointer',
-                                                                background: idx === selectedIndex ? '#fff0f5' : 'transparent',
-                                                                color: 'var(--brown)',
-                                                                fontWeight: '600',
-                                                                borderBottom: '1px solid #eee'
-                                                            }}
-                                                        >
-                                                            🏷️ {cat.name}
-                                                        </div>
-                                                    ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '1rem' }}>
-                                        {formData.tags?.map(tagId => (
-                                            <div key={tagId} className="tag-chip active" style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '5px',
-                                                padding: '5px 12px',
-                                                background: 'var(--pink)',
-                                                color: 'white',
-                                                borderRadius: '20px',
-                                                fontSize: '0.9rem',
-                                                fontWeight: '600'
-                                            }}>
-                                                #{getCategoryName(tagId) || tagId}
-                                                <span
-                                                    onClick={() => {
-                                                        const nextTags = formData.tags.filter(id => id !== tagId);
-                                                        setFormData({
-                                                            ...formData,
-                                                            tags: nextTags
-                                                        });
-                                                    }}
-                                                    style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.3)', width: '18px', height: '18px', borderRadius: '50%', textAlign: 'center', lineHeight: '16px' }}
-                                                >
-                                                    ×
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Section 3: Ghi chú & Hình ảnh */}
-                            <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
-                                <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🖼️ Ghi chú & Hình ảnh</h4>
-                                <div className="description-wrapper" style={{ marginBottom: '1.5rem' }}>
-                                    <textarea
-                                        placeholder="Mô tả sản phẩm (Tùy chọn)..."
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="form-textarea"
-                                        rows="2"
-                                    />
-                                </div>
-
-                                <div className="image-upload-section">
-                                    {/* Mắt Thần Status Bar */}
-                                    {(uploadStatus.total > 0) && (
-                                        <div style={{
-                                            background: '#fff',
-                                            border: `2px solid ${uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0ea5e9'}`,
-                                            padding: '12px 20px',
-                                            borderRadius: '15px',
-                                            marginBottom: '1rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            animation: 'fadeIn 0.3s ease',
-                                            fontSize: '0.9rem',
-                                            boxShadow: '0 8px 15px rgba(0,0,0,0.05)'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                    <span style={{ fontSize: '1.2rem' }}>✅</span>
-                                                    <span style={{ fontWeight: '800', color: '#059669' }}>Nhận: {uploadStatus.added}</span>
-                                                </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                    <span style={{ fontSize: '1.2rem' }}>🧿</span>
-                                                    <span style={{ fontWeight: '800', color: 'var(--pink)' }}>Chặn: {uploadStatus.duplicates}</span>
-                                                </div>
-                                                {uploadStatus.lastMatch && (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '5px' }}>
-                                                        {uploadStatus.lastMatchedImage && (
-                                                            <div style={{ position: 'relative', width: '45px', height: '45px', borderRadius: '8px', overflow: 'hidden', border: '2px solid var(--pink)', flexShrink: 0 }}>
-                                                                <img src={uploadStatus.lastMatchedImage} alt="Match" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(255,143,171,0.8)', color: 'white', fontSize: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>CŨ</div>
-                                                            </div>
-                                                        )}
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                            <div style={{ fontSize: '0.75rem', color: '#999', fontStyle: 'italic' }}>
-                                                                (Trùng {uploadStatus.lastMatch}%)
-                                                            </div>
-                                                            {uploadStatus.lastMatchedName && (
-                                                                <div style={{ fontSize: '0.8rem', color: 'var(--pink)', fontWeight: 'bold', background: '#fff1f2', padding: '2px 8px', borderRadius: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
-                                                                    Tên: {uploadStatus.lastMatchedName}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 'bold' }}>
-                                                    ⏳ {uploadStatus.processed} / {uploadStatus.total}
-                                                </div>
-                                                <div style={{ width: '40px', height: '40px', position: 'relative' }}>
-                                                    <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
-                                                        <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" strokeWidth="3" />
-                                                        <circle
-                                                            cx="18" cy="18" r="16" fill="none" stroke={uploadStatus.processed === uploadStatus.total ? '#059669' : '#0ea5e9'}
-                                                            strokeWidth="3"
-                                                            strokeDasharray={`${(uploadStatus.processed / uploadStatus.total) * 100}, 100`}
-                                                            transition="all 0.4s"
-                                                        />
-                                                    </svg>
-                                                    {uploadStatus.processed === uploadStatus.total && (
-                                                        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.8rem' }}>🎉</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
-                                        <label className="image-upload-label" style={{
-                                            flex: 1,
-                                            margin: 0,
+                                    {showTagSuggestions && tagInputText && (
+                                        <div className="custom-suggestions" style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: 0,
+                                            right: 0,
                                             background: 'white',
-                                            color: 'var(--pink)',
                                             border: '2px solid var(--pink)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '10px',
-                                            padding: '12px'
+                                            borderRadius: '12px',
+                                            zIndex: 1000,
+                                            maxHeight: '200px',
+                                            overflowY: 'auto',
+                                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                                            marginTop: '-5px'
                                         }}>
-                                            📷 Chọn ảnh hoặc Paste (Ctrl+V)
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                multiple
-                                                onChange={handleImageUpload}
-                                                style={{ display: 'none' }}
-                                            />
-                                        </label>
-
-                                        <label className="bulk-import-btn" style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            padding: '10px 25px',
-                                            background: importing ? '#eee' : '#ecfdf5',
-                                            color: '#059669',
-                                            border: `2px solid ${importing ? '#ddd' : '#10b981'}`,
-                                            borderRadius: '15px',
-                                            cursor: importing ? 'not-allowed' : 'pointer',
-                                            fontWeight: '800',
-                                            fontSize: '0.9rem',
-                                            transition: 'all 0.2s',
-                                            whiteSpace: 'nowrap'
-                                        }}>
-                                            {importing ? `⚙️ Xử lý...` : '📁 Up Thư Mục'}
-                                            <input
-                                                type="file"
-                                                webkitdirectory="true"
-                                                directory="true"
-                                                onChange={handleFolderImport}
-                                                style={{ display: 'none' }}
-                                                disabled={importing}
-                                            />
-                                        </label>
-                                    </div>
-
-                                    {importing && (
-                                        <div className="import-progress-mini" style={{ marginBottom: '1.5rem' }}>
-                                            <div style={{ height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{
-                                                    height: '100%',
-                                                    background: '#10b981',
-                                                    width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
-                                                    transition: 'width 0.3s'
-                                                }} />
-                                            </div>
-                                            <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '6px', fontWeight: 'bold', textAlign: 'right' }}>
-                                                Đang nhập thư mục: {importStats.current} / {importStats.total}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                                        <p className="paste-hint" style={{ margin: 0, fontSize: '0.8rem', color: '#999' }}>💡 Gợi ý: Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '5px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#64748b' }}>🎯 Độ nhạy Mắt Thần:</span>
-                                            <select
-                                                value={visualSensitivity}
-                                                onChange={(e) => setVisualSensitivity(Number(e.target.value))}
-                                                style={{ border: 'none', background: 'transparent', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--pink)', outline: 'none', cursor: 'pointer' }}
-                                            >
-                                                <option value={8}>Cực thấp (12%)</option>
-                                                <option value={12}>Thấp (18%)</option>
-                                                <option value={15}>Vừa (23% - Mặc định)</option>
-                                                <option value={18}>Cao (28%)</option>
-                                                <option value={20}>Rất Cao (31%)</option>
-                                                <option value={25}>Cực Cao (39%)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {stagedImages.length > 0 && (
-                                        <div className="staged-images-container">
-                                            <div className="staged-header">
-                                                <span>📦 {stagedImages.length} ảnh trong danh sách</span>
-                                                <button
-                                                    type="button"
-                                                    className="clear-staged-btn"
-                                                    onClick={() => setStagedImages([])}
-                                                >
-                                                    🗑️ Xóa hết
-                                                </button>
-                                            </div>
-                                            <div className="staged-images-grid">
-                                                {stagedImages.map(img => (
-                                                    <div key={img.id} className="staged-image-item">
-                                                        <img src={img.data} alt="Staged" />
-                                                        <button
-                                                            type="button"
-                                                            className="remove-staged-btn"
-                                                            onClick={() => removeStagedImage(img.id)}
-                                                        >
-                                                            ✕
-                                                        </button>
+                                            {allFilterableCategories
+                                                .filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase()))
+                                                .map((cat, idx) => (
+                                                    <div
+                                                        key={cat.id}
+                                                        onClick={() => handleAddSmartTag(cat.name)}
+                                                        className={`suggestion-item ${idx === selectedIndex ? 'active' : ''}`}
+                                                        style={{
+                                                            padding: '10px 15px',
+                                                            cursor: 'pointer',
+                                                            background: idx === selectedIndex ? '#fff0f5' : 'transparent',
+                                                            color: 'var(--brown)',
+                                                            fontWeight: '600',
+                                                            borderBottom: '1px solid #eee'
+                                                        }}
+                                                    >
+                                                        🏷️ {cat.name}
                                                     </div>
                                                 ))}
-                                            </div>
                                         </div>
                                     )}
                                 </div>
+
+                                <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '1rem' }}>
+                                    {formData.tags?.map(tagId => (
+                                        <div key={tagId} className="tag-chip active" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                            padding: '5px 12px',
+                                            background: 'var(--pink)',
+                                            color: 'white',
+                                            borderRadius: '20px',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '600'
+                                        }}>
+                                            #{getCategoryName(tagId) || tagId}
+                                            <span
+                                                onClick={() => {
+                                                    const nextTags = formData.tags.filter(id => id !== tagId);
+                                                    setFormData({
+                                                        ...formData,
+                                                        tags: nextTags
+                                                    });
+                                                }}
+                                                style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.3)', width: '18px', height: '18px', borderRadius: '50%', textAlign: 'center', lineHeight: '16px' }}
+                                            >
+                                                ×
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section 3: Ghi chú & Hình ảnh */}
+                        <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                            <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🖼️ Ghi chú & Hình ảnh</h4>
+                            <div className="description-wrapper" style={{ marginBottom: '1.5rem' }}>
+                                <textarea
+                                    placeholder="Mô tả sản phẩm (Tùy chọn)..."
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="form-textarea"
+                                    rows="2"
+                                />
                             </div>
 
-                            <div className="form-actions" style={{ gridColumn: 'span 2', display: 'flex', gap: '15px', marginTop: '2rem' }}>
-                                {stagedImages.length > 1 && !editingId ? (
-                                    <>
-                                        <button
-                                            type="button"
-                                            className="submit-btn secondary-btn"
-                                            onClick={() => handleSubmit(null, false)}
-                                            style={{ flex: 1, background: 'var(--brown)', color: 'white', padding: '15px' }}
-                                        >
-                                            📦 Lưu thành 1 Album ({stagedImages.length} ảnh)
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="submit-btn primary-btn"
-                                            onClick={() => handleSubmit(null, true)}
-                                            style={{ flex: 1, padding: '15px' }}
-                                        >
-                                            🚀 Lưu thành nhiều sản phẩm (Mỗi ảnh 1 bánh)
-                                        </button>
-                                    </>
-                                ) : (
+                            <div className="image-upload-section">
+                                {/* Simple Status Bar */}
+                                {(uploadStatus.total > 0) && (
+                                    <div style={{
+                                        background: '#fff',
+                                        border: `2px solid #0ea5e9`,
+                                        padding: '12px 20px',
+                                        borderRadius: '15px',
+                                        marginBottom: '1rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        animation: 'fadeIn 0.3s ease',
+                                        fontSize: '0.9rem',
+                                        boxShadow: '0 8px 15px rgba(0,0,0,0.05)'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                <span style={{ fontSize: '1.2rem' }}>✅</span>
+                                                <span style={{ fontWeight: '800', color: '#059669' }}>Nhận: {uploadStatus.added}</span>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 'bold' }}>
+                                                {(uploadStatus.processed / uploadStatus.total * 100).toFixed(0)}%
+                                            </div>
+                                            <div style={{ width: '40px', height: '40px', position: 'relative' }}>
+                                                <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" strokeWidth="3" />
+                                                    <circle
+                                                        cx="18" cy="18" r="16" fill="none" stroke={uploadStatus.processed === uploadStatus.total ? '#059669' : '#0ea5e9'}
+                                                        strokeWidth="3"
+                                                        strokeDasharray={`${(uploadStatus.processed / uploadStatus.total) * 100}, 100`}
+                                                        transition="all 0.4s"
+                                                    />
+                                                </svg>
+                                                {uploadStatus.processed === uploadStatus.total && (
+                                                    <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.8rem' }}>🎉</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
+                                    <label className="image-upload-label" style={{
+                                        flex: 1,
+                                        margin: 0,
+                                        background: 'white',
+                                        color: 'var(--pink)',
+                                        border: '2px solid var(--pink)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '10px',
+                                        padding: '12px'
+                                    }}>
+                                        📷 Chọn ảnh hoặc Paste (Ctrl+V)
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImageUpload}
+                                            style={{ display: 'none' }}
+                                        />
+                                    </label>
+
+                                    <label className="bulk-import-btn" style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '10px 25px',
+                                        background: importing ? '#eee' : '#ecfdf5',
+                                        color: '#059669',
+                                        border: `2px solid ${importing ? '#ddd' : '#10b981'}`,
+                                        borderRadius: '15px',
+                                        cursor: importing ? 'not-allowed' : 'pointer',
+                                        fontWeight: '800',
+                                        fontSize: '0.9rem',
+                                        transition: 'all 0.2s',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {importing ? `⚙️ Xử lý...` : '📁 Up Thư Mục'}
+                                        <input
+                                            type="file"
+                                            webkitdirectory="true"
+                                            directory="true"
+                                            onChange={handleFolderImport}
+                                            style={{ display: 'none' }}
+                                            disabled={importing}
+                                        />
+                                    </label>
+                                </div>
+
+                                {importing && (
+                                    <div className="import-progress-mini" style={{ marginBottom: '1.5rem' }}>
+                                        <div style={{ height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                height: '100%',
+                                                background: '#10b981',
+                                                width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
+                                                transition: 'width 0.3s'
+                                            }} />
+                                        </div>
+                                        <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '6px', fontWeight: 'bold', textAlign: 'right' }}>
+                                            Đang nhập thư mục: {importStats.current} / {importStats.total}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <p className="paste-hint" style={{ margin: 0, fontSize: '0.8rem', color: '#999' }}>💡 Gợi ý: Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
+
+                                {stagedImages.length > 0 && (
+                                    <div className="staged-images-container" style={{ marginTop: '1.5rem' }}>
+                                        <div className="staged-header">
+                                            <span>📦 {stagedImages.length} ảnh trong danh sách</span>
+                                            <button
+                                                type="button"
+                                                className="clear-staged-btn"
+                                                onClick={() => setStagedImages([])}
+                                            >
+                                                🗑️ Xóa hết
+                                            </button>
+                                        </div>
+                                        <div className="staged-images-grid">
+                                            {stagedImages.map(img => (
+                                                <div key={img.id} className="staged-image-item">
+                                                    <img src={img.data} alt="Staged" />
+                                                    <button
+                                                        type="button"
+                                                        className="remove-staged-btn"
+                                                        onClick={() => removeStagedImage(img.id)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="form-actions" style={{ gridColumn: 'span 2', display: 'flex', gap: '15px', marginTop: '2rem' }}>
+                            {stagedImages.length > 1 && !editingId ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="submit-btn secondary-btn"
+                                        onClick={() => handleSubmit(null, false)}
+                                        style={{ flex: 1, background: 'var(--brown)', color: 'white', padding: '15px' }}
+                                    >
+                                        📦 Lưu thành 1 Album ({stagedImages.length} ảnh)
+                                    </button>
                                     <button
                                         type="button"
                                         className="submit-btn primary-btn"
-                                        onClick={() => handleSubmit(null, false)}
-                                        style={{ width: '100%' }}
+                                        onClick={() => handleSubmit(null, true)}
+                                        style={{ flex: 1, padding: '15px' }}
                                     >
-                                        {editingId ? '💾 Cập Nhật' : '✨ Thêm Sản Phẩm'}
+                                        🚀 Lưu thành nhiều sản phẩm (Mỗi ảnh 1 bánh)
                                     </button>
-                                )}
-                                {editingId && (
-                                    <button
-                                        type="button"
-                                        className="cancel-btn"
-                                        onClick={() => {
-                                            setEditingId(null);
-                                            setFormData({
-                                                name: '',
-                                                categoryId: '',
-                                                subCategoryId: '',
-                                                price: '',
-                                                description: '',
-                                                images: [],
-                                                tags: []
-                                            });
-                                            setStagedImages([]);
-                                        }}
-                                    >
-                                        ✕ Hủy
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
-                </>
+                                </>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="submit-btn primary-btn"
+                                    onClick={(e) => handleSubmit(e, false)}
+                                    style={{ width: '100%' }}
+                                >
+                                    {editingId ? '💾 Cập Nhật' : '✨ Thêm Sản Phẩm'}
+                                </button>
+                            )}
+                            {editingId && (
+                                <button
+                                    type="button"
+                                    className="cancel-btn"
+                                    onClick={() => {
+                                        setEditingId(null);
+                                        setFormData({
+                                            name: '',
+                                            categoryId: '',
+                                            subCategoryId: '',
+                                            price: '',
+                                            description: '',
+                                            images: [],
+                                            tags: []
+                                        });
+                                        setStagedImages([]);
+                                    }}
+                                >
+                                    ✕ Hủy
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </div>
             ) : (
                 <div className="manager-section" style={{ background: 'var(--white)', padding: '2rem', borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                     <div className="bulk-tagging-header">
