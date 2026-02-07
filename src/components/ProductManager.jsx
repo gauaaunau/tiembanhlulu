@@ -664,12 +664,10 @@ export default function ProductManager() {
                 // Update ETA in UploadStatus for optional specialized display
                 setUploadStatus(prev => ({ ...prev, processed: globalProcessedCount }));
 
-                // THROTTLING: Smart Queue Drain (v4.6.3)
-                if (globalProcessedCount % 10 === 0) {
-                    console.log(`⏳ Throttling: Waiting for network sync after ${globalProcessedCount} images...`);
-                    await waitForSync(); // Wait for queue to empty
-                    await new Promise(r => setTimeout(r, 1500)); // Safety cooldown
-                }
+                // STRICT STREAM SYNC (v4.6.4)
+                // Sync after EVERY image to prevent "Write stream exhausted"
+                // This relies on network latency as the natural throttle.
+                await waitForSync();
             }
         }
 
