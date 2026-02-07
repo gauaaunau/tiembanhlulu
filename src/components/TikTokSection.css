@@ -147,35 +147,53 @@
 /* Cute Custom Video Player Styles */
 .cute-player-wrapper {
     position: relative;
-    width: 95%;
-    max-width: 500px;
-    height: auto;
+    width: min(95vw, 450px);
+    /* Constrain width but stay responsive */
+    max-height: 92vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     background: #1a1a1a;
     overflow: hidden;
-    border-radius: 25px;
+    border-radius: 28px;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-    padding: 10px;
+    padding: 12px;
     border: 2px solid rgba(255, 255, 255, 0.1);
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .video-main-area {
     position: relative;
     width: 100%;
-    aspect-ratio: 9/16;
+    flex: 1;
+    /* Take up available space */
+    min-height: 0;
+    /* Important for flex child to shrink */
     background: #000;
-    border-radius: 18px;
+    border-radius: 20px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .lightbox-player {
     width: 100%;
     height: 100%;
-    max-height: 65vh;
-    /* Slights smaller as requested */
     object-fit: contain;
+    /* Ensure full video is visible */
     cursor: pointer;
 }
 

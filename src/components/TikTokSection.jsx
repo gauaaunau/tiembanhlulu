@@ -17,7 +17,7 @@ export default function TikTokSection() {
     const [showControls, setShowControls] = useState(true);
 
     useEffect(() => {
-        console.log("🎥 TikTokSection v6.1.2 - Live");
+        console.log("🎥 TikTokSection v6.1.4 - Live");
         const unsubscribe = subscribeToItems('settings', (items) => {
             const tiktokSettings = items.find(item => item.id === 'tiktok_featured');
             if (tiktokSettings && tiktokSettings.videos) {
