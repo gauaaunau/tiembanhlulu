@@ -167,32 +167,38 @@ export default function ProductManager() {
         setIsRepairing(true);
         setRepairStats({ current: 0, total: toRepair.length });
 
-        // Process in small batches to stay safe on mobile
-        const batchSize = 3;
-        for (let i = 0; i < toRepair.length; i += batchSize) {
-            const batch = toRepair.slice(i, i + batchSize);
+        // Process in larger chunks but save in one bulk operation to avoid stream exhaustion
+        const chunkSize = 10;
+        for (let i = 0; i < toRepair.length; i += chunkSize) {
+            const chunk = toRepair.slice(i, i + chunkSize);
+            const batchResults = [];
 
-            await Promise.all(batch.map(async (p) => {
+            // Process images sequentially within the chunk to be safe on memory/canvas
+            for (const p of chunk) {
                 try {
                     const imgUrl = (p.images && p.images[0]) || p.image;
-                    if (!imgUrl) return;
+                    if (!imgUrl) continue;
 
                     const vHash = await calculatePHash(imgUrl);
                     if (vHash) {
-                        await saveItem('products', { ...p, visualHash: vHash.hex, visualBits: vHash.bits, visualVersion: 2 });
+                        batchResults.push({ ...p, visualHash: vHash.hex, visualBits: vHash.bits, visualVersion: 2 });
                     }
                 } catch (err) {
                     console.error("Repair failed for:", p.id, err);
                 }
-            }));
+            }
 
-            setRepairStats(prev => ({ ...prev, current: Math.min(i + batchSize, toRepair.length) }));
-            // Artificial delay between batches to prevent feedback loop crash
-            await new Promise(r => setTimeout(r, 600));
+            if (batchResults.length > 0) {
+                await addItemsBulk('products', batchResults);
+            }
+
+            setRepairStats(prev => ({ ...prev, current: Math.min(i + chunkSize, toRepair.length) }));
+            // Artificial delay between chunks to prevent Firestore exhaustion
+            await new Promise(r => setTimeout(r, 1500));
         }
 
         setIsRepairing(false);
-        alert("🎉 Đã cập nhật dữ liệu thị giác thành công! Giờ đây nhân viên sẽ không thể up trùng các mẫu này nữa.");
+        alert("🎉 Đã cập nhật dữ liệu thị giác thành công! Giờ đây hệ thống sẽ chặn trùng cực kỳ chính xác.");
     };
 
     const getHammingDistance = (bits1, bits2) => {
