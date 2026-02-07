@@ -297,7 +297,6 @@ export default function ProductManager() {
                     const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits);
                     const similarity = Math.round((1 - dist / 64) * 100);
                     alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu: "${dupProduct.name || 'Bánh không tên'}" - Độ tương đồng ${similarity}%)`);
-                    processedFiles++;
                     return;
                 }
 
