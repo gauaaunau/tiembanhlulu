@@ -332,77 +332,82 @@
     gap: 8px;
 }
 
-/* Cute Buttons & Icons Upgrade */
+/* Cute Buttons - Perfect Circles (v6.2.5) */
 .cute-btn {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    color: var(--pink);
-    width: 44px;
-    height: 44px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 38px;
+    /* Slightly smaller as requested */
+    height: 38px;
+    aspect-ratio: 1 / 1;
+    /* Force perfect circle */
+    flex-shrink: 0;
+    /* Prevent distortion */
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 12px rgba(255, 107, 156, 0.15);
+    cursor: pointer;
+    padding: 0;
 }
 
 .cute-btn:hover {
-    background: var(--pink);
-    color: white;
-    transform: scale(1.1) rotate(5deg);
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
 }
 
 .cute-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Shrink volume button specifically */
+.mute-btn {
+    width: 32px;
+    height: 32px;
+}
+
+.mute-btn svg {
+    width: 15px;
+    height: 15px;
 }
 
 .cute-time {
-    color: var(--brown);
-    font-size: 13px;
-    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 600;
     font-family: 'Inter', sans-serif;
-    min-width: 85px;
-    /* Prevent jumping */
+    min-width: 70px;
 }
 
-/* Big Play Button Restored - Better Centering */
+/* Big Play Button - Perfect Circle */
 .big-play-btn.surprise-elastic {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 95px;
-    height: 95px;
-    background: rgba(255, 255, 255, 0.4);
-    /* Transparent glass */
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 4px solid white;
-    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 50% !important;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    cursor: pointer;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     z-index: 10001;
 }
 
-.big-play-btn.surprise-elastic .surprise-btn-icon {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Correct Play Triangle Centering via Path & Translation */
+/* Perfect Play Triangle */
 .is-paused .surprise-path-1 {
-    transform: scale(1) translateX(2px);
-    /* Lower shift to avoid 'lệch' */
+    d: path("M35,25 L35,75 L78,50 L78,50 Z");
+    transform: translateX(4px);
 }
 
 /* SVG Path for PLAY (triangle) - Perfectly centered design */
@@ -410,7 +415,7 @@
     transform: scale(0.95);
 }
 
-/* Mobile Specifics */
+/* Mobile Specifics - Fixing "Vuông Vức" appearance */
 @media (max-width: 480px) {
     .tiktok-section {
         margin: 1.5rem auto;
