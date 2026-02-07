@@ -33,6 +33,7 @@ export default function ProductManager() {
     const [isCloudEnabled] = useState(!!import.meta.env.VITE_FIREBASE_API_KEY);
     const [isStorageEnabled] = useState(false); // REVERTED (v5.0.0): Back to Base64 per user request
     const [uploadingImages, setUploadingImages] = useState(false);
+    const [batchResting, setBatchResting] = useState(false); // v5.0.5
     const [targetTagId, setTargetTagId] = useState('');
     const [bulkSelectedIds, setBulkSelectedIds] = useState([]);
     const [tagInputText, setTagInputText] = useState('');
@@ -306,8 +307,15 @@ export default function ProductManager() {
 
                     // STRICT STREAM SYNC: Prevents "Write stream exhausted"
                     await waitForSync();
-                    // GENTLE THROTTLE (v5.0.4): Give Firestore room to breathe with large Base64
+                    // GENTLE THROTTLE (v5.0.4)
                     await new Promise(r => setTimeout(r, 500));
+
+                    // CHUNKED SYNC (v5.0.5): Pause every 10 images to clear SDK buffer
+                    if ((i + 1) % 10 === 0 && i + 1 < stagedImages.length) {
+                        setBatchResting(true);
+                        await new Promise(r => setTimeout(r, 3000));
+                        setBatchResting(false);
+                    }
                 }
 
                 alert(`Đã thêm ${stagedImages.length} sản phẩm thành công!`);
@@ -665,6 +673,13 @@ export default function ProductManager() {
                 await waitForSync();
                 // GENTLE THROTTLE (v5.0.4): Prevent SDK buffer overflow
                 await new Promise(r => setTimeout(r, 500));
+
+                // CHUNKED SYNC (v5.0.5): Pause every 10 images
+                if ((i + 1) % 10 === 0 && i + 1 < files.length) {
+                    setBatchResting(true);
+                    await new Promise(r => setTimeout(r, 3000));
+                    setBatchResting(false);
+                }
             }
         }
 
@@ -988,24 +1003,24 @@ export default function ProductManager() {
                                     <div className="loading-spinner" style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid var(--pink)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
 
                                     <h2 style={{ fontSize: '2.5rem', margin: '20px 0 10px 0', color: 'var(--brown)', fontWeight: '800' }}>
-                                        Đang nhập hàng... {Math.round((importStats.current / (importStats.total || 1)) * 100)}%
+                                        {batchResting ? '🧘 Đang nghỉ xả hơi 3s...' : `Đang nhập hàng... ${Math.round((importStats.current / (importStats.total || 1)) * 100)}%`}
                                     </h2>
 
                                     <div style={{ width: '100%', height: '12px', background: '#f0f0f0', borderRadius: '6px', margin: '15px 0', overflow: 'hidden' }}>
                                         <div style={{
                                             height: '100%',
-                                            background: 'var(--pink)',
+                                            background: batchResting ? '#94a3b8' : 'var(--pink)',
                                             width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
                                             transition: 'width 0.3s ease'
                                         }}></div>
                                     </div>
 
                                     <p style={{ margin: '5px 0', color: '#666', fontWeight: 'bold' }}>
-                                        {importStats.current} / {importStats.total} ảnh
+                                        {batchResting ? 'Hệ thống đang giải phóng bộ nhớ để tránh nghẽn...' : `${importStats.current} / ${importStats.total} ảnh`}
                                     </p>
 
                                     <p style={{ margin: '10px 0 0 0', color: '#e11d48', fontSize: '0.9rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                        ⚠️ Vui lòng không tắt trình duyệt...
+                                        {batchResting ? '⚡ KHÔNG ĐƯỢC TẮT TRÌNH DUYỆT' : '⚠️ Vui lòng không tắt trình duyệt...'}
                                     </p>
 
                                     {importStats.startTime > 0 && importStats.current > 1 && (
