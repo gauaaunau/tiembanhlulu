@@ -144,6 +144,18 @@ export default function ProductGallery() {
         );
     }, [products, categories]);
 
+    // PRE-CALCULATE UNCATEGORIZED (v5.1.1): Products missing valid tags/categories
+    const uncategorizedProducts = useMemo(() => {
+        return products.filter(p => {
+            const hasCategory = p.categoryId && categories.find(c => c.id === p.categoryId);
+            const hasTags = (p.tags || []).some(t => {
+                const tClean = t.replace(/^(#)/, '').trim();
+                return tClean && !tClean.includes('_');
+            });
+            return !hasCategory && !hasTags;
+        });
+    }, [products, categories]);
+
     // 2. Filter categories based on search
     const allFilterableCategories = useMemo(() => {
         if (!catSearch.trim()) return rawCategories;
@@ -162,11 +174,10 @@ export default function ProductGallery() {
         return cat ? cat.name : (catId || '');
     };
 
-    // OPTIMIZATION: Pre-calculate grouped products for "All" view to avoid O(N^2) in render
     const groupedProducts = useMemo(() => {
         if (filter !== 'All') return [];
 
-        return rawCategories.map(cat => {
+        const groups = rawCategories.map(cat => {
             const catNameLower = cat.name.toLowerCase();
             const productsInCat = products.filter(p => {
                 const pCatName = getCategoryName(p.categoryId).toLowerCase();
@@ -178,8 +189,19 @@ export default function ProductGallery() {
                 });
             });
             return { ...cat, items: productsInCat };
-        }).filter(cat => cat && cat.items && cat.items.length > 0);
-    }, [products, rawCategories]); // Products grouped by ALL categories, search NO LONGER filters this
+        });
+
+        // Add Fallback Group for Uncategorized (v5.1.1)
+        if (uncategorizedProducts.length > 0) {
+            groups.push({
+                id: 'uncategorized',
+                name: 'Sản phẩm mới',
+                items: uncategorizedProducts
+            });
+        }
+
+        return groups.filter(cat => cat && cat.items && cat.items.length > 0);
+    }, [products, rawCategories, uncategorizedProducts]); // Products grouped by ALL categories, search NO LONGER filters this
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
