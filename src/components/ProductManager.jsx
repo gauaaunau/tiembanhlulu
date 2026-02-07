@@ -176,12 +176,17 @@ export default function ProductManager() {
         return dist;
     };
 
-    const findVisualDuplicate = (newHashBits, threshold = 4) => {
-        if (!newHashBits) return null;
-        // Check current products
-        return products.find(p => {
-            if (!p.visualBits) return false;
-            return getHammingDistance(newHashBits, p.visualBits) <= threshold;
+    const findVisualDuplicate = (newHashBits, listToSearch, threshold = 8) => {
+        if (!newHashBits || !listToSearch) return null;
+        return listToSearch.find(item => {
+            const targetBits = item.visualBits || item.vBits;
+            if (!targetBits) return false;
+            const dist = getHammingDistance(newHashBits, targetBits);
+            if (dist <= threshold) {
+                console.log(`[VisualMatch] Distance: ${dist} (<= ${threshold}) - Match found:`, item.name || item.id);
+                return true;
+            }
+            return false;
         });
     };
 
@@ -251,14 +256,21 @@ export default function ProductManager() {
                 const vHash = await calculatePHash(reader.result);
 
                 // Fuzzy Match (HAMMING DISTANCE)
-                const dupProduct = findVisualDuplicate(vHash?.bits);
+                // 1. Check against DB
+                const dupProduct = findVisualDuplicate(vHash?.bits, products);
                 if (dupProduct) {
-                    alert(`⚠️ Mẫu này đã có trong tiệm rồi (Tương đồng cao với bánh: "${dupProduct.name || 'Bánh không tên'}")!`);
+                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu: "${dupProduct.name || 'Bánh không tên'}")`);
                     return;
                 }
 
                 setStagedImages(prev => {
-                    if (vHash && prev.some(img => img.vBits === vHash.bits)) return prev;
+                    // 2. Check against CURRENT BATCH (Fuzzy)
+                    const batchDup = findVisualDuplicate(vHash?.bits, prev);
+                    if (batchDup) {
+                        console.warn("Bỏ qua ảnh trùng trong cùng đợt upload.");
+                        return prev;
+                    }
+
                     return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: reader.result,
@@ -297,14 +309,18 @@ export default function ProductManager() {
                 const vHash = await calculatePHash(imageData);
 
                 // Fuzzy Match (Hamming Distance)
-                const dupProduct = findVisualDuplicate(vHash?.bits);
+                // 1. Check against DB
+                const dupProduct = findVisualDuplicate(vHash?.bits, products);
                 if (dupProduct) {
-                    alert(`⚠️ Mẫu này đã có trong tiệm rồi (Hình ảnh tương đương bánh "${dupProduct.name || 'Bánh không tên'}")!`);
+                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu "${dupProduct.name || 'Bánh không tên'}")`);
                     return;
                 }
 
                 setStagedImages(prev => {
-                    if (vHash && prev.some(img => img.vBits === vHash.bits)) return prev;
+                    // 2. Check against CURRENT BATCH (Fuzzy)
+                    const batchDup = findVisualDuplicate(vHash?.bits, prev);
+                    if (batchDup) return prev;
+
                     return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: imageData,
@@ -721,9 +737,16 @@ export default function ProductManager() {
                     const vHash = await calculatePHash(imageData);
 
                     // Cross-device Visual Check (FUZZY)
-                    const dupProduct = findVisualDuplicate(vHash?.bits);
+                    const dupProduct = findVisualDuplicate(vHash?.bits, products);
                     if (dupProduct) {
                         console.log(`Bỏ qua ảnh trùng visual (giống bánh ${dupProduct.name}): ${file.name}`);
+                        processedCount++;
+                        continue;
+                    }
+
+                    // Intra-batch Check (FUZZY)
+                    if (findVisualDuplicate(vHash?.bits, productsToSave)) {
+                        console.log(`Bỏ qua ảnh trùng trong đợt import này: ${file.name}`);
                         processedCount++;
                         continue;
                     }
