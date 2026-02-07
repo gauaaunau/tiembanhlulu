@@ -32,6 +32,7 @@ export default function ProductManager() {
     const [typedTag, setTypedTag] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const repairExecutedRef = useRef(false);
 
     useEffect(() => {
         console.log("🛠️ ProductManager v2.2.0 - Live");
@@ -73,25 +74,9 @@ export default function ProductManager() {
         checkMigration();
 
         // 2. Setup Real-time Listeners
-        const unsubProducts = subscribeToItems('products', async (items) => {
+        const unsubProducts = subscribeToItems('products', (items) => {
             if (items) {
                 setProducts(items);
-                // Repair legacy products missing VISUAL bits for fuzzy match
-                const missingBits = items.filter(p => !p.visualBits);
-                if (missingBits.length > 0) {
-                    console.log(`Reparing ${missingBits.length} legacy visual bits...`);
-                    for (const p of missingBits) {
-                        try {
-                            const imgUrl = (p.images && p.images[0]) || p.image;
-                            if (!imgUrl) continue;
-
-                            const vHash = await calculatePHash(imgUrl);
-                            if (vHash) {
-                                await saveItem('products', { ...p, visualHash: vHash.hex, visualBits: vHash.bits });
-                            }
-                        } catch (e) { console.error("Repair failed for product:", p.id, e); }
-                    }
-                }
             }
             setIsLoading(false);
         });
