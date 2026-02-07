@@ -1325,9 +1325,10 @@ export default function ProductManager() {
                                         </div>
                                     )}
                                     {inlineEditingId === product.id ? (
-                                        <div className="inline-price-editor" style={{ marginTop: '5px' }}>
+                                        <div className="inline-price-editor">
                                             <input
                                                 autoFocus
+                                                className="inline-price-input"
                                                 type="text"
                                                 value={inlinePriceValue}
                                                 onChange={(e) => setInlinePriceValue(e.target.value)}
@@ -1336,37 +1337,21 @@ export default function ProductManager() {
                                                     if (e.key === 'Escape') setInlineEditingId(null);
                                                 }}
                                                 onBlur={() => handleInlinePriceSave(product, inlinePriceValue)}
-                                                placeholder="Nhập giá..."
-                                                style={{
-                                                    width: '100px',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '10px',
-                                                    border: '2px solid var(--pink)',
-                                                    fontSize: '0.85rem',
-                                                    outline: 'none',
-                                                    textAlign: 'center'
-                                                }}
+                                                placeholder="0"
                                             />
-                                            <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '5px' }}>cành</span>
+                                            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--pink)' }}>cành</span>
                                         </div>
                                     ) : (
-                                        <p
+                                        <div
                                             className="product-price"
                                             onClick={() => {
                                                 setInlineEditingId(product.id);
                                                 setInlinePriceValue(product.price === 'Liên hệ' ? '' : product.price);
                                             }}
-                                            style={{
-                                                cursor: 'pointer',
-                                                padding: '2px 6px',
-                                                borderRadius: '5px',
-                                                transition: 'background 0.2s',
-                                                display: 'inline-block'
-                                            }}
                                             title="Click để sửa giá nhanh"
                                         >
-                                            {isNaN(product.price) ? product.price : `${product.price} cành`} ✏️
-                                        </p>
+                                            {isNaN(product.price) ? product.price : `${product.price} cành`}
+                                        </div>
                                     )}
                                     <p className="product-desc">{product.description}</p>
                                 </div>

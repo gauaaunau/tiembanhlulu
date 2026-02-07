@@ -480,10 +480,64 @@
 }
 
 .product-price {
-    color: var(--pink);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    background: linear-gradient(45deg, var(--pink), #ff85a1);
+    padding: 4px 12px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid white;
+    box-shadow: 0 4px 10px rgba(255, 126, 179, 0.2);
+    margin-bottom: 0.8rem;
+}
+
+.product-price:hover {
+    transform: scale(1.05) rotate(-2deg);
+    box-shadow: 0 6px 15px rgba(255, 126, 179, 0.4);
+}
+
+.product-price::before {
+    content: '🏷️';
+    font-size: 0.9rem;
+}
+
+.inline-price-editor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    border: 2px dashed var(--pink);
+    animation: popScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popScale {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.inline-price-input {
+    width: 80px;
+    border: none;
+    outline: none;
+    font-family: var(--font-body);
     font-weight: 700;
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    color: var(--pink);
+    text-align: center;
+    font-size: 1.1rem;
 }
 
 .product-desc {

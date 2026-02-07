@@ -383,10 +383,22 @@
 }
 
 .product-price {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 800;
-    color: var(--pink);
-    text-shadow: 1px 1px 0 var(--dark-brown);
+    color: white;
+    background: linear-gradient(45deg, var(--pink), #ff85a1);
+    padding: 5px 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(255, 126, 179, 0.3);
+    border: 2px solid white;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.product-price::before {
+    content: '🍰';
+    font-size: 1rem;
 }
 
 .btn-add {
@@ -592,10 +604,24 @@
 }
 
 .external-price {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     font-weight: 800;
     color: white;
-    text-shadow: 0 0 15px rgba(255, 183, 197, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 10px 25px;
+    border-radius: 20px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 20px rgba(255, 126, 179, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.external-price::after {
+    content: '✨';
+    font-size: 1.5rem;
+    filter: drop-shadow(0 0 5px white);
 }
 
 .btn-quick-order {

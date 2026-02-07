@@ -418,7 +418,9 @@ export default function ProductGallery() {
                                                 <h3>{selectedProduct.name}</h3>
                                                 <div className="external-footer">
                                                     {(selectedProduct.price && selectedProduct.price !== 'Liên hệ') && (
-                                                        <span className="external-price">{selectedProduct.price}</span>
+                                                        <span className="external-price">
+                                                            {isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`}
+                                                        </span>
                                                     )}
 
                                                     {!showContactOptions ? (
