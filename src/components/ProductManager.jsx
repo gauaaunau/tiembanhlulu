@@ -42,6 +42,7 @@ export default function ProductManager() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0 });
+    const [progressLabel, setProgressLabel] = useState('Đang nhập hàng...'); // v5.0.8
     const statusTimeoutRef = useRef(null);
 
     useEffect(() => {
@@ -282,6 +283,7 @@ export default function ProductManager() {
                 const baseName = formData.name || getCategoryName(formData.categoryId) || 'Bánh';
 
                 // Initialize Import Stats for the Overlay UI
+                setProgressLabel('Đang dọn hàng lên kệ...');
                 setImportStats({ current: 0, total: stagedImages.length, startTime: Date.now() });
 
                 for (let i = 0; i < stagedImages.length; i++) {
@@ -574,6 +576,7 @@ export default function ProductManager() {
         if (files.length === 0) return;
 
         setImporting(true);
+        setProgressLabel('Đang dọn món từ thư mục...');
         setImportStats({ current: 0, total: files.length, startTime: Date.now() });
         setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
@@ -718,6 +721,7 @@ export default function ProductManager() {
 
         try {
             setImporting(true); // Reuse progress UI
+            setProgressLabel(isFiltered ? `Đang dọn dẹp ${getCategoryName(adminFilter)}...` : 'Đang dọn sạch cửa hàng...');
             setImportStats({ current: 0, total: targetCount, startTime: Date.now() });
 
             for (let i = 0; i < filteredAdminProducts.length; i++) {
@@ -1032,7 +1036,7 @@ export default function ProductManager() {
                                     <div className="loading-spinner" style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid var(--pink)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
 
                                     <h2 style={{ fontSize: '2.5rem', margin: '20px 0 10px 0', color: 'var(--brown)', fontWeight: '800' }}>
-                                        {batchResting ? '🧘 Đang nghỉ xả hơi 3s...' : `Đang nhập hàng... ${Math.round((importStats.current / (importStats.total || 1)) * 100)}%`}
+                                        {batchResting ? '🧘 Đang nghỉ xả hơi 3s...' : `${progressLabel} ${Math.round((importStats.current / (importStats.total || 1)) * 100)}%`}
                                     </h2>
 
                                     <div style={{ width: '100%', height: '12px', background: '#f0f0f0', borderRadius: '6px', margin: '15px 0', overflow: 'hidden' }}>
@@ -1045,7 +1049,7 @@ export default function ProductManager() {
                                     </div>
 
                                     <p style={{ margin: '5px 0', color: '#666', fontWeight: 'bold' }}>
-                                        {batchResting ? 'Hệ thống đang giải phóng bộ nhớ để tránh nghẽn...' : `${importStats.current} / ${importStats.total} ảnh`}
+                                        {batchResting ? 'Hệ thống đang giải phóng bộ nhớ để tránh nghẽn...' : `${importStats.current} / ${importStats.total} ${progressLabel.includes('dọn dẹp') ? 'sản phẩm' : 'ảnh'}`}
                                     </p>
 
                                     <p style={{ margin: '10px 0 0 0', color: '#e11d48', fontSize: '0.9rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
