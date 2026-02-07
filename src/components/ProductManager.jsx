@@ -36,7 +36,7 @@ export default function ProductManager() {
     const [isRepairing, setIsRepairing] = useState(false);
     const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
     const [visualSensitivity, setVisualSensitivity] = useState(15);
-    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null });
+    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null });
     const statusTimeoutRef = useRef(null);
 
     useEffect(() => {
@@ -289,7 +289,7 @@ export default function ProductManager() {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        setUploadStatus({ total: files.length, processed: 0, added: 0, duplicates: 0, lastMatch: null });
+        setUploadStatus({ total: files.length, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null });
 
         files.forEach(async (file) => {
             const reader = new FileReader();
@@ -308,14 +308,15 @@ export default function ProductManager() {
                         ...prev,
                         duplicates: prev.duplicates + 1,
                         processed: prev.processed + 1,
-                        lastMatch: similarity
+                        lastMatch: similarity,
+                        lastMatchedName: dupProduct.name || dupProduct.id
                     }));
 
                     if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                     if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                     statusTimeoutRef.current = setTimeout(() => {
-                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null });
-                    }, 5000);
+                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null });
+                    }, 8000);
                     return;
                 }
 
@@ -360,7 +361,7 @@ export default function ProductManager() {
         if (images.length === 0) return;
         e.preventDefault();
 
-        setUploadStatus({ total: images.length, processed: 0, added: 0, duplicates: 0, lastMatch: null });
+        setUploadStatus({ total: images.length, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null });
 
         images.forEach(async (file) => {
             const reader = new FileReader();
@@ -379,13 +380,14 @@ export default function ProductManager() {
                         ...prev,
                         duplicates: prev.duplicates + 1,
                         processed: prev.processed + 1,
-                        lastMatch: similarity
+                        lastMatch: similarity,
+                        lastMatchedName: dupProduct.name || dupProduct.id
                     }));
 
                     if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                     statusTimeoutRef.current = setTimeout(() => {
-                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null });
-                    }, 5000);
+                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null, lastMatchedName: null });
+                    }, 8000);
                     return;
                 }
 
@@ -1385,8 +1387,15 @@ export default function ProductManager() {
                                                     <span style={{ fontWeight: '800', color: 'var(--pink)' }}>Chặn: {uploadStatus.duplicates}</span>
                                                 </div>
                                                 {uploadStatus.lastMatch && (
-                                                    <div style={{ fontSize: '0.75rem', color: '#999', fontStyle: 'italic', marginLeft: '5px' }}>
-                                                        (Khớp {uploadStatus.lastMatch}%)
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <div style={{ fontSize: '0.75rem', color: '#999', fontStyle: 'italic', marginLeft: '5px' }}>
+                                                            (Trùng {uploadStatus.lastMatch}%)
+                                                        </div>
+                                                        {uploadStatus.lastMatchedName && (
+                                                            <div style={{ fontSize: '0.8rem', color: 'var(--pink)', fontWeight: 'bold', marginLeft: '5px', background: '#fff1f2', padding: '2px 8px', borderRadius: '5px' }}>
+                                                                Tên: {uploadStatus.lastMatchedName}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
