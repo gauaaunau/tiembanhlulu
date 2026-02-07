@@ -65,19 +65,24 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.95);
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.play-icon {
-    font-size: 12px;
+.play-icon-svg {
+    width: 18px;
+    height: 18px;
     color: var(--pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-left: 2px;
 }
 
@@ -123,19 +128,19 @@
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.9);
     border: none;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    font-size: 20px;
+    color: #333;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10001;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
 }
 
 .close-lightbox:hover {
@@ -149,16 +154,18 @@
     position: relative;
     width: min(92vw, 420px);
     height: auto;
-    max-height: 95vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     background: #111;
     overflow: hidden;
-    border-radius: 30px;
+    border-radius: 32px;
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-top: 20px;
+    /* Slight offset to balance the close button space */
 }
 
 @keyframes slideUp {
@@ -179,12 +186,12 @@
     height: auto;
     max-height: 70vh;
     background: #000;
-    border-radius: 22px;
+    border-radius: 24px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
 }
 
 .lightbox-player {
@@ -196,126 +203,75 @@
     cursor: pointer;
 }
 
-/* Glassmorphic Controls - Now Static below video */
+/* Glassmorphic Controls */
 .cute-controls {
     position: relative;
     width: 100%;
     background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 15px 5px 5px 5px;
+    padding: 18px 8px 8px 8px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    opacity: 1;
-    /* Always visible */
-    transform: none;
-    z-index: 10002;
-    pointer-events: auto;
+    gap: 14px;
 }
 
-.controls-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.controls-left,
-.controls-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Cute Buttons */
+/* Cute Buttons with SVG support */
 .cute-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border: none;
     color: white;
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    font-size: 14px;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cute-btn:hover {
     background: var(--pink);
-    transform: scale(1.15);
+    transform: scale(1.1);
+    color: white;
 }
 
-.cute-time {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 11px;
-    font-weight: 500;
-    font-family: 'Inter', sans-serif;
+.cute-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
-/* Cute Seeker/Range Styles */
-.cute-seeker,
-.cute-volume-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    outline: none;
-}
-
-.cute-seeker::-webkit-slider-thumb,
-.cute-volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 14px;
-    height: 14px;
-    background: var(--pink);
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(255, 100, 150, 0.4);
-}
-
-.volume-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.cute-volume-slider {
-    width: 60px;
-}
-
-/* Big Play Button on Pause */
+/* Big Play Button on Pause with SVG */
 .big-play-btn {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 28px;
     cursor: pointer;
     transition: all 0.3s ease;
     z-index: 10001;
-    padding-left: 4px;
+}
+
+.big-play-btn svg {
+    width: 34px;
+    height: 34px;
+    margin-left: 4px;
 }
 
 .big-play-btn:hover {
     background: var(--pink);
     border-color: white;
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: translate(-50%, -50%) scale(1.1);
 }
 
 /* Mobile Specifics */
