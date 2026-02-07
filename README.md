@@ -1,3 +1,7 @@
+# Sweet Pantry - Admin Dashboard
+
+> **Current Status**: Stable Release v4.6.4 (Strict Stream Sync) - [DEPLOY_TRIGGER_7053]
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
