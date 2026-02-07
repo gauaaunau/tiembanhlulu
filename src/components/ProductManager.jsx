@@ -156,7 +156,7 @@ export default function ProductManager() {
     };
 
     const handleManualRepair = async () => {
-        const toRepair = products.filter(p => !p.visualBits);
+        const toRepair = products.filter(p => p.visualVersion !== 2 || !p.visualBits);
         if (toRepair.length === 0) {
             alert("✨ Mọi sản phẩm đều đã có dữ liệu thị giác!");
             return;
@@ -179,7 +179,7 @@ export default function ProductManager() {
 
                     const vHash = await calculatePHash(imgUrl);
                     if (vHash) {
-                        await saveItem('products', { ...p, visualHash: vHash.hex, visualBits: vHash.bits });
+                        await saveItem('products', { ...p, visualHash: vHash.hex, visualBits: vHash.bits, visualVersion: 2 });
                     }
                 } catch (err) {
                     console.error("Repair failed for:", p.id, err);
@@ -427,6 +427,7 @@ export default function ProductManager() {
                         imageHash: img.hash || null,
                         visualHash: img.vHash || null,
                         visualBits: img.vBits || null, // SAVING BITS FOR FUZZY MATCH
+                        visualVersion: 2,
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
@@ -475,6 +476,7 @@ export default function ProductManager() {
                 imageHash: stagedImages[0]?.hash || null, // Hash from first image
                 visualHash: stagedImages[0]?.vHash || null,
                 visualBits: stagedImages[0]?.vBits || null,
+                visualVersion: 2,
                 createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
             };
 
@@ -1055,16 +1057,16 @@ export default function ProductManager() {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ marginBottom: '5px', fontWeight: 'bold', color: 'var(--pink)' }}>
-                                    {products.filter(p => !p.visualBits).length} ảnh cần học
+                                    {products.filter(p => p.visualVersion !== 2 || !p.visualBits).length} ảnh cần học
                                 </div>
                                 <button
                                     onClick={handleManualRepair}
-                                    disabled={isRepairing || products.filter(p => !p.visualBits).length === 0}
+                                    disabled={isRepairing || products.filter(p => p.visualVersion !== 2 || !p.visualBits).length === 0}
                                     className="primary-btn"
                                     style={{
                                         padding: '10px 25px',
                                         borderRadius: '12px',
-                                        opacity: isRepairing || products.filter(p => !p.visualBits).length === 0 ? 0.5 : 1
+                                        opacity: isRepairing || products.filter(p => p.visualVersion !== 2 || !p.visualBits).length === 0 ? 0.5 : 1
                                     }}
                                 >
                                     {isRepairing ? '⏳ Đang học...' : '🚀 Bắt đầu ngay'}
