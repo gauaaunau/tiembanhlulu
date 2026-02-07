@@ -35,7 +35,7 @@ export default function ProductManager() {
     const repairExecutedRef = useRef(false);
     const [isRepairing, setIsRepairing] = useState(false);
     const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
-    const [visualSensitivity, setVisualSensitivity] = useState(15);
+    const [visualSensitivity, setVisualSensitivity] = useState(18);
 
     useEffect(() => {
         console.log("🛠️ ProductManager v2.2.0 - Live");
