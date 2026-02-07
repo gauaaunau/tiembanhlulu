@@ -73,9 +73,22 @@ export default function ProductManager() {
         checkMigration();
 
         // 2. Setup Real-time Listeners
-        const unsubProducts = subscribeToItems('products', (items) => {
-            if (items) setProducts(items);
-            setIsLoading(false); // Stop loading after first batch
+        const unsubProducts = subscribeToItems('products', async (items) => {
+            if (items) {
+                setProducts(items);
+                // Repair legacy products missing hashes (Base64 only)
+                const missingHashes = items.filter(p => !p.imageHash && p.images && p.images[0]?.startsWith('data:image'));
+                if (missingHashes.length > 0) {
+                    console.log(`Reparing ${missingHashes.length} legacy hashes...`);
+                    for (const p of missingHashes) {
+                        try {
+                            const hash = await calculateDataHash(p.images[0]);
+                            await saveItem('products', { ...p, imageHash: hash });
+                        } catch (e) { console.error(e); }
+                    }
+                }
+            }
+            setIsLoading(false);
         });
 
         const unsubCategories = subscribeToItems('categories', (items) => {
@@ -113,6 +126,21 @@ export default function ProductManager() {
         };
         saveDrafts();
     }, [stagedImages]);
+
+    const calculateDataHash = async (base64OrBlob) => {
+        let buffer;
+        if (typeof base64OrBlob === 'string' && base64OrBlob.startsWith('data:')) {
+            const res = await fetch(base64OrBlob);
+            buffer = await res.arrayBuffer();
+        } else if (base64OrBlob instanceof Blob) {
+            buffer = await base64OrBlob.arrayBuffer();
+        } else {
+            return null;
+        }
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
 
     const compressImage = (base64Str, maxWidth = 1600, maxHeight = 1600) => {
         return new Promise((resolve) => {
@@ -292,6 +320,7 @@ export default function ProductManager() {
                         id: `prod_${Date.now()}_${i}`,
                         name: stagedImages.length > 1 ? `${baseName} ${i + 1}` : baseName,
                         images: [finalUrl],
+                        imageHash: img.hash, // SAVE THE HASH!
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
@@ -337,6 +366,7 @@ export default function ProductManager() {
                 id: editingId || `prod_${Date.now()}`,
                 price: formData.price,
                 images: finalImages,
+                imageHash: stagedImages[0]?.hash || null, // Hash from first image
                 createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
             };
 
@@ -609,6 +639,15 @@ export default function ProductManager() {
             for (const file of catFiles) {
                 try {
 
+                    const originalHash = await calculateDataHash(file);
+
+                    // Cross-device Check
+                    if (products.some(p => p.imageHash === originalHash)) {
+                        console.log(`Bỏ qua ảnh đã có trong tiệm: ${file.name}`);
+                        processedCount++;
+                        continue;
+                    }
+
                     const reader = new FileReader();
                     const imageData = await new Promise((resolve) => {
                         reader.onload = (re) => resolve(re.target.result);
@@ -617,7 +656,7 @@ export default function ProductManager() {
                     const compressed = await compressImage(imageData);
 
                     // Duplicate Check (Centralized & Robust)
-                    if (isImageDuplicate(compressed)) {
+                    if (isImageDuplicate(compressed)) { // Keep as fallback
                         console.log(`Bỏ qua ảnh trùng: ${file.name}`);
                         processedCount++;
                         continue;
@@ -644,7 +683,8 @@ export default function ProductManager() {
                         description: '',
                         images: [finalUrl],
                         createdAt: Date.now(),
-                        tags: [catName] // Only folder name, no ID
+                        tags: [catName], // Only folder name, no ID
+                        imageHash: originalHash
                     };
 
                     newProducts.push(newProd);
