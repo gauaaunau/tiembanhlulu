@@ -76,15 +76,20 @@ export default function ProductManager() {
         const unsubProducts = subscribeToItems('products', async (items) => {
             if (items) {
                 setProducts(items);
-                // Repair legacy products missing VISUAL hashes
-                const missingHashes = items.filter(p => !p.visualHash && p.images && p.images[0]?.startsWith('data:image'));
-                if (missingHashes.length > 0) {
-                    console.log(`Reparing ${missingHashes.length} legacy visual hashes...`);
-                    for (const p of missingHashes) {
+                // Repair legacy products missing VISUAL hashes (Base64 AND Cloud URLs)
+                const missingTags = items.filter(p => !p.visualHash);
+                if (missingTags.length > 0) {
+                    console.log(`Reparing ${missingTags.length} legacy visual hashes...`);
+                    for (const p of missingTags) {
                         try {
-                            const vHash = await calculatePHash(p.images[0]);
-                            await saveItem('products', { ...p, visualHash: vHash });
-                        } catch (e) { console.error(e); }
+                            const imgUrl = (p.images && p.images[0]) || p.image;
+                            if (!imgUrl) continue;
+
+                            const vHash = await calculatePHash(imgUrl);
+                            if (vHash) {
+                                await saveItem('products', { ...p, visualHash: vHash.hex, visualBits: vHash.bits });
+                            }
+                        } catch (e) { console.error("Repair failed for product:", p.id, e); }
                     }
                 }
             }
@@ -127,10 +132,11 @@ export default function ProductManager() {
         saveDrafts();
     }, [stagedImages]);
 
-    const calculatePHash = (base64) => {
+    const calculatePHash = (imgSource) => {
         return new Promise((resolve) => {
             const img = new Image();
-            img.src = base64;
+            img.crossOrigin = "Anonymous"; // Crucial for cloud images
+            img.src = imgSource;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = 8;
@@ -145,15 +151,37 @@ export default function ProductManager() {
                 }
 
                 const avg = gray.reduce((a, b) => a + b, 0) / 64;
-                const hash = gray.map(p => (p >= avg ? '1' : '0')).join('');
+                const bits = gray.map(p => (p >= avg ? '1' : '0')).join('');
+
                 // Convert 64-bit string to hex for storage
                 let hex = '';
                 for (let i = 0; i < 64; i += 4) {
-                    hex += parseInt(hash.substr(i, 4), 2).toString(16);
+                    hex += parseInt(bits.substr(i, 4), 2).toString(16);
                 }
-                resolve(hex);
+                resolve({ hex, bits });
             };
-            img.onerror = () => resolve(null);
+            img.onerror = (e) => {
+                console.error("pHash Load Error:", e);
+                resolve(null);
+            };
+        });
+    };
+
+    const getHammingDistance = (bits1, bits2) => {
+        if (!bits1 || !bits2 || bits1.length !== bits2.length) return 999;
+        let dist = 0;
+        for (let i = 0; i < bits1.length; i++) {
+            if (bits1[i] !== bits2[i]) dist++;
+        }
+        return dist;
+    };
+
+    const findVisualDuplicate = (newHashBits, threshold = 4) => {
+        if (!newHashBits) return null;
+        // Check current products
+        return products.find(p => {
+            if (!p.visualBits) return false;
+            return getHammingDistance(newHashBits, p.visualBits) <= threshold;
         });
     };
 
@@ -222,25 +250,26 @@ export default function ProductManager() {
             reader.onloadend = async () => {
                 const vHash = await calculatePHash(reader.result);
 
-                // Visual Check against DB
-                const isVisualDup = products.some(p => p.visualHash === vHash);
-                if (isVisualDup) {
-                    alert(`⚠️ Mẫu bánh này đã có trong tiệm rồi (${file.name})!`);
+                // Fuzzy Match (HAMMING DISTANCE)
+                const dupProduct = findVisualDuplicate(vHash?.bits);
+                if (dupProduct) {
+                    alert(`⚠️ Mẫu này đã có trong tiệm rồi (Tương đồng cao với bánh: "${dupProduct.name || 'Bánh không tên'}")!`);
                     return;
                 }
 
                 setStagedImages(prev => {
-                    if (prev.some(img => img.vHash === vHash)) return prev;
+                    if (vHash && prev.some(img => img.vBits === vHash.bits)) return prev;
                     return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: reader.result,
-                        vHash
+                        vHash: vHash?.hex,
+                        vBits: vHash?.bits
                     }];
                 });
 
                 const compressed = await compressImage(reader.result);
                 setStagedImages(prev => prev.map(img =>
-                    img.vHash === vHash ? { ...img, data: compressed } : img
+                    img.vBits === vHash?.bits ? { ...img, data: compressed } : img
                 ));
             };
             reader.readAsDataURL(file);
@@ -267,25 +296,26 @@ export default function ProductManager() {
                 const imageData = reader.result;
                 const vHash = await calculatePHash(imageData);
 
-                // Check against global library (Visual Match)
-                const isVisualDup = products.some(p => p.visualHash === vHash);
-                if (isVisualDup) {
-                    alert('⚠️ Mẫu bánh này đã có trong cửa hàng rồi! (Phát hiện thấy hình ảnh trùng khớp)');
+                // Fuzzy Match (Hamming Distance)
+                const dupProduct = findVisualDuplicate(vHash?.bits);
+                if (dupProduct) {
+                    alert(`⚠️ Mẫu này đã có trong tiệm rồi (Hình ảnh tương đương bánh "${dupProduct.name || 'Bánh không tên'}")!`);
                     return;
                 }
 
                 setStagedImages(prev => {
-                    if (prev.some(img => img.vHash === vHash)) return prev;
+                    if (vHash && prev.some(img => img.vBits === vHash.bits)) return prev;
                     return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: imageData,
-                        vHash
+                        vHash: vHash?.hex,
+                        vBits: vHash?.bits
                     }];
                 });
 
                 const compressed = await compressImage(imageData);
                 setStagedImages(prev => prev.map(img =>
-                    img.vHash === vHash ? { ...img, data: compressed } : img
+                    img.vBits === vHash?.bits ? { ...img, data: compressed } : img
                 ));
             };
             reader.readAsDataURL(file);
@@ -352,6 +382,7 @@ export default function ProductManager() {
                         images: [finalUrl],
                         imageHash: img.hash || null,
                         visualHash: img.vHash || null,
+                        visualBits: img.vBits || null, // SAVING BITS FOR FUZZY MATCH
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
@@ -399,6 +430,7 @@ export default function ProductManager() {
                 images: finalImages,
                 imageHash: stagedImages[0]?.hash || null, // Hash from first image
                 visualHash: stagedImages[0]?.vHash || null,
+                visualBits: stagedImages[0]?.vBits || null,
                 createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
             };
 
@@ -688,9 +720,10 @@ export default function ProductManager() {
 
                     const vHash = await calculatePHash(imageData);
 
-                    // Cross-device Visual Check
-                    if (products.some(p => p.visualHash === vHash)) {
-                        console.log(`Bỏ qua ảnh đã có trong tiệm (trùng hình ảnh): ${file.name}`);
+                    // Cross-device Visual Check (FUZZY)
+                    const dupProduct = findVisualDuplicate(vHash?.bits);
+                    if (dupProduct) {
+                        console.log(`Bỏ qua ảnh trùng visual (giống bánh ${dupProduct.name}): ${file.name}`);
                         processedCount++;
                         continue;
                     }
@@ -727,7 +760,8 @@ export default function ProductManager() {
                         createdAt: Date.now(),
                         tags: [catName], // Only folder name, no ID
                         imageHash: originalHash,
-                        visualHash: vHash
+                        visualHash: vHash?.hex,
+                        visualBits: vHash?.bits
                     };
 
                     newProducts.push(newProd);
