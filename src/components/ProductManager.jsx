@@ -76,14 +76,14 @@ export default function ProductManager() {
         const unsubProducts = subscribeToItems('products', async (items) => {
             if (items) {
                 setProducts(items);
-                // Repair legacy products missing hashes (Base64 only)
-                const missingHashes = items.filter(p => !p.imageHash && p.images && p.images[0]?.startsWith('data:image'));
+                // Repair legacy products missing VISUAL hashes
+                const missingHashes = items.filter(p => !p.visualHash && p.images && p.images[0]?.startsWith('data:image'));
                 if (missingHashes.length > 0) {
-                    console.log(`Reparing ${missingHashes.length} legacy hashes...`);
+                    console.log(`Reparing ${missingHashes.length} legacy visual hashes...`);
                     for (const p of missingHashes) {
                         try {
-                            const hash = await calculateDataHash(p.images[0]);
-                            await saveItem('products', { ...p, imageHash: hash });
+                            const vHash = await calculatePHash(p.images[0]);
+                            await saveItem('products', { ...p, visualHash: vHash });
                         } catch (e) { console.error(e); }
                     }
                 }
@@ -126,6 +126,36 @@ export default function ProductManager() {
         };
         saveDrafts();
     }, [stagedImages]);
+
+    const calculatePHash = (base64) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 8;
+                canvas.height = 8;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 8, 8);
+                const data = ctx.getImageData(0, 0, 8, 8).data;
+
+                let gray = [];
+                for (let i = 0; i < data.length; i += 4) {
+                    gray.push(Math.floor((data[i] + data[i + 1] + data[i + 2]) / 3));
+                }
+
+                const avg = gray.reduce((a, b) => a + b, 0) / 64;
+                const hash = gray.map(p => (p >= avg ? '1' : '0')).join('');
+                // Convert 64-bit string to hex for storage
+                let hex = '';
+                for (let i = 0; i < 64; i += 4) {
+                    hex += parseInt(hash.substr(i, 4), 2).toString(16);
+                }
+                resolve(hex);
+            };
+            img.onerror = () => resolve(null);
+        });
+    };
 
     const calculateDataHash = async (base64OrBlob) => {
         let buffer;
@@ -190,31 +220,28 @@ export default function ProductManager() {
         files.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = async () => {
-                const compressed = await compressImage(reader.result);
+                const vHash = await calculatePHash(reader.result);
+
+                // Visual Check against DB
+                const isVisualDup = products.some(p => p.visualHash === vHash);
+                if (isVisualDup) {
+                    alert(`⚠️ Mẫu bánh này đã có trong tiệm rồi (${file.name})!`);
+                    return;
+                }
 
                 setStagedImages(prev => {
-                    // Check local staged (using functional PREV to avoid closure bug)
-                    const isStagedDup = prev.some(img => img.data === compressed);
-                    if (isStagedDup) {
-                        console.warn(`Bỏ qua ảnh trùng trong lượt này: ${file.name}`);
-                        return prev;
-                    }
-
-                    // Check global library (products list is stable enough here)
-                    const isGlobalDup = products.some(p =>
-                        (p.images || [p.image] || []).some(img => img === compressed)
-                    );
-
-                    if (isGlobalDup) {
-                        alert(`⚠️ Mẫu này đã có trong cửa hàng rồi (${file.name})!`);
-                        return prev;
-                    }
-
+                    if (prev.some(img => img.vHash === vHash)) return prev;
                     return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
-                        data: compressed
+                        data: reader.result,
+                        vHash
                     }];
                 });
+
+                const compressed = await compressImage(reader.result);
+                setStagedImages(prev => prev.map(img =>
+                    img.vHash === vHash ? { ...img, data: compressed } : img
+                ));
             };
             reader.readAsDataURL(file);
         });
@@ -237,26 +264,29 @@ export default function ProductManager() {
         images.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = async () => {
-                const imageData = await compressImage(reader.result);
+                const imageData = reader.result;
+                const vHash = await calculatePHash(imageData);
+
+                // Check against global library (Visual Match)
+                const isVisualDup = products.some(p => p.visualHash === vHash);
+                if (isVisualDup) {
+                    alert('⚠️ Mẫu bánh này đã có trong cửa hàng rồi! (Phát hiện thấy hình ảnh trùng khớp)');
+                    return;
+                }
 
                 setStagedImages(prev => {
-                    const isStagedDup = prev.some(img => img.data === imageData);
-                    if (isStagedDup) return prev;
-
-                    const isGlobalDup = products.some(p =>
-                        (p.images || [p.image] || []).some(img => img === imageData)
-                    );
-
-                    if (isGlobalDup) {
-                        alert('⚠️ Ảnh này đã có trong cửa hàng rồi!');
-                        return prev;
-                    }
-
+                    if (prev.some(img => img.vHash === vHash)) return prev;
                     return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
-                        data: imageData
+                        data: imageData,
+                        vHash
                     }];
                 });
+
+                const compressed = await compressImage(imageData);
+                setStagedImages(prev => prev.map(img =>
+                    img.vHash === vHash ? { ...img, data: compressed } : img
+                ));
             };
             reader.readAsDataURL(file);
         });
@@ -320,7 +350,8 @@ export default function ProductManager() {
                         id: `prod_${Date.now()}_${i}`,
                         name: stagedImages.length > 1 ? `${baseName} ${i + 1}` : baseName,
                         images: [finalUrl],
-                        imageHash: img.hash, // SAVE THE HASH!
+                        imageHash: img.hash || null,
+                        visualHash: img.vHash || null,
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
@@ -367,6 +398,7 @@ export default function ProductManager() {
                 price: formData.price,
                 images: finalImages,
                 imageHash: stagedImages[0]?.hash || null, // Hash from first image
+                visualHash: stagedImages[0]?.vHash || null,
                 createdAt: editingId ? (products.find(p => p.id === editingId)?.createdAt || Date.now()) : Date.now()
             };
 
@@ -653,6 +685,16 @@ export default function ProductManager() {
                         reader.onload = (re) => resolve(re.target.result);
                         reader.readAsDataURL(file);
                     });
+
+                    const vHash = await calculatePHash(imageData);
+
+                    // Cross-device Visual Check
+                    if (products.some(p => p.visualHash === vHash)) {
+                        console.log(`Bỏ qua ảnh đã có trong tiệm (trùng hình ảnh): ${file.name}`);
+                        processedCount++;
+                        continue;
+                    }
+
                     const compressed = await compressImage(imageData);
 
                     // Duplicate Check (Centralized & Robust)
@@ -684,7 +726,8 @@ export default function ProductManager() {
                         images: [finalUrl],
                         createdAt: Date.now(),
                         tags: [catName], // Only folder name, no ID
-                        imageHash: originalHash
+                        imageHash: originalHash,
+                        visualHash: vHash
                     };
 
                     newProducts.push(newProd);
