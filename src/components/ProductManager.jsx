@@ -966,20 +966,62 @@ export default function ProductManager() {
                             </div>
                         </div>
 
-                        {/* Footer Actions */}
+                        {/* Footer Actions / Progress Section */}
                         <div className="form-footer-sticky" style={{ borderTop: '1px solid #f0f0f0', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-                            {stagedImages.length > 1 && !editingId ? (
+                            {importing || (uploadingImages && stagedImages.length > 1) ? (
+                                /* INLINE PROGRESS UI (v5.0.3) */
+                                <div style={{
+                                    width: '100%',
+                                    maxWidth: '500px',
+                                    padding: '2rem',
+                                    background: 'white',
+                                    borderRadius: '20px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    textAlign: 'center'
+                                }}>
+                                    <div className="loading-spinner" style={{ width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid var(--pink)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+
+                                    <h2 style={{ fontSize: '2.5rem', margin: '20px 0 10px 0', color: 'var(--brown)', fontWeight: '800' }}>
+                                        Đang nhập hàng... {Math.round((importStats.current / (importStats.total || 1)) * 100)}%
+                                    </h2>
+
+                                    <div style={{ width: '100%', height: '12px', background: '#f0f0f0', borderRadius: '6px', margin: '15px 0', overflow: 'hidden' }}>
+                                        <div style={{
+                                            height: '100%',
+                                            background: 'var(--pink)',
+                                            width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
+                                            transition: 'width 0.3s ease'
+                                        }}></div>
+                                    </div>
+
+                                    <p style={{ margin: '5px 0', color: '#666', fontWeight: 'bold' }}>
+                                        {importStats.current} / {importStats.total} ảnh
+                                    </p>
+
+                                    <p style={{ margin: '10px 0 0 0', color: '#e11d48', fontSize: '0.9rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        ⚠️ Vui lòng không tắt trình duyệt...
+                                    </p>
+
+                                    {importStats.startTime > 0 && importStats.current > 1 && (
+                                        <p style={{ marginTop: '5px', color: '#999', fontSize: '0.8rem' }}>
+                                            ⏱️ Ước tính còn: {Math.ceil(((Date.now() - importStats.startTime) / importStats.current) * (importStats.total - importStats.current) / 1000)} giây
+                                        </p>
+                                    )}
+                                </div>
+                            ) : stagedImages.length > 1 && !editingId ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', width: '100%', maxWidth: '600px' }}>
-                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ background: 'var(--brown)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} disabled={uploadingImages} style={{ background: 'var(--brown)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer' }}>
                                         📦 LƯU 1 ALBUM CHUNG
                                     </button>
-                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} style={{ background: 'var(--pink)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none' }}>
+                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} disabled={uploadingImages} style={{ background: 'var(--pink)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
                                         🚀 LƯU RIÊNG TỪNG CHIẾC
                                     </button>
                                 </div>
                             ) : (
-                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} style={{ width: '100%', maxWidth: '400px', background: 'var(--pink)', color: 'white', height: '55px', borderRadius: '15px', fontSize: '1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 6px 20px rgba(255, 133, 162, 0.2)', transition: 'transform 0.2s' }}>
-                                    {editingId ? '💾 LƯU THAY ĐỔI' : '✨ HOÀN TẤT & THÊM BÁNH'}
+                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} disabled={uploadingImages} style={{ width: '100%', maxWidth: '400px', background: 'var(--pink)', color: 'white', height: '55px', borderRadius: '15px', fontSize: '1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 6px 20px rgba(255, 133, 162, 0.2)', transition: 'transform 0.2s' }}>
+                                    {uploadingImages ? '⏳ ĐANG XỬ LÝ...' : (editingId ? '💾 LƯU THAY ĐỔI' : '✨ HOÀN TẤT & THÊM BÁNH')}
                                 </button>
                             )}
 
@@ -1105,46 +1147,6 @@ export default function ProductManager() {
                 </div>
             )}
 
-            {/* PROGRESS OVERLAY (v4.6.0) */}
-            {(importing || (uploadingImages && stagedImages.length > 1)) && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    zIndex: 9999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
-                    <div className="loading-spinner" style={{ width: '60px', height: '60px', border: '6px solid #f3f3f3', borderTop: '6px solid var(--pink)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                    <h2 style={{ marginTop: '20px', color: 'var(--brown)', fontWeight: '800' }}>
-                        Đang nhập hàng... {Math.round((importStats.current / (importStats.total || 1)) * 100)}%
-                    </h2>
-                    <div style={{ width: '300px', height: '10px', background: '#eee', borderRadius: '5px', marginTop: '10px', overflow: 'hidden' }}>
-                        <div style={{
-                            height: '100%',
-                            background: 'var(--pink)',
-                            width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
-                            transition: 'width 0.3s ease'
-                        }}></div>
-                    </div>
-                    <p style={{ marginTop: '10px', color: '#666', fontWeight: '500' }}>
-                        {importStats.current} / {importStats.total} ảnh
-                    </p>
-                    {importStats.startTime > 0 && importStats.current > 0 && (
-                        <p style={{ marginTop: '5px', color: '#888', fontSize: '0.9rem' }}>
-                            ⏱️ Còn khoảng: {Math.ceil(((Date.now() - importStats.startTime) / importStats.current) * (importStats.total - importStats.current) / 1000)} giây
-                        </p>
-                    )}
-                    <p style={{ marginTop: '5px', color: '#999', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                        Vui lòng không tắt trình duyệt...
-                    </p>
-                </div>
-            )}
 
             <div className="manager-section">
                 <div className="list-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
