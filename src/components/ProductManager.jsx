@@ -393,8 +393,11 @@ export default function ProductManager() {
             // Upload all images
             const finalImages = await processImagesForUpload(productImages);
 
+            const finalName = formData.name.trim() || `Bánh ${products.length + 1}`;
+
             const productData = {
                 ...formData,
+                name: finalName,
                 id: editingId || `prod_${Date.now()}`,
                 price: formData.price,
                 images: finalImages,
@@ -693,7 +696,7 @@ export default function ProductManager() {
 
                     const newProd = {
                         id: `prod_${Date.now()}_${Math.random()}`,
-                        name: '',
+                        name: `Bánh ${newProducts.length + 1}`,
                         categoryId: cat.id,
                         price: 'Liên hệ',
                         description: '',

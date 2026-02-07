@@ -68,13 +68,13 @@ export default function Hero() {
             <a href="https://facebook.com/tiembanhlulu" target="_blank" rel="noopener noreferrer" title="Facebook">
               <img src="https://img.icons8.com/color/48/facebook-new.png" alt="FB" />
             </a>
-            <a href="https://instagram.com/tiembanhlulu" target="_blank" rel="noopener noreferrer" title="Instagram">
+            <a href="https://instagram.com/tiembanh.lulu" target="_blank" rel="noopener noreferrer" title="Instagram">
               <img src="https://img.icons8.com/color/48/instagram-new.png" alt="IG" />
             </a>
-            <a href="https://tiktok.com/@tiembanhlulu" target="_blank" rel="noopener noreferrer" title="TikTok">
+            <a href="https://tiktok.com/@tiembanh.lulu" target="_blank" rel="noopener noreferrer" title="TikTok">
               <img src="https://img.icons8.com/color/48/tiktok.png" alt="TT" />
             </a>
-            <a href="https://zalo.me/0376722830" target="_blank" rel="noopener noreferrer" title="Zalo">
+            <a href="https://zalo.me/0798341868" target="_blank" rel="noopener noreferrer" title="Zalo">
               <img src="https://img.icons8.com/color/48/zalo.png" alt="Zalo" />
             </a>
           </div>
