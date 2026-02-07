@@ -931,16 +931,16 @@ export default function ProductManager() {
                         <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Điền thông tin và hình ảnh để hiển thị lên tiệm bánh Lulu</p>
                     </div>
 
-                    <form className="product-form" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }} onSubmit={(e) => handleSubmit(e, false)}>
+                    <form className="product-form" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem', boxSizing: 'border-box', maxWidth: '100%' }} onSubmit={(e) => handleSubmit(e, false)}>
                         <div className="form-sections-container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                             {/* Section 1: Thông tin cơ bản */}
-                            <div className="form-group-section" style={{ background: '#fbfbfb', padding: '1.5rem', borderRadius: '25px', border: '1px solid #f3f3f3' }}>
+                            <div className="form-group-section">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.2rem' }}>
                                     <span style={{ fontSize: '1.2rem' }}>📝</span>
                                     <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--brown)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Thông tin cơ bản</h4>
                                 </div>
-                                <div className="responsive-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                                <div className="responsive-row">
                                     <div className="input-field">
                                         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px', paddingLeft: '5px' }}>TÊN BÁNH</label>
                                         <input
@@ -967,7 +967,7 @@ export default function ProductManager() {
                             </div>
 
                             {/* Section 2: Phân loại & Giao diện */}
-                            <div className="form-group-section" style={{ background: '#fbfbfb', padding: '1.5rem', borderRadius: '25px', border: '1px solid #f3f3f3' }}>
+                            <div className="form-group-section">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.2rem' }}>
                                     <span style={{ fontSize: '1.2rem' }}>🏷️</span>
                                     <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--brown)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Phân loại & Chủ đề</h4>

@@ -18,12 +18,11 @@
 .form-textarea,
 .form-select {
     box-sizing: border-box !important;
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     height: 55px;
-    /* Standardized height */
     padding: 0 20px;
     border: 3px solid var(--pink) !important;
-    /* Thicker borders for premium look */
     border-radius: 20px !important;
     background: white !important;
     font-family: var(--font-body);
@@ -51,9 +50,23 @@
 
 .form-row {
     grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 2rem;
+}
+
+.responsive-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-field {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .smart-tag-container {
