@@ -693,25 +693,54 @@ export default function ProductManager() {
     const [adminFilter, setAdminFilter] = useState('All');
 
     const handleDeleteAll = async () => {
-        const confirm1 = confirm('⚠️ QUAN TRỌNG: Bạn có chắc chắn muốn XÓA TẤT CẢ sản phẩm không?');
-        if (!confirm1) return;
+        const isFiltered = adminFilter !== 'All';
+        const targetCount = filteredAdminProducts.length;
 
-        const confirm2 = confirm('🔥 HÀNH ĐỘNG NÀY KHÔNG THỂ KHỔI PHỤC! Bạn vẫn muốn tiếp tục chứ?');
-        if (!confirm2) return;
+        if (targetCount === 0) {
+            alert('Không có sản phẩm nào để xóa!');
+            return;
+        }
 
-        const confirmText = prompt('Vui lòng nhập chữ "XOA" (viết hoa, không dấu) để xác nhận xóa sạch shop:');
-        if (confirmText !== 'XOA') {
-            alert('Xác nhận không đúng. Đã hủy lệnh xóa.');
+        const confirmMessage = isFiltered
+            ? `⚠️ Bạn có chắc muốn xóa ${targetCount} sản phẩm đang hiển thị (Lọc: ${getCategoryName(adminFilter)})?`
+            : `⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ ${targetCount} sản phẩm trong shop không?`;
+
+        if (!confirm(confirmMessage)) return;
+
+        const finalConfirm = prompt(isFiltered
+            ? `Nhập "XOA" để xóa ${targetCount} sản phẩm này:`
+            : 'QUAN TRỌNG: Nhập "XOA" để xóa SẠCH TOÀN BỘ SHOP:');
+
+        if (finalConfirm !== 'XOA') {
+            alert('Hủy lệnh xóa.');
             return;
         }
 
         try {
-            await deleteAllItems('products');
-            setProducts([]);
-            alert('💥 Đã xóa sạch toàn bộ sản phẩm!');
+            setImporting(true); // Reuse progress UI
+            setImportStats({ current: 0, total: targetCount, startTime: Date.now() });
+
+            for (let i = 0; i < filteredAdminProducts.length; i++) {
+                const p = filteredAdminProducts[i];
+                await deleteItem('products', p.id);
+
+                setImportStats(prev => ({ ...prev, current: i + 1 }));
+
+                // Keep it stable like uploads
+                await waitForSync();
+                if ((i + 1) % 10 === 0) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+
+            const dbProducts = await getAllItems('products');
+            setProducts(dbProducts);
+            alert(`💥 Đã xóa thành công ${targetCount} sản phẩm!`);
         } catch (error) {
-            console.error('Delete all error:', error);
+            console.error('Delete error:', error);
             alert('❌ Lỗi khi xóa dữ liệu!');
+        } finally {
+            setImporting(false);
         }
     };
 
@@ -1194,17 +1223,18 @@ export default function ProductManager() {
                             onClick={handleDeleteAll}
                             style={{
                                 padding: '8px 18px',
-                                background: '#e74c3c',
+                                background: adminFilter === 'All' ? '#e74c3c' : '#f39c12',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '10px',
-                                fontWeight: '600',
                                 cursor: 'pointer',
-                                transition: 'all 0.3s ease'
+                                fontWeight: 'bold',
+                                fontSize: '0.85rem'
                             }}
                         >
-                            🗑️ Xóa Tất Cả
+                            {adminFilter === 'All' ? '💥 XÓA TẤT CẢ' : `🗑️ XÓA ${filteredAdminProducts.length} MỤC ĐANG LỌC`}
                         </button>
+
                     </div>
                 </div>
 
@@ -1260,6 +1290,6 @@ export default function ProductManager() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
