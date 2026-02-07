@@ -518,8 +518,7 @@ export default function ProductManager() {
             const nextTags = [...formData.tags, category.name];
             setFormData(prev => ({
                 ...prev,
-                tags: nextTags,
-                categoryId: prev.categoryId || category.id
+                tags: nextTags
             }));
         }
         setTagInputText('');
@@ -923,326 +922,119 @@ export default function ProductManager() {
             )}
 
             {activeAdminTab === 'add' ? (
-                <div className="manager-section">
-                    <h3>{editingId ? '✏️ Sửa Sản Phẩm' : '➕ Thêm Sản Phẩm Mới'}</h3>
-                    <form className="product-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={(e) => handleSubmit(e, false)}>
-                        {/* Section 1: Thông tin cơ bản */}
-                        <div className="form-card" style={{ background: '#fdfdfd', padding: '1.2rem', borderRadius: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                            <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>📝 Thông tin cơ bản</h4>
-                            <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <input
-                                    type="text"
-                                    placeholder="Tên bánh (Tùy chọn)"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="form-input"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Giá (VD: 250k, 500k...)"
-                                    value={formData.price}
-                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                    className="form-input"
-                                />
-                            </div>
-                        </div>
+                <div className="manager-section minimalist-form" style={{ background: 'white', padding: '2rem', borderRadius: '25px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                    <h3 style={{ marginBottom: '1.5rem', borderBottom: '2px solid #fff5f7', paddingBottom: '10px' }}>
+                        {editingId ? '✏️ Chỉnh sửa bánh' : '➕ Thêm bánh mới'}
+                    </h3>
 
-                        {/* Section 2: Phân loại & Tags */}
-                        <div className="form-card" style={{ background: '#fdfdfd', padding: '1.2rem', borderRadius: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                            <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🏷️ Phân loại & Tags</h4>
-                            <div className="smart-tag-container">
-                                <div className="tags-input-wrapper" style={{ position: 'relative' }}>
+                    <form className="product-form" onSubmit={(e) => handleSubmit(e, false)}>
+                        <div className="form-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            {/* Column 1: Info */}
+                            <div className="form-column">
+                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#888', marginBottom: '8px' }}>Tên & Giá</label>
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
                                     <input
                                         type="text"
-                                        placeholder="Gán Tag Thể loại (Ví dụ: Bánh Rồng, Baby...)"
-                                        value={tagInputText}
-                                        onChange={(e) => {
-                                            setTagInputText(e.target.value);
-                                            setShowTagSuggestions(true);
-                                            setSelectedIndex(0);
-                                        }}
-                                        onFocus={() => setShowTagSuggestions(true)}
-                                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
-                                        onKeyDown={handleTagInputKeyDown}
+                                        placeholder="Tên bánh"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         className="form-input"
+                                        style={{ flex: 2 }}
                                     />
-
-                                    {showTagSuggestions && tagInputText && (
-                                        <div className="custom-suggestions" style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            background: 'white',
-                                            border: '2px solid var(--pink)',
-                                            borderRadius: '12px',
-                                            zIndex: 1000,
-                                            maxHeight: '200px',
-                                            overflowY: 'auto',
-                                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                                            marginTop: '-5px'
-                                        }}>
-                                            {allFilterableCategories
-                                                .filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase()))
-                                                .map((cat, idx) => (
-                                                    <div
-                                                        key={cat.id}
-                                                        onClick={() => handleAddSmartTag(cat.name)}
-                                                        className={`suggestion-item ${idx === selectedIndex ? 'active' : ''}`}
-                                                        style={{
-                                                            padding: '10px 15px',
-                                                            cursor: 'pointer',
-                                                            background: idx === selectedIndex ? '#fff0f5' : 'transparent',
-                                                            color: 'var(--brown)',
-                                                            fontWeight: '600',
-                                                            borderBottom: '1px solid #eee'
-                                                        }}
-                                                    >
-                                                        🏷️ {cat.name}
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    )}
+                                    <input
+                                        type="text"
+                                        placeholder="Giá"
+                                        value={formData.price}
+                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                        className="form-input"
+                                        style={{ flex: 1 }}
+                                    />
                                 </div>
 
-                                <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '1rem' }}>
-                                    {formData.tags?.map(tagId => (
-                                        <div key={tagId} className="tag-chip active" style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '5px',
-                                            padding: '5px 12px',
-                                            background: 'var(--pink)',
-                                            color: 'white',
-                                            borderRadius: '20px',
-                                            fontSize: '0.9rem',
-                                            fontWeight: '600'
-                                        }}>
-                                            #{getCategoryName(tagId) || tagId}
-                                            <span
-                                                onClick={() => {
-                                                    const nextTags = formData.tags.filter(id => id !== tagId);
-                                                    setFormData({
-                                                        ...formData,
-                                                        tags: nextTags
-                                                    });
-                                                }}
-                                                style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.3)', width: '18px', height: '18px', borderRadius: '50%', textAlign: 'center', lineHeight: '16px' }}
-                                            >
-                                                ×
-                                            </span>
-                                        </div>
-                                    ))}
+                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#888', marginBottom: '8px' }}>Tags (Thể loại)</label>
+                                <div className="smart-tag-container" style={{ marginBottom: '1.5rem' }}>
+                                    <div className="tags-input-wrapper" style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Gõ tag: Bánh Rồng, Baby..."
+                                            value={tagInputText}
+                                            onChange={(e) => {
+                                                setTagInputText(e.target.value);
+                                                setShowTagSuggestions(true);
+                                                setSelectedIndex(0);
+                                            }}
+                                            onFocus={() => setShowTagSuggestions(true)}
+                                            onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                                            onKeyDown={handleTagInputKeyDown}
+                                            className="form-input"
+                                        />
+                                        {showTagSuggestions && tagInputText && (
+                                            <div className="custom-suggestions" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid var(--pink)', borderRadius: '12px', zIndex: 1000, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}>
+                                                {allFilterableCategories.filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase())).map((cat, idx) => (
+                                                    <div key={cat.id} onClick={() => handleAddSmartTag(cat.name)} style={{ padding: '8px 12px', cursor: 'pointer', background: idx === selectedIndex ? '#fff5f7' : 'transparent' }}>🏷️ {cat.name}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                                        {formData.tags?.map(tagId => (
+                                            <div key={tagId} className="tag-chip active" style={{ padding: '4px 10px', background: 'var(--pink)', color: 'white', borderRadius: '15px', fontSize: '0.8rem', fontWeight: '600' }}>
+                                                #{getCategoryName(tagId) || tagId}
+                                                <span onClick={() => setFormData({ ...formData, tags: formData.tags.filter(id => id !== tagId) })} style={{ marginLeft: '6px', cursor: 'pointer', opacity: 0.7 }}>×</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Section 3: Ghi chú & Hình ảnh */}
-                        <div className="form-card" style={{ background: '#fdfdfd', padding: '1.2rem', borderRadius: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                            <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🖼️ Ghi chú & Hình ảnh</h4>
-                            <div className="description-wrapper" style={{ marginBottom: '1.5rem' }}>
+                            {/* Column 2: Media */}
+                            <div className="form-column">
+                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#888', marginBottom: '8px' }}>Mô tả & Hình ảnh</label>
                                 <textarea
-                                    placeholder="Mô tả sản phẩm (Tùy chọn)..."
+                                    placeholder="Mô tả bánh..."
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="form-textarea"
-                                    rows="2"
+                                    style={{ height: '80px', marginBottom: '15px' }}
                                 />
-                            </div>
 
-                            <div className="image-upload-section">
-                                {/* Simple Status Bar */}
-                                {(uploadStatus.total > 0) && (
-                                    <div style={{
-                                        background: '#fff',
-                                        border: `2px solid #0ea5e9`,
-                                        padding: '12px 20px',
-                                        borderRadius: '15px',
-                                        marginBottom: '1rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        animation: 'fadeIn 0.3s ease',
-                                        fontSize: '0.9rem',
-                                        boxShadow: '0 8px 15px rgba(0,0,0,0.05)'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <span style={{ fontSize: '1.2rem' }}>✅</span>
-                                                <span style={{ fontWeight: '800', color: '#059669' }}>Nhận: {uploadStatus.added}</span>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 'bold' }}>
-                                                {(uploadStatus.processed / uploadStatus.total * 100).toFixed(0)}%
-                                            </div>
-                                            <div style={{ width: '40px', height: '40px', position: 'relative' }}>
-                                                <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
-                                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" strokeWidth="3" />
-                                                    <circle
-                                                        cx="18" cy="18" r="16" fill="none" stroke={uploadStatus.processed === uploadStatus.total ? '#059669' : '#0ea5e9'}
-                                                        strokeWidth="3"
-                                                        strokeDasharray={`${(uploadStatus.processed / uploadStatus.total) * 100}, 100`}
-                                                        transition="all 0.4s"
-                                                    />
-                                                </svg>
-                                                {uploadStatus.processed === uploadStatus.total && (
-                                                    <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.8rem' }}>🎉</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
-                                    <label className="image-upload-label" style={{
-                                        flex: 1,
-                                        margin: 0,
-                                        background: 'white',
-                                        color: 'var(--pink)',
-                                        border: '2px solid var(--pink)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '10px',
-                                        padding: '12px'
-                                    }}>
-                                        📷 Chọn ảnh hoặc Paste (Ctrl+V)
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            onChange={handleImageUpload}
-                                            style={{ display: 'none' }}
-                                        />
+                                <div className="image-action-bar" style={{ display: 'flex', gap: '8px' }}>
+                                    <label className="image-upload-label" style={{ flex: 1, padding: '10px', fontSize: '0.8rem', border: '2px dashed var(--pink)', background: 'white', borderRadius: '12px', cursor: 'pointer', textAlign: 'center' }}>
+                                        📷 Click/Paste để thêm ảnh
+                                        <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
                                     </label>
-
-                                    <label className="bulk-import-btn" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        padding: '10px 25px',
-                                        background: importing ? '#eee' : '#ecfdf5',
-                                        color: '#059669',
-                                        border: `2px solid ${importing ? '#ddd' : '#10b981'}`,
-                                        borderRadius: '15px',
-                                        cursor: importing ? 'not-allowed' : 'pointer',
-                                        fontWeight: '800',
-                                        fontSize: '0.9rem',
-                                        transition: 'all 0.2s',
-                                        whiteSpace: 'nowrap'
-                                    }}>
-                                        {importing ? `⚙️ Xử lý...` : '📁 Up Thư Mục'}
-                                        <input
-                                            type="file"
-                                            webkitdirectory="true"
-                                            directory="true"
-                                            onChange={handleFolderImport}
-                                            style={{ display: 'none' }}
-                                            disabled={importing}
-                                        />
+                                    <label className="bulk-import-btn" style={{ padding: '10px 15px', fontSize: '0.8rem', background: '#f0fdf4', color: '#16a34a', border: '2px solid #bbf7d0', borderRadius: '12px', cursor: 'pointer' }}>
+                                        📁 Up Thư Mục
+                                        <input type="file" webkitdirectory="true" directory="true" onChange={handleFolderImport} style={{ display: 'none' }} />
                                     </label>
                                 </div>
 
-                                {importing && (
-                                    <div className="import-progress-mini" style={{ marginBottom: '1.5rem' }}>
-                                        <div style={{ height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
-                                            <div style={{
-                                                height: '100%',
-                                                background: '#10b981',
-                                                width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
-                                                transition: 'width 0.3s'
-                                            }} />
-                                        </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '6px', fontWeight: 'bold', textAlign: 'right' }}>
-                                            Đang nhập thư mục: {importStats.current} / {importStats.total}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <p className="paste-hint" style={{ margin: 0, fontSize: '0.8rem', color: '#999' }}>💡 Gợi ý: Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
-
                                 {stagedImages.length > 0 && (
-                                    <div className="staged-images-container" style={{ marginTop: '1.5rem' }}>
-                                        <div className="staged-header">
-                                            <span>📦 {stagedImages.length} ảnh trong danh sách</span>
-                                            <button
-                                                type="button"
-                                                className="clear-staged-btn"
-                                                onClick={() => setStagedImages([])}
-                                            >
-                                                🗑️ Xóa hết
-                                            </button>
-                                        </div>
-                                        <div className="staged-images-grid">
-                                            {stagedImages.map(img => (
-                                                <div key={img.id} className="staged-image-item">
-                                                    <img src={img.data} alt="Staged" />
-                                                    <button
-                                                        type="button"
-                                                        className="remove-staged-btn"
-                                                        onClick={() => removeStagedImage(img.id)}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="staged-mini-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '5px', marginTop: '10px' }}>
+                                        {stagedImages.slice(0, 5).map(img => (
+                                            <div key={img.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
+                                                <img src={img.data} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} />
+                                            </div>
+                                        ))}
+                                        {stagedImages.length > 5 && <div style={{ background: '#eee', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>+{stagedImages.length - 5}</div>}
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="form-actions" style={{ gridColumn: 'span 2', display: 'flex', gap: '15px', marginTop: '2rem' }}>
+                        <div className="form-submit-footer" style={{ marginTop: '2rem', display: 'block' }}>
                             {stagedImages.length > 1 && !editingId ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        className="submit-btn secondary-btn"
-                                        onClick={() => handleSubmit(null, false)}
-                                        style={{ flex: 1, background: 'var(--brown)', color: 'white', padding: '15px' }}
-                                    >
-                                        📦 Lưu thành 1 Album ({stagedImages.length} ảnh)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="submit-btn primary-btn"
-                                        onClick={() => handleSubmit(null, true)}
-                                        style={{ flex: 1, padding: '15px' }}
-                                    >
-                                        🚀 Lưu thành nhiều sản phẩm (Mỗi ảnh 1 bánh)
-                                    </button>
-                                </>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ flex: 1, height: '55px' }}>📦 Lưu 1 Album</button>
+                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} style={{ flex: 1, height: '55px' }}>🚀 Lưu Từng Bánh</button>
+                                </div>
                             ) : (
-                                <button
-                                    type="button"
-                                    className="submit-btn primary-btn"
-                                    onClick={(e) => handleSubmit(e, false)}
-                                    style={{ width: '100%' }}
-                                >
-                                    {editingId ? '💾 Cập Nhật' : '✨ Thêm Sản Phẩm'}
+                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} style={{ width: '100%', height: '55px' }}>
+                                    {editingId ? '💾 Lưu thay đổi' : '✨ Thêm vào cửa hàng'}
                                 </button>
                             )}
                             {editingId && (
-                                <button
-                                    type="button"
-                                    className="cancel-btn"
-                                    onClick={() => {
-                                        setEditingId(null);
-                                        setFormData({
-                                            name: '',
-                                            categoryId: '',
-                                            subCategoryId: '',
-                                            price: '',
-                                            description: '',
-                                            images: [],
-                                            tags: []
-                                        });
-                                        setStagedImages([]);
-                                    }}
-                                >
-                                    ✕ Hủy
-                                </button>
+                                <button type="button" className="cancel-link" onClick={() => { setEditingId(null); setFormData({ name: '', categoryId: '', price: '', description: '', images: [], tags: [] }); setStagedImages([]); }} style={{ display: 'block', width: '100%', marginTop: '15px', background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem' }}>✕ Hủy bỏ</button>
                             )}
                         </div>
                     </form>
