@@ -23,21 +23,29 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
             </div>
             {/* RESTORED TAGS PER USER REQUEST (Sanitized to hide internal IDs) */}
             <div className="product-tags-row">
-                {product.categoryId && !product.categoryId.includes('_') && (
-                    <span className="product-tag-badge primary">
-                        #{product.categoryId.replace('cat_', '')}
-                    </span>
-                )}
-                {(product.tags || [])
-                    .filter(tag => {
-                        // Hide internal IDs like "1770363107410_0.0907..."
-                        if (tag.includes('_') && !isNaN(tag.split('_')[0])) return false;
-                        if (!isNaN(tag) && tag.length > 8) return false;
-                        return true;
-                    })
-                    .map((tag, i) => (
-                        <span key={i} className="product-tag-badge">#{tag}</span>
-                    ))}
+                {(() => {
+                    const tagSet = new Set();
+
+                    // 1. Add Category if it's not a cryptic ID
+                    if (product.categoryId && !product.categoryId.includes('_')) {
+                        tagSet.add(product.categoryId.replace('cat_', '').toLowerCase());
+                    }
+
+                    // 2. Add Tags (Sanitized)
+                    (product.tags || []).forEach(tag => {
+                        // Skip ID-like tags
+                        if (tag.includes('_') && !isNaN(tag.split('_')[0])) return;
+                        if (!isNaN(tag) && tag.length > 8) return;
+                        tagSet.add(tag.trim().toLowerCase());
+                    });
+
+                    // 3. Render unique badges
+                    return Array.from(tagSet).map((tag, i) => {
+                        // Capitalize for display
+                        const displayTag = tag.charAt(0).toUpperCase() + tag.slice(1);
+                        return <span key={i} className={`product-tag-badge ${i === 0 ? 'primary' : ''}`}>#{displayTag}</span>;
+                    });
+                })()}
             </div>
             <div className="product-info">
                 <h3 className="product-name">{product.name}</h3>

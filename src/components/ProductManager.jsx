@@ -885,21 +885,6 @@ export default function ProductManager() {
                 >
                     🏷️ Gán Tag Hàng Loạt
                 </button>
-                <button
-                    onClick={() => setActiveAdminTab('system')}
-                    className={`tab-btn ${activeAdminTab === 'system' ? 'active' : ''}`}
-                    style={{
-                        padding: '10px 20px',
-                        border: 'none',
-                        background: activeAdminTab === 'system' ? 'var(--pink)' : 'var(--white)',
-                        color: activeAdminTab === 'system' ? 'white' : 'var(--brown)',
-                        borderRadius: '15px 15px 0 0',
-                        cursor: 'pointer',
-                        fontWeight: '600'
-                    }}
-                >
-                    ⚙️ Hệ Thống
-                </button>
             </div>
 
             {isCloudEnabled && (
@@ -942,7 +927,7 @@ export default function ProductManager() {
                     <h3>{editingId ? '✏️ Sửa Sản Phẩm' : '➕ Thêm Sản Phẩm Mới'}</h3>
                     <form className="product-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={(e) => handleSubmit(e, false)}>
                         {/* Section 1: Thông tin cơ bản */}
-                        <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                        <div className="form-card" style={{ background: '#fdfdfd', padding: '1.2rem', borderRadius: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                             <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>📝 Thông tin cơ bản</h4>
                             <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <input
@@ -963,7 +948,7 @@ export default function ProductManager() {
                         </div>
 
                         {/* Section 2: Phân loại & Tags */}
-                        <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                        <div className="form-card" style={{ background: '#fdfdfd', padding: '1.2rem', borderRadius: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                             <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🏷️ Phân loại & Tags</h4>
                             <div className="smart-tag-container">
                                 <div className="tags-input-wrapper" style={{ position: 'relative' }}>
@@ -1053,7 +1038,7 @@ export default function ProductManager() {
                         </div>
 
                         {/* Section 3: Ghi chú & Hình ảnh */}
-                        <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                        <div className="form-card" style={{ background: '#fdfdfd', padding: '1.2rem', borderRadius: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                             <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🖼️ Ghi chú & Hình ảnh</h4>
                             <div className="description-wrapper" style={{ marginBottom: '1.5rem' }}>
                                 <textarea
