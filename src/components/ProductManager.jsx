@@ -213,14 +213,16 @@ export default function ProductManager() {
         return dist;
     };
 
-    const findVisualDuplicate = (newHashBits, listToSearch, threshold = visualSensitivity) => {
+    const findVisualDuplicate = (newHashBits, listToSearch, threshold = visualSensitivity, context = "Search") => {
         if (!newHashBits || !listToSearch) return null;
         return listToSearch.find(item => {
-            const targetBits = item.visualBits || item.vBits;
+            const targetBits = item.visualBits || item.vBits || item.visualHash;
             if (!targetBits) return false;
             const dist = getHammingDistance(newHashBits, targetBits);
+            const similarity = Math.round((1 - dist / 64) * 100);
+
             if (dist <= threshold) {
-                console.log(`[VisualMatch] Distance: ${dist} (<= ${threshold}) - Match found:`, item.name || item.id);
+                console.log(`[Mắt Thần - ${context}] 🚩 Match Found! Similarity: ${similarity}% (Dist: ${dist} <= ${threshold}) - Item: ${item.name || item.id}`);
                 return true;
             }
             return false;
@@ -297,7 +299,7 @@ export default function ProductManager() {
 
                 // Fuzzy Match (HAMMING DISTANCE)
                 // 1. Check against DB
-                const dupProduct = findVisualDuplicate(vHash?.bits, products);
+                const dupProduct = findVisualDuplicate(vHash?.bits, products, visualSensitivity, "DATABASE");
                 if (dupProduct) {
                     const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits || dupProduct.visualHash);
                     const similarity = Math.round((1 - dist / 64) * 100);
@@ -327,7 +329,7 @@ export default function ProductManager() {
 
                 setStagedImages(prev => {
                     // Check against current batch
-                    const batchDup = findVisualDuplicate(vHash?.bits, prev);
+                    const batchDup = findVisualDuplicate(vHash?.bits, prev, visualSensitivity, "CURRENT_BATCH");
                     if (batchDup) return prev;
                     return [...prev, newImg];
                 });
@@ -368,7 +370,7 @@ export default function ProductManager() {
 
                 // Fuzzy Match (Hamming Distance)
                 // 1. Check against DB
-                const dupProduct = findVisualDuplicate(vHash?.bits, products);
+                const dupProduct = findVisualDuplicate(vHash?.bits, products, visualSensitivity, "DATABASE");
                 if (dupProduct) {
                     const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits || dupProduct.visualHash);
                     const similarity = Math.round((1 - dist / 64) * 100);
@@ -397,7 +399,7 @@ export default function ProductManager() {
 
                 setStagedImages(prev => {
                     // Check against current batch
-                    const batchDup = findVisualDuplicate(vHash?.bits, prev);
+                    const batchDup = findVisualDuplicate(vHash?.bits, prev, visualSensitivity, "CURRENT_BATCH");
                     if (batchDup) return prev;
                     return [...prev, newImg];
                 });
