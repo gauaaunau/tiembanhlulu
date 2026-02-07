@@ -261,9 +261,9 @@ export default function ProductManager() {
     const handleSubmit = async (e, forceBulkMode = false) => {
         if (e) e.preventDefault();
 
-        // New requirement (v4.2.1): Tag validation prompt
+        // Tag validation prompt (v4.5.0)
         if (formData.tags.length === 0) {
-            const confirmNoTags = window.confirm("Bạn chưa gắn tag ảnh, bạn có muốn tiếp tục đăng không?");
+            const confirmNoTags = window.confirm("Bạn chưa gắn tag cho sản phẩm này. Bạn có muốn tiếp tục đăng không?");
             if (!confirmNoTags) return;
         }
 
