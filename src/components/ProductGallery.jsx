@@ -69,7 +69,7 @@ export default function ProductGallery() {
     const galleryRef = useRef(null);
 
     useEffect(() => {
-        console.log("🌸 ProductGallery v2.2.0 - Live");
+        console.log("🌸 ProductGallery v6.1.2 - Live");
         // Real-time synchronization for products and categories
         const unsubProducts = subscribeToItems('products', (items) => {
             setProducts(items);
