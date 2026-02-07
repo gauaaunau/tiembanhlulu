@@ -581,17 +581,25 @@ export default function ProductManager() {
         });
 
         const categoryNames = Object.keys(folderGroups);
-        let processedCount = 0;
-
-        const categoriesToSave = [];
-        const productsToSave = [];
+        let globalProcessedCount = 0;
 
         for (const catName of categoryNames) {
+            // 1. Find or create category (Stream Mode: Check & Save immediately if new)
             let cat = allFilterableCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+            if (!cat) {
+                // Check if we just added it in this session's newCategories
+                cat = newCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+            }
+
             if (!cat) {
                 cat = { id: `cat_${Date.now()}_${Math.random()}`, name: catName, subCategories: [] };
                 newCategories.push(cat);
-                categoriesToSave.push(cat);
+                // Save Category IMMEDIATELY
+                try {
+                    await saveItem('categories', cat);
+                } catch (err) {
+                    console.warn(`Failed to save category ${cat.name}`, err);
+                }
             }
 
             const catFiles = folderGroups[catName];
@@ -627,45 +635,31 @@ export default function ProductManager() {
                         tags: [catName]
                     };
 
+                    // STREAM SAVE: Save Product IMMEDIATELY
+                    await saveItem('products', newProd);
+
+                    // Update Local State appropriately
                     newProducts.push(newProd);
-                    productsToSave.push(newProd);
+
                 } catch (err) {
                     console.error(`Lỗi xử lý file ${file.name}:`, err);
                 }
 
-                processedCount++;
-                setImportStats(prev => ({ ...prev, current: processedCount }));
-                setUploadStatus(prev => ({ ...prev, processed: processedCount }));
-            }
-        }
+                globalProcessedCount++;
 
-        // SEQUENTIAL SAVE (Crucial for Free Tier Base64)
-        // We do NOT use addItemsBulk here because it's too fast for Base64 payload.
-
-        if (categoriesToSave.length > 0) {
-            console.log(`Saving ${categoriesToSave.length} categories separately...`);
-            // Save categories sequentially to ensure they exist for filtering
-            for (const cat of categoriesToSave) {
-                try {
-                    await saveItem('categories', cat);
-                } catch (err) {
-                    console.warn(`Failed to save category ${cat.name}, but continuing locally.`, err);
-                }
-            }
-        }
-
-        if (productsToSave.length > 0) {
-            console.log(`Saving ${productsToSave.length} products sequentially to avoid overload...`);
-            for (let i = 0; i < productsToSave.length; i++) {
-                await saveItem('products', productsToSave[i]);
-                // Update progress to show actual save count
+                // UPDATE PROGRESS (Real-time based on SAVED items)
                 setImportStats(prev => ({
                     ...prev,
-                    current: processedCount + i + 1,
-                    status: `Đã lưu ${i + 1}/${productsToSave.length}`
+                    current: globalProcessedCount
                 }));
-                // 300ms delay after EVERY save to prevent stream exhaustion
-                await new Promise(r => setTimeout(r, 300));
+                // Update ETA in UploadStatus for optional specialized display
+                setUploadStatus(prev => ({ ...prev, processed: globalProcessedCount }));
+
+                // THROTTLING: Pause 1.5s every 10 images
+                if (globalProcessedCount % 10 === 0) {
+                    console.log(`⏳ Throttling: Pausing for 1.5s after ${globalProcessedCount} images...`);
+                    await new Promise(r => setTimeout(r, 1500));
+                }
             }
         }
 
@@ -673,7 +667,7 @@ export default function ProductManager() {
         localStorage.setItem('cached_categories', JSON.stringify(newCategories));
         setProducts(newProducts);
         setImporting(false);
-        alert(`🎉 Thành công! Đã thêm ${productsToSave.length} món mới.`);
+        alert(`🎉 Thành công! Đã thêm ${globalProcessedCount} món mới.`);
     };
 
     const [adminFilter, setAdminFilter] = useState('All');
