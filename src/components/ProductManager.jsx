@@ -151,9 +151,7 @@ export default function ProductManager() {
     };
 
     const isImageDuplicate = (imageData) => {
-        if (!imageData) return false;
-        // Check current staged batch (Literal check only)
-        return stagedImages.some(img => img.data === imageData);
+        return false; // Decommissioned: Pure Upload
     };
 
     const handleImageUpload = (e) => {
@@ -557,14 +555,14 @@ export default function ProductManager() {
     }, [formData, products]);
 
     const [importing, setImporting] = useState(false);
-    const [importStats, setImportStats] = useState({ current: 0, total: 0 });
+    const [importStats, setImportStats] = useState({ current: 0, total: 0, startTime: 0 });
 
     const handleFolderImport = async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
         setImporting(true);
-        setImportStats({ current: 0, total: files.length });
+        setImportStats({ current: 0, total: files.length, startTime: Date.now() });
         setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
         const newCategories = [...categories];
@@ -574,9 +572,9 @@ export default function ProductManager() {
         const folderGroups = {};
         files.forEach(file => {
             const pathParts = file.webkitRelativePath.split(/[/\\]/);
-            if (pathParts.length < 3) return; // Skip files in root or empty folders
+            if (pathParts.length < 3) return;
 
-            const catName = pathParts[1]; // Subfolder name
+            const catName = pathParts[1];
             if (!catName) return;
             if (!folderGroups[catName]) folderGroups[catName] = [];
             folderGroups[catName].push(file);
@@ -585,12 +583,10 @@ export default function ProductManager() {
         const categoryNames = Object.keys(folderGroups);
         let processedCount = 0;
 
-        // Track items to save (Deltas)
         const categoriesToSave = [];
         const productsToSave = [];
 
         for (const catName of categoryNames) {
-            // Find or create category
             let cat = allFilterableCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
             if (!cat) {
                 cat = { id: `cat_${Date.now()}_${Math.random()}`, name: catName, subCategories: [] };
@@ -601,60 +597,14 @@ export default function ProductManager() {
             const catFiles = folderGroups[catName];
             for (const file of catFiles) {
                 try {
-
-                    const originalHash = await calculateDataHash(file);
-
-                    // Cross-device Check
-                    if (products.some(p => p.imageHash === originalHash)) {
-                        console.log(`Bỏ qua ảnh đã có trong tiệm: ${file.name}`);
-                        processedCount++;
-                        setUploadStatus(prev => ({ ...prev, processed: processedCount }));
-                        continue;
-                    }
-
                     const reader = new FileReader();
                     const imageData = await new Promise((resolve) => {
                         reader.onload = (re) => resolve(re.target.result);
                         reader.readAsDataURL(file);
                     });
 
-                    const vHash = await calculatePHash(imageData);
-
-                    // Cross-device Visual Check (FUZZY)
-                    const dupProduct = findVisualDuplicate(vHash?.bits, products);
-                    if (dupProduct) {
-                        const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.visualHash);
-                        const similarity = Math.round((1 - dist / 64) * 100);
-
-                        setUploadStatus(prev => ({
-                            ...prev,
-                            duplicates: prev.duplicates + 1,
-                            processed: prev.processed + 1,
-                            lastMatch: similarity
-                        }));
-
-                        console.log(`Bỏ qua ảnh trùng visual (giống bánh ${dupProduct.name}): ${file.name}`);
-                        processedCount++;
-                        continue;
-                    }
-
-                    // Intra-batch Check (FUZZY)
-                    if (findVisualDuplicate(vHash?.bits, productsToSave)) {
-                        console.log(`Bỏ qua ảnh trùng trong đợt import này: ${file.name}`);
-                        processedCount++;
-                        continue;
-                    }
-
                     const compressed = await compressImage(imageData);
 
-                    // Duplicate Check (Centralized & Robust)
-                    if (isImageDuplicate(compressed)) { // Keep as fallback
-                        console.log(`Bỏ qua ảnh trùng: ${file.name}`);
-                        processedCount++;
-                        continue;
-                    }
-
-                    // UPLOAD TO STORAGE IMMEDIATELY
                     let finalUrl = compressed;
                     if (isStorageEnabled) {
                         try {
@@ -662,24 +612,19 @@ export default function ProductManager() {
                             const uploadFile = new File([blob], file.name || "image.jpg", { type: "image/jpeg" });
                             finalUrl = await uploadImage(uploadFile);
                         } catch (uErr) {
-                            console.warn("Storage upload failed (payment required?), using Base64 fallback.", uErr);
-                            // Fallback to base64 if upload fails
+                            console.warn("Storage upload failed, using Base64 fallback.", uErr);
                         }
                     }
 
                     const newProd = {
                         id: `prod_${Date.now()}_${Math.random()}`,
-                        name: '', // Don't use messy filenames as names
+                        name: '',
                         categoryId: cat.id,
                         price: 'Liên hệ',
                         description: '',
                         images: [finalUrl],
                         createdAt: Date.now(),
-                        tags: [catName], // Only folder name, no ID
-                        imageHash: originalHash,
-                        visualHash: vHash?.hex,
-                        visualBits: vHash?.bits,
-                        visualVersion: 2
+                        tags: [catName]
                     };
 
                     newProducts.push(newProd);
@@ -1197,6 +1142,47 @@ export default function ProductManager() {
                             ☝️ Vui lòng chọn một Nhãn ở trên để bắt đầu!
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* PROGRESS OVERLAY (v4.6.0) */}
+            {importing && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    <div className="loading-spinner" style={{ width: '60px', height: '60px', border: '6px solid #f3f3f3', borderTop: '6px solid var(--pink)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    <h2 style={{ marginTop: '20px', color: 'var(--brown)', fontWeight: '800' }}>
+                        Đang nhập hàng... {Math.round((importStats.current / (importStats.total || 1)) * 100)}%
+                    </h2>
+                    <div style={{ width: '300px', height: '10px', background: '#eee', borderRadius: '5px', marginTop: '10px', overflow: 'hidden' }}>
+                        <div style={{
+                            height: '100%',
+                            background: 'var(--pink)',
+                            width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
+                            transition: 'width 0.3s ease'
+                        }}></div>
+                    </div>
+                    <p style={{ marginTop: '10px', color: '#666', fontWeight: '500' }}>
+                        {importStats.current} / {importStats.total} ảnh
+                    </p>
+                    {importStats.startTime > 0 && importStats.current > 0 && (
+                        <p style={{ marginTop: '5px', color: '#888', fontSize: '0.9rem' }}>
+                            ⏱️ Còn khoảng: {Math.ceil(((Date.now() - importStats.startTime) / importStats.current) * (importStats.total - importStats.current) / 1000)} giây
+                        </p>
+                    )}
+                    <p style={{ marginTop: '5px', color: '#999', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                        Vui lòng không tắt trình duyệt...
+                    </p>
                 </div>
             )}
 
