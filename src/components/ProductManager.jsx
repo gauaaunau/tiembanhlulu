@@ -922,41 +922,62 @@ export default function ProductManager() {
             )}
 
             {activeAdminTab === 'add' ? (
-                <div className="manager-section minimalist-form" style={{ background: 'white', padding: '2rem', borderRadius: '25px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                    <h3 style={{ marginBottom: '1.5rem', borderBottom: '2px solid #fff5f7', paddingBottom: '10px' }}>
-                        {editingId ? '✏️ Chỉnh sửa bánh' : '➕ Thêm bánh mới'}
-                    </h3>
+                <div className="manager-section modern-admin-form" style={{ background: '#fff', borderRadius: '30px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', padding: '0', overflow: 'hidden' }}>
+                    <div className="form-header" style={{ background: 'linear-gradient(135deg, #fff5f7 0%, #fff 100%)', padding: '2rem', borderBottom: '1px solid #f0f0f0' }}>
+                        <h3 style={{ margin: 0, color: 'var(--brown)', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {editingId ? '✏️ Cập nhật sản phẩm' : '✨ Thêm bánh mới'}
+                            <span style={{ fontSize: '0.8rem', background: 'var(--pink)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontWeight: 'bold' }}>VERSION 4.4.0</span>
+                        </h3>
+                        <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Điền thông tin và hình ảnh để hiển thị lên tiệm bánh Lulu</p>
+                    </div>
 
-                    <form className="product-form" onSubmit={(e) => handleSubmit(e, false)}>
-                        <div className="form-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                            {/* Column 1: Info */}
-                            <div className="form-column">
-                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#888', marginBottom: '8px' }}>Tên & Giá</label>
-                                <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Tên bánh"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="form-input"
-                                        style={{ flex: 2 }}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Giá"
-                                        value={formData.price}
-                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                        className="form-input"
-                                        style={{ flex: 1 }}
-                                    />
+                    <form className="product-form" style={{ padding: '2rem' }} onSubmit={(e) => handleSubmit(e, false)}>
+                        <div className="form-sections-container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+                            {/* Section 1: Thông tin cơ bản */}
+                            <div className="form-group-section" style={{ background: '#fbfbfb', padding: '1.5rem', borderRadius: '25px', border: '1px solid #f3f3f3' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.2rem' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>📝</span>
+                                    <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--brown)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Thông tin cơ bản</h4>
                                 </div>
+                                <div className="responsive-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                                    <div className="input-field">
+                                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px', paddingLeft: '5px' }}>TÊN BÁNH</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ví dụ: Bánh kem dâu tây mọng nước..."
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            className="form-input"
+                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px' }}
+                                        />
+                                    </div>
+                                    <div className="input-field">
+                                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px', paddingLeft: '5px' }}>GIÁ NIÊM YẾT</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Để trống nếu muốn hiện 'Liên hệ'..."
+                                            value={formData.price}
+                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                            className="form-input"
+                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px' }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#888', marginBottom: '8px' }}>Tags (Thể loại)</label>
-                                <div className="smart-tag-container" style={{ marginBottom: '1.5rem' }}>
+                            {/* Section 2: Phân loại & Giao diện */}
+                            <div className="form-group-section" style={{ background: '#fbfbfb', padding: '1.5rem', borderRadius: '25px', border: '1px solid #f3f3f3' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.2rem' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>🏷️</span>
+                                    <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--brown)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Phân loại & Chủ đề</h4>
+                                </div>
+                                <div className="smart-tag-container">
+                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px', paddingLeft: '5px' }}>THÊM TAG CHỦ ĐỀ</label>
                                     <div className="tags-input-wrapper" style={{ position: 'relative' }}>
                                         <input
                                             type="text"
-                                            placeholder="Gõ tag: Bánh Rồng, Baby..."
+                                            placeholder="Gõ để tìm hoặc thêm mới: Bé trai, Công chúa, Tiệc..."
                                             value={tagInputText}
                                             onChange={(e) => {
                                                 setTagInputText(e.target.value);
@@ -967,74 +988,101 @@ export default function ProductManager() {
                                             onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
                                             onKeyDown={handleTagInputKeyDown}
                                             className="form-input"
+                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px' }}
                                         />
                                         {showTagSuggestions && tagInputText && (
-                                            <div className="custom-suggestions" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid var(--pink)', borderRadius: '12px', zIndex: 1000, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}>
+                                            <div className="custom-suggestions" style={{ position: 'absolute', top: '103%', left: 0, right: 0, background: 'white', border: '2px solid var(--pink)', borderRadius: '15px', zIndex: 1000, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
                                                 {allFilterableCategories.filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase())).map((cat, idx) => (
-                                                    <div key={cat.id} onClick={() => handleAddSmartTag(cat.name)} style={{ padding: '8px 12px', cursor: 'pointer', background: idx === selectedIndex ? '#fff5f7' : 'transparent' }}>🏷️ {cat.name}</div>
+                                                    <div key={cat.id} onClick={() => handleAddSmartTag(cat.name)} className={`suggestion-item ${idx === selectedIndex ? 'active' : ''}`} style={{ padding: '12px 20px', cursor: 'pointer', background: idx === selectedIndex ? '#fff0f5' : 'transparent', fontWeight: '600', color: 'var(--brown)' }}>✨ {cat.name}</div>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
-                                    <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                                    <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '1rem' }}>
+                                        {formData.tags?.length === 0 && <span style={{ color: '#bbb', fontSize: '0.85rem', italic: 'true' }}>Chưa có tag nào được chọn</span>}
                                         {formData.tags?.map(tagId => (
-                                            <div key={tagId} className="tag-chip active" style={{ padding: '4px 10px', background: 'var(--pink)', color: 'white', borderRadius: '15px', fontSize: '0.8rem', fontWeight: '600' }}>
+                                            <div key={tagId} className="tag-chip active" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 15px', background: 'var(--pink)', color: 'white', borderRadius: '25px', fontSize: '0.9rem', fontWeight: '700', boxShadow: '0 4px 10px rgba(255, 133, 162, 0.2)' }}>
                                                 #{getCategoryName(tagId) || tagId}
-                                                <span onClick={() => setFormData({ ...formData, tags: formData.tags.filter(id => id !== tagId) })} style={{ marginLeft: '6px', cursor: 'pointer', opacity: 0.7 }}>×</span>
+                                                <span onClick={() => setFormData({ ...formData, tags: formData.tags.filter(id => id !== tagId) })} style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.3)', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>✕</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Column 2: Media */}
-                            <div className="form-column">
-                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#888', marginBottom: '8px' }}>Mô tả & Hình ảnh</label>
+                            {/* Section 3: Hình ảnh & Mô tả */}
+                            <div className="form-group-section" style={{ background: '#fbfbfb', padding: '1.5rem', borderRadius: '25px', border: '1px solid #f3f3f3' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.2rem' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>🖼️</span>
+                                    <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--brown)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Hình ảnh & Mô tả</h4>
+                                </div>
+
+                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px', paddingLeft: '5px' }}>MÔ TẢ NGẮN (HIỆN TRÊN LIGHTBOX)</label>
                                 <textarea
-                                    placeholder="Mô tả bánh..."
+                                    placeholder="Điền vài dòng cảm nhận về chiếc bánh này nhé..."
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="form-textarea"
-                                    style={{ height: '80px', marginBottom: '15px' }}
+                                    style={{ width: '100%', borderRadius: '15px', padding: '15px', minHeight: '100px', marginBottom: '1.5rem' }}
                                 />
 
-                                <div className="image-action-bar" style={{ display: 'flex', gap: '8px' }}>
-                                    <label className="image-upload-label" style={{ flex: 1, padding: '10px', fontSize: '0.8rem', border: '2px dashed var(--pink)', background: 'white', borderRadius: '12px', cursor: 'pointer', textAlign: 'center' }}>
-                                        📷 Click/Paste để thêm ảnh
+                                <div className="media-upload-zone" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
+                                    <label className="image-upload-label" style={{ flex: '1 1 300px', margin: 0, background: '#fff', color: 'var(--pink)', border: '2px dashed var(--pink)', borderRadius: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '30px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                        <span style={{ fontSize: '2rem' }}>📸</span>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <p style={{ fontWeight: '800', margin: 0 }}>Bấm để chọn hoặc Dán (Paste)</p>
+                                            <p style={{ fontSize: '0.75rem', color: '#888', margin: '5px 0 0 0' }}>Hỗ trợ nhiều ảnh cùng lúc, Ctrl+V thần thánh</p>
+                                        </div>
                                         <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
                                     </label>
-                                    <label className="bulk-import-btn" style={{ padding: '10px 15px', fontSize: '0.8rem', background: '#f0fdf4', color: '#16a34a', border: '2px solid #bbf7d0', borderRadius: '12px', cursor: 'pointer' }}>
-                                        📁 Up Thư Mục
+
+                                    <label className="bulk-folder-btn" style={{ flex: '0 0 auto', background: '#ecfdf5', border: '2px solid #10b981', color: '#059669', padding: '20px 30px', borderRadius: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '1.5rem' }}>📁</span>
+                                        <p style={{ fontWeight: '800', margin: 0, fontSize: '0.85rem' }}>Up Thư Mục</p>
                                         <input type="file" webkitdirectory="true" directory="true" onChange={handleFolderImport} style={{ display: 'none' }} />
                                     </label>
                                 </div>
 
                                 {stagedImages.length > 0 && (
-                                    <div className="staged-mini-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '5px', marginTop: '10px' }}>
-                                        {stagedImages.slice(0, 5).map(img => (
-                                            <div key={img.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
-                                                <img src={img.data} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} />
-                                            </div>
-                                        ))}
-                                        {stagedImages.length > 5 && <div style={{ background: '#eee', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>+{stagedImages.length - 5}</div>}
+                                    <div className="staged-preview-list" style={{ marginTop: '2rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 5px' }}>
+                                            <span style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--brown)' }}>📦 ĐANG CHỜ LƯU: {stagedImages.length} ẢNH</span>
+                                            <button type="button" onClick={() => setStagedImages([])} style={{ background: 'none', border: 'none', color: '#e11d48', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>🗑️ XÓA HẾT</button>
+                                        </div>
+                                        <div className="mini-staged-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px' }}>
+                                            {stagedImages.map(img => (
+                                                <div key={img.id} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                                                    <img src={img.data} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="staged-mini" />
+                                                    <button type="button" onClick={() => removeStagedImage(img.id)} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', width: '20px', height: '20px', borderRadius: '50%', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="form-submit-footer" style={{ marginTop: '2rem', display: 'block' }}>
+                        {/* Footer Actions */}
+                        <div className="form-footer-sticky" style={{ marginTop: '3rem', borderTop: '1px solid #f0f0f0', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {stagedImages.length > 1 && !editingId ? (
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ flex: 1, height: '55px' }}>📦 Lưu 1 Album</button>
-                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} style={{ flex: 1, height: '55px' }}>🚀 Lưu Từng Bánh</button>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ background: 'var(--brown)', color: 'white', height: '60px', borderRadius: '20px', fontSize: '1rem', fontWeight: 'bold' }}>
+                                        📦 LƯU 1 ALBUM CHUNG
+                                    </button>
+                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} style={{ background: 'var(--pink)', color: 'white', height: '60px', borderRadius: '20px', fontSize: '1rem', fontWeight: 'bold', border: 'none' }}>
+                                        🚀 LƯU RIÊNG TỪNG CHIẾC ({stagedImages.length})
+                                    </button>
                                 </div>
                             ) : (
-                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} style={{ width: '100%', height: '55px' }}>
-                                    {editingId ? '💾 Lưu thay đổi' : '✨ Thêm vào cửa hàng'}
+                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} style={{ width: '100%', background: 'var(--pink)', color: 'white', height: '60px', borderRadius: '20px', fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px rgba(255, 133, 162, 0.3)', transition: 'transform 0.2s' }}>
+                                    {editingId ? '💾 LƯU THAY ĐỔI NGAY' : '✨ HOÀN TẤT & THÊM VÀO TIỆM'}
                                 </button>
                             )}
+
                             {editingId && (
-                                <button type="button" className="cancel-link" onClick={() => { setEditingId(null); setFormData({ name: '', categoryId: '', price: '', description: '', images: [], tags: [] }); setStagedImages([]); }} style={{ display: 'block', width: '100%', marginTop: '15px', background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem' }}>✕ Hủy bỏ</button>
+                                <button type="button" onClick={() => { setEditingId(null); setFormData({ name: '', categoryId: '', price: '', description: '', images: [], tags: [] }); setStagedImages([]); }} style={{ background: 'none', border: 'none', color: '#999', padding: '10px', cursor: 'pointer', fontWeight: '600' }}>
+                                    ✕ HUỶ BỎ CHỈNH SỬA
+                                </button>
                             )}
                         </div>
                     </form>
