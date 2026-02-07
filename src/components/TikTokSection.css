@@ -149,7 +149,7 @@
     color: white;
 }
 
-/* Cute Custom Video Player Styles - Pure Transparent Glass (v6.2.4) */
+/* Cute Custom Video Player Styles - Pure Transparent Glass (v6.2.7) */
 .cute-player-wrapper {
     position: relative;
     width: min(92vw, 420px);
@@ -235,73 +235,6 @@
     position: relative;
     width: 100%;
     background: transparent;
-    padding: 20px 10px 10px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* Surprise Play/Pause Morphing Animation (v6.2.0) */
-.surprise-btn-icon {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.surprise-svg {
-    width: 100%;
-    height: 100%;
-    transition: transform 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-}
-
-.surprise-path-1,
-.surprise-path-2 {
-    fill: currentColor;
-    transition: d 0.45s cubic-bezier(0.68, -0.6, 0.32, 1.6),
-        transform 0.45s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-    transform-origin: center;
-}
-
-/* Morphing to PAUSE (is-playing) */
-.is-playing .surprise-path-1 {
-    d: path("M32,25 L32,75 L48,75 L48,25 Z");
-}
-
-.is-playing .surprise-path-2 {
-    d: path("M55,20 L55,80 L70,80 L70,20 Z");
-}
-
-.is-playing .surprise-svg {
-    transform: rotate(180deg);
-}
-
-/* Morphing to PLAY (is-paused) */
-.is-paused .surprise-path-1 {
-    d: path("M35,20 L35,80 L85,50 L85,50 Z");
-    transform: scale(0.9);
-}
-
-.is-paused .surprise-path-2 {
-    d: path("M35,20 L35,80 L85,50 L85,50 Z");
-    transform: scale(0.9);
-    opacity: 0;
-}
-
-.is-paused .surprise-svg {
-    transform: rotate(0deg);
-}
-
-.surprise-elastic {
-    transition: all 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6) !important;
-}
-
-/* Glassmorphic Controls - Fixed Layout (v6.2.1) */
-.cute-controls {
-    position: relative;
-    width: 100%;
-    background: transparent;
     padding: 15px 5px 5px 5px;
     display: flex;
     flex-direction: column;
@@ -332,18 +265,15 @@
     gap: 8px;
 }
 
-/* Cute Buttons - Perfect Circles (v6.2.5) */
+/* Cute Buttons - Perfect Circles (v6.2.7) */
 .cute-btn {
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     width: 38px;
-    /* Slightly smaller as requested */
     height: 38px;
     aspect-ratio: 1 / 1;
-    /* Force perfect circle */
     flex-shrink: 0;
-    /* Prevent distortion */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -415,67 +345,82 @@
     transform: scale(0.95);
 }
 
-/* Mobile Specifics - Fixing "Vuông Vức" appearance */
+/* Mobile Specifics - Fixing "Vuông Vức" appearance & Dark background (v6.2.7) */
 @media (max-width: 480px) {
-    .tiktok-section {
-        margin: 1.5rem auto;
+    .tiktok-lightbox {
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .tiktok-grid {
-        gap: 8px;
+    .lightbox-content {
+        width: 100%;
         max-width: 100%;
-    }
-
-    .thumbnail-wrapper {
-        border-radius: 8px;
-    }
-
-    .play-overlay {
-        width: 28px;
-        height: 28px;
-    }
-
-    .play-icon {
-        font-size: 10px;
-    }
-
-    .lightbox-player {
-        height: 100vh;
-    }
-
-    .close-lightbox {
-        top: 20px;
-        right: 10px;
-        width: 36px;
-        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: transparent !important;
+        box-shadow: none !important;
+        position: relative;
     }
 
     .cute-player-wrapper {
-        height: 100vh;
-        border-radius: 0;
+        width: min(94vw, 380px);
+        height: auto !important;
+        max-height: 92vh;
+        border-radius: 40px !important;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(25px) saturate(150%);
+        -webkit-backdrop-filter: blur(25px) saturate(150%);
+        border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6) !important;
+        margin-top: 0;
+    }
+
+    .video-main-area {
+        border-radius: 30px !important;
+        background: #000;
+        overflow: hidden;
+    }
+
+    .lightbox-player {
+        border-radius: 28px !important;
     }
 
     .cute-controls {
-        bottom: 30px;
-        left: 10px;
-        right: 10px;
-        padding: 10px 15px;
-    }
-
-    .cute-volume-slider {
-        display: none;
-        /* Hide volume slider on mobile to save space */
+        padding: 15px 5px 5px 5px;
+        gap: 12px;
     }
 
     .cute-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
     }
 
-    .big-play-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
+    .close-lightbox {
+        position: absolute;
+        top: -15px;
+        right: 0px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        z-index: 10002;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .big-play-btn.surprise-elastic {
+        width: 70px;
+        height: 70px;
+        border-radius: 50% !important;
     }
 }
