@@ -675,7 +675,7 @@ export default function ProductManager() {
                 await new Promise(r => setTimeout(r, 500));
 
                 // CHUNKED SYNC (v5.0.5): Pause every 10 images
-                if ((i + 1) % 10 === 0 && i + 1 < files.length) {
+                if (globalProcessedCount % 10 === 0 && globalProcessedCount < files.length) {
                     setBatchResting(true);
                     await new Promise(r => setTimeout(r, 3000));
                     setBatchResting(false);
