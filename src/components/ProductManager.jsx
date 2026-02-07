@@ -5,6 +5,7 @@ import {
     saveItem,
     saveAllItems,
     deleteItem,
+    deleteItemsBulk,
     addItemsBulk,
     deleteAllItems,
     subscribeToItems,
@@ -43,6 +44,7 @@ export default function ProductManager() {
     const [isLoading, setIsLoading] = useState(true);
     const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0 });
     const [progressLabel, setProgressLabel] = useState('Đang nhập hàng...'); // v5.0.8
+    const wakeLockRef = useRef(null); // v5.0.9
     const statusTimeoutRef = useRef(null);
 
     useEffect(() => {
@@ -127,6 +129,68 @@ export default function ProductManager() {
         };
         saveDrafts();
     }, [stagedImages]);
+
+    // SCREEN WAKE LOCK (v5.0.9): Prevent device sleep during progress
+    useEffect(() => {
+        const handleWakeLock = async () => {
+            if ('wakeLock' in navigator && importing) {
+                try {
+                    wakeLockRef.current = await navigator.wakeLock.request('screen');
+                    console.log("🕯️ Wake Lock Active: Screen will stay awake.");
+                } catch (err) {
+                    console.warn("Wake Lock request failed:", err);
+                }
+            } else if (wakeLockRef.current && !importing) {
+                try {
+                    await wakeLockRef.current.release();
+                    wakeLockRef.current = null;
+                    console.log("🌙 Wake Lock Released: Device can sleep now.");
+                } catch (err) {
+                    console.error("Wake Lock release failed:", err);
+                }
+            }
+        };
+
+        handleWakeLock();
+
+        // Cleanup on unmount
+        return () => {
+            if (wakeLockRef.current) {
+                wakeLockRef.current.release().catch(() => { });
+            }
+        };
+    }, [importing]);
+
+    // SCREEN WAKE LOCK (v5.0.9): Prevent device sleep during progress
+    useEffect(() => {
+        const handleWakeLock = async () => {
+            if ('wakeLock' in navigator && importing) {
+                try {
+                    wakeLockRef.current = await navigator.wakeLock.request('screen');
+                    console.log("🕯️ Wake Lock Active: Screen will stay awake.");
+                } catch (err) {
+                    console.warn("Wake Lock request failed:", err);
+                }
+            } else if (wakeLockRef.current && !importing) {
+                try {
+                    await wakeLockRef.current.release();
+                    wakeLockRef.current = null;
+                    console.log("🌙 Wake Lock Released: Device can sleep now.");
+                } catch (err) {
+                    console.error("Wake Lock release failed:", err);
+                }
+            }
+        };
+
+        handleWakeLock();
+
+        // Cleanup on unmount
+        return () => {
+            if (wakeLockRef.current) {
+                wakeLockRef.current.release().catch(() => { });
+            }
+        };
+    }, [importing]);
 
 
 
