@@ -76,11 +76,11 @@ export default function ProductManager() {
         const unsubProducts = subscribeToItems('products', async (items) => {
             if (items) {
                 setProducts(items);
-                // Repair legacy products missing VISUAL hashes (Base64 AND Cloud URLs)
-                const missingTags = items.filter(p => !p.visualHash);
-                if (missingTags.length > 0) {
-                    console.log(`Reparing ${missingTags.length} legacy visual hashes...`);
-                    for (const p of missingTags) {
+                // Repair legacy products missing VISUAL bits for fuzzy match
+                const missingBits = items.filter(p => !p.visualBits);
+                if (missingBits.length > 0) {
+                    console.log(`Reparing ${missingBits.length} legacy visual bits...`);
+                    for (const p of missingBits) {
                         try {
                             const imgUrl = (p.images && p.images[0]) || p.image;
                             if (!imgUrl) continue;
@@ -142,6 +142,7 @@ export default function ProductManager() {
                 canvas.width = 8;
                 canvas.height = 8;
                 const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = false; // Higher consistency
                 ctx.drawImage(img, 0, 0, 8, 8);
                 const data = ctx.getImageData(0, 0, 8, 8).data;
 
@@ -176,7 +177,7 @@ export default function ProductManager() {
         return dist;
     };
 
-    const findVisualDuplicate = (newHashBits, listToSearch, threshold = 8) => {
+    const findVisualDuplicate = (newHashBits, listToSearch, threshold = 12) => {
         if (!newHashBits || !listToSearch) return null;
         return listToSearch.find(item => {
             const targetBits = item.visualBits || item.vBits;
