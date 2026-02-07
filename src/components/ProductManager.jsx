@@ -1221,52 +1221,7 @@ export default function ProductManager() {
 
             {activeAdminTab === 'add' ? (
                 <>
-                    {/* Bulk Import Section */}
-                    <div className="manager-section bulk-import-section" style={{ background: 'var(--soft-pink)', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
-                        <h3>🚀 Up Ảnh Thần Tốc (Theo Thư Mục)</h3>
-                        <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#666' }}>
-                            Chọn thư mục <strong>"Ảnh Lulucake"</strong>. Hệ thống sẽ tự tạo Thể loại theo tên thư mục và thêm toàn bộ ảnh vào web!
-                        </p>
 
-                        <div className="bulk-actions">
-                            <label className="bulk-import-label" style={{
-                                display: 'inline-block',
-                                padding: '12px 24px',
-                                background: 'var(--pink)',
-                                color: 'white',
-                                borderRadius: '25px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                boxShadow: '0 4px 10px rgba(255,105,180,0.3)'
-                            }}>
-                                {importing ? ` đang xử lý... (${importStats.current}/${importStats.total})` : '📁 Chọn thư mục để Up ngay!'}
-                                <input
-                                    type="file"
-                                    webkitdirectory="true"
-                                    directory="true"
-                                    onChange={handleFolderImport}
-                                    style={{ display: 'none' }}
-                                    disabled={importing}
-                                />
-                            </label>
-                            {importing && (
-                                <div className="import-progress-bar" style={{
-                                    marginTop: '1rem',
-                                    height: '8px',
-                                    background: '#eee',
-                                    borderRadius: '4px',
-                                    overflow: 'hidden'
-                                }}>
-                                    <div style={{
-                                        height: '100%',
-                                        background: 'var(--pink)',
-                                        width: `${(importStats.current / importStats.total) * 100}%`,
-                                        transition: 'width 0.3s ease'
-                                    }} />
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
                     <div className="manager-section">
                         <h3>{editingId ? '✏️ Sửa Sản Phẩm' : '➕ Thêm Sản Phẩm Mới'}</h3>
@@ -1428,7 +1383,7 @@ export default function ProductManager() {
                             </div>
 
                             <div className="image-upload-section" style={{ gridColumn: 'span 2' }}>
-                                {/* Mắt Thần Status Bar (Silent Notification) */}
+                                {/* Mắt Thần Status Bar */}
                                 {(uploadStatus.total > 0 || uploadStatus.duplicates > 0) && (
                                     <div style={{
                                         background: uploadStatus.duplicates > 0 ? '#fff5f8' : '#f0f9ff',
@@ -1456,17 +1411,63 @@ export default function ProductManager() {
                                         </div>
                                     </div>
                                 )}
-                                <label className="image-upload-label">
-                                    📷 Chọn ảnh hoặc Paste (Ctrl+V)
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleImageUpload}
-                                        style={{ display: 'none' }}
-                                    />
-                                </label>
-                                <p className="paste-hint">💡 Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Không giới hạn số lượng!</p>
+
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
+                                    <label className="image-upload-label" style={{ flex: 1, margin: 0 }}>
+                                        📷 Chọn ảnh hoặc Paste (Ctrl+V)
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImageUpload}
+                                            style={{ display: 'none' }}
+                                        />
+                                    </label>
+
+                                    <label className="bulk-import-btn" style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '10px 20px',
+                                        background: importing ? '#eee' : '#fff0f5',
+                                        color: 'var(--pink)',
+                                        border: '2px dashed var(--pink)',
+                                        borderRadius: '15px',
+                                        cursor: importing ? 'not-allowed' : 'pointer',
+                                        fontWeight: '700',
+                                        fontSize: '0.9rem',
+                                        transition: 'all 0.2s',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {importing ? `⚙️ Xử lý...` : '📁 Up Thư Mục'}
+                                        <input
+                                            type="file"
+                                            webkitdirectory="true"
+                                            directory="true"
+                                            onChange={handleFolderImport}
+                                            style={{ display: 'none' }}
+                                            disabled={importing}
+                                        />
+                                    </label>
+                                </div>
+
+                                {importing && (
+                                    <div className="import-progress-mini" style={{ marginBottom: '1rem' }}>
+                                        <div style={{ height: '4px', background: '#eee', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                height: '100%',
+                                                background: 'var(--pink)',
+                                                width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
+                                                transition: 'width 0.3s'
+                                            }} />
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '4px', textAlign: 'right' }}>
+                                            Đang nhập thư mục: {importStats.current} / {importStats.total}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <p className="paste-hint" style={{ marginTop: 0 }}>💡 Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
 
                                 {stagedImages.length > 0 && (
                                     <div className="staged-images-container">
