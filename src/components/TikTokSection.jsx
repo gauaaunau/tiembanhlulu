@@ -15,6 +15,15 @@ const PauseIcon = () => (
     </svg>
 );
 
+const SurprisePlayPause = ({ isPlaying }) => (
+    <div className={`surprise-btn-icon ${isPlaying ? 'is-playing' : 'is-paused'}`}>
+        <svg viewBox="0 0 100 100" className="surprise-svg">
+            <path className="surprise-path-1" d="M30,20 L30,80 L50,80 L50,20 Z" />
+            <path className="surprise-path-2" d="M60,20 L60,80 L80,80 L80,20 Z" />
+        </svg>
+    </div>
+);
+
 const VolumeIcon = () => (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
         <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
@@ -182,8 +191,8 @@ export default function TikTokSection() {
 
                                 {/* Centered Play Big Icon on Pause */}
                                 {!isPlaying && (
-                                    <div className="big-play-btn" onClick={togglePlay}>
-                                        <PlayIcon />
+                                    <div className="big-play-btn surprise-elastic" onClick={togglePlay}>
+                                        <SurprisePlayPause isPlaying={false} />
                                     </div>
                                 )}
                             </div>
@@ -203,8 +212,8 @@ export default function TikTokSection() {
 
                                 <div className="controls-bottom">
                                     <div className="controls-left">
-                                        <button className="cute-btn play-btn" onClick={togglePlay}>
-                                            {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                                        <button className="cute-btn play-btn surprise-elastic" onClick={togglePlay}>
+                                            <SurprisePlayPause isPlaying={isPlaying} />
                                         </button>
                                         <span className="cute-time">
                                             {formatTime(currentTime)} / {formatTime(duration)}

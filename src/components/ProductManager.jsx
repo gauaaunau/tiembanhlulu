@@ -1261,7 +1261,7 @@ export default function ProductManager() {
                 <div className="manager-section tiktok-manager-ui" style={{ background: '#fff', borderRadius: '30px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', padding: '2rem' }}>
                     <div className="form-header" style={{ marginBottom: '2rem' }}>
                         <h3 style={{ color: 'var(--brown)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            Quan Ly Video TikTok (v6.1.6)
+                            Quản Lý Video TikTok (v6.1.8)
                         </h3>
                         <p style={{ color: '#888', fontSize: '0.9rem' }}>Tải video TikTok về và hiển thị với video player tùy chỉnh!</p>
                     </div>
