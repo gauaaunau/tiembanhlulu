@@ -306,6 +306,8 @@ export default function ProductManager() {
 
                     // STRICT STREAM SYNC: Prevents "Write stream exhausted"
                     await waitForSync();
+                    // GENTLE THROTTLE (v5.0.4): Give Firestore room to breathe with large Base64
+                    await new Promise(r => setTimeout(r, 500));
                 }
 
                 alert(`Đã thêm ${stagedImages.length} sản phẩm thành công!`);
@@ -661,6 +663,8 @@ export default function ProductManager() {
                 // Sync after EVERY image to prevent "Write stream exhausted"
                 // This relies on network latency as the natural throttle.
                 await waitForSync();
+                // GENTLE THROTTLE (v5.0.4): Prevent SDK buffer overflow
+                await new Promise(r => setTimeout(r, 500));
             }
         }
 
