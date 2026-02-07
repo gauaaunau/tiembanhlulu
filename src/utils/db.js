@@ -8,7 +8,8 @@ import {
     query,
     orderBy,
     writeBatch,
-    onSnapshot
+    onSnapshot,
+    waitForPendingWrites
 } from "firebase/firestore";
 
 const DB_NAME = 'LuluCakeDB';
@@ -37,6 +38,18 @@ export const openDB = () => {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
+};
+
+export const waitForSync = async () => {
+    if (isCloudEnabled) {
+        try {
+            // Strictly wait for all pending writes to be acknowledged by the backend
+            await waitForPendingWrites(firestore);
+            console.log("✅ Network Sync Complete: Queue drained.");
+        } catch (err) {
+            console.error("Wait for sync failed:", err);
+        }
+    }
 };
 
 export const getAllItems = async (storeName) => {

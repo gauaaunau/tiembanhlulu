@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import './ProductManager.css';
-import { subscribeToItems, saveItem, deleteItem, openDB, addItemsBulk, deleteAllItems, getAllItems, saveAllItems } from '../utils/db';
+import {
+    getAllItems,
+    saveItem,
+    saveAllItems,
+    deleteItem,
+    addItemsBulk,
+    deleteAllItems,
+    subscribeToItems,
+    waitForSync
+} from '../utils/db';
 import { uploadImage, base64ToBlob } from '../utils/storage';
 import LoadingScreen from './LoadingScreen';
 
@@ -655,10 +664,11 @@ export default function ProductManager() {
                 // Update ETA in UploadStatus for optional specialized display
                 setUploadStatus(prev => ({ ...prev, processed: globalProcessedCount }));
 
-                // THROTTLING: Pause 1.5s every 10 images
+                // THROTTLING: Smart Queue Drain (v4.6.3)
                 if (globalProcessedCount % 10 === 0) {
-                    console.log(`⏳ Throttling: Pausing for 1.5s after ${globalProcessedCount} images...`);
-                    await new Promise(r => setTimeout(r, 1500));
+                    console.log(`⏳ Throttling: Waiting for network sync after ${globalProcessedCount} images...`);
+                    await waitForSync(); // Wait for queue to empty
+                    await new Promise(r => setTimeout(r, 1500)); // Safety cooldown
                 }
             }
         }
