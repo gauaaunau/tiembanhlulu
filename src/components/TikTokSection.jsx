@@ -10,54 +10,18 @@ export default function TikTokSection() {
     useEffect(() => {
         const unsubscribe = subscribeToItems('settings', (items) => {
             const tiktokSettings = items.find(item => item.id === 'tiktok_featured');
-            if (tiktokSettings && tiktokSettings.urls) {
-                const urls = tiktokSettings.urls.filter(url => url && url.trim() !== '');
-                if (urls.length > 0) {
-                    fetchVideoThumbnails(urls);
-                } else {
-                    setIsLoading(false);
-                }
-            } else {
-                setIsLoading(false);
+            if (tiktokSettings && tiktokSettings.videos) {
+                // v6.0.0: Load self-hosted videos
+                const validVideos = tiktokSettings.videos.filter(v => v && v.videoUrl);
+
+                // Pad to always have 3 slots
+                const padded = [null, null, null].map((_, i) => validVideos[i] || null);
+                setVideos(padded);
             }
+            setIsLoading(false);
         });
         return () => unsubscribe();
     }, []);
-
-    const fetchVideoThumbnails = async (urls) => {
-        const videoData = await Promise.all(urls.slice(0, 3).map(async (url) => {
-            try {
-                const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    return {
-                        url,
-                        thumbnail: data.thumbnail_url || 'https://img.icons8.com/?size=512&id=118638&format=png'
-                    };
-                }
-            } catch (err) {
-                console.warn('Thumbnail fetch failed:', err);
-            }
-            return {
-                url,
-                thumbnail: 'https://img.icons8.com/?size=512&id=118638&format=png'
-            };
-        }));
-
-        // Pad to always have 3 slots
-        const padded = [null, null, null].map((_, i) => videoData[i] || null);
-        setVideos(padded);
-        setIsLoading(false);
-    };
-
-    const getEmbedUrl = (url) => {
-        if (!url) return null;
-        const match = url.match(/\/video\/(\d+)/);
-        if (match && match[1]) {
-            return `https://www.tiktok.com/embed/v2/${match[1]}`;
-        }
-        return null;
-    };
 
     if (isLoading || videos.every(v => !v)) return null;
 
@@ -73,7 +37,7 @@ export default function TikTokSection() {
                         <div className="thumbnail-wrapper">
                             {video ? (
                                 <>
-                                    <img src={video.thumbnail} alt="TikTok video" className="video-thumbnail" />
+                                    <img src={video.thumbnailUrl} alt="TikTok video" className="video-thumbnail" />
                                     <div className="play-overlay">
                                         <span className="play-icon">▶</span>
                                     </div>
@@ -96,12 +60,13 @@ export default function TikTokSection() {
                 <div className="tiktok-lightbox" onClick={() => setSelectedVideo(null)}>
                     <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
                         <button className="close-lightbox" onClick={() => setSelectedVideo(null)}>✕</button>
-                        <iframe
-                            src={getEmbedUrl(selectedVideo.url)}
+                        <video
+                            src={selectedVideo.videoUrl}
                             className="lightbox-player"
-                            allowFullScreen
-                            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                        ></iframe>
+                            controls
+                            autoPlay
+                            style={{ width: '100%', height: '90vh', objectFit: 'contain' }}
+                        />
                     </div>
                 </div>
             )}

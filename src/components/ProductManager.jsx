@@ -11,7 +11,8 @@ import {
     subscribeToItems,
     waitForSync
 } from '../utils/db';
-import { uploadImage, base64ToBlob } from '../utils/storage';
+import { uploadImage, base64ToBlob, uploadVideo } from '../utils/storage';
+import { downloadTikTokVideo, isValidTikTokUrl } from '../utils/tiktokDownloader';
 import LoadingScreen from './LoadingScreen';
 
 export default function ProductManager() {
@@ -51,7 +52,12 @@ export default function ProductManager() {
     const [inlineEditingId, setInlineEditingId] = useState(null); // v5.1.0
     const [inlinePriceValue, setInlinePriceValue] = useState(''); // v5.1.0
     const [adminSearch, setAdminSearch] = useState(''); // v5.2.0
-    const [tiktokUrls, setTiktokUrls] = useState(['', '', '']); // v5.5.0
+
+    // v6.0.0: TikTok Video Self-Hosting
+    const [tiktokVideos, setTiktokVideos] = useState([null, null, null]); // {id, videoUrl, thumbnailUrl}
+    const [tiktokInputUrls, setTiktokInputUrls] = useState(['', '', '']); // Temporary input URLs
+    const [downloadingIndex, setDownloadingIndex] = useState(null); // Track which video is downloading
+    const [downloadProgress, setDownloadProgress] = useState(''); // Progress message
     const [isSavingSettings, setIsSavingSettings] = useState(false);
 
     useEffect(() => {
@@ -117,8 +123,16 @@ export default function ProductManager() {
 
         const unsubSettings = subscribeToItems('settings', (items) => {
             const tiktokSettings = items.find(item => item.id === 'tiktok_featured');
-            if (tiktokSettings && tiktokSettings.urls) {
-                setTiktokUrls(tiktokSettings.urls);
+            if (tiktokSettings) {
+                // v6.0.0: Support new video format {videos: [{videoUrl, thumbnailUrl}]}
+                if (tiktokSettings.videos) {
+                    setTiktokVideos(tiktokSettings.videos);
+                }
+                // Legacy: Still support old URL format for backwards compatibility
+                else if (tiktokSettings.urls) {
+                    // Convert old URLs to empty video slots
+                    setTiktokInputUrls(tiktokSettings.urls);
+                }
             }
         });
 
@@ -176,6 +190,84 @@ export default function ProductManager() {
         };
     }, [importing]);
 
+    // v6.0.0: Handle TikTok video download and upload
+    const handleDownloadAndUpload = async (index) => {
+        const tiktokUrl = tiktokInputUrls[index];
+
+        // Validate URL
+        if (!tiktokUrl || !isValidTikTokUrl(tiktokUrl)) {
+            alert('❌ URL TikTok không hợp lệ! Vui lòng kiểm tra lại.');
+            return;
+        }
+
+        setDownloadingIndex(index);
+        setDownloadProgress('Đang tải video từ TikTok...');
+
+        try {
+            // Step 1: Download video from TikTok
+            const { videoBlob, thumbnail } = await downloadTikTokVideo(tiktokUrl);
+
+            setDownloadProgress('Đang upload lên Firebase Storage...');
+
+            // Step 2: Upload video to Firebase Storage
+            const videoUrl = await uploadVideo(videoBlob, 'tiktok_video.mp4');
+
+            setDownloadProgress('Đang lưu vào database...');
+
+            // Step 3: Update videos array
+            const newVideos = [...tiktokVideos];
+            newVideos[index] = {
+                id: `video_${Date.now()}_${index}`,
+                videoUrl,
+                thumbnailUrl: thumbnail
+            };
+            setTiktokVideos(newVideos);
+
+            // Step 4: Save to database
+            await saveItem('settings', {
+                id: 'tiktok_featured',
+                videos: newVideos,
+                updatedAt: Date.now()
+            });
+
+            // Step 5: Clear input
+            const newInputs = [...tiktokInputUrls];
+            newInputs[index] = '';
+            setTiktokInputUrls(newInputs);
+
+            setDownloadProgress('✅ Hoàn tất!');
+            setTimeout(() => {
+                setDownloadingIndex(null);
+                setDownloadProgress('');
+            }, 2000);
+
+        } catch (error) {
+            console.error('TikTok download error:', error);
+            alert(`❌ Lỗi: ${error.message}\n\nVui lòng thử lại hoặc dùng link khác.`);
+            setDownloadingIndex(null);
+            setDownloadProgress('');
+        }
+    };
+
+    // v6.0.0: Delete uploaded video
+    const handleDeleteVideo = async (index) => {
+        if (!confirm(`Xóa video ${index + 1}?`)) return;
+
+        const newVideos = [...tiktokVideos];
+        newVideos[index] = null;
+        setTiktokVideos(newVideos);
+
+        try {
+            await saveItem('settings', {
+                id: 'tiktok_featured',
+                videos: newVideos,
+                updatedAt: Date.now()
+            });
+            alert('✅ Đã xóa video!');
+        } catch (error) {
+            alert('❌ Lỗi khi xóa video!');
+        }
+    };
 
 
     const compressImage = (base64Str, maxWidth = 1600, maxHeight = 1600) => {
@@ -1169,70 +1261,124 @@ export default function ProductManager() {
                 <div className="manager-section tiktok-manager-ui" style={{ background: '#fff', borderRadius: '30px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', padding: '2rem' }}>
                     <div className="form-header" style={{ marginBottom: '2rem' }}>
                         <h3 style={{ color: 'var(--brown)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            🎥 Quản Lý TikTok Featured
+                            🎥 Quản Lý Video TikTok (v6.0.0)
                         </h3>
-                        <p style={{ color: '#888', fontSize: '0.9rem' }}>Dán link 3 video TikTok bạn muốn khoe lên trang chủ nhé!</p>
+                        <p style={{ color: '#888', fontSize: '0.9rem' }}>Tải video TikTok về và hiển thị với video player tùy chỉnh!</p>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
-                        {tiktokUrls.map((url, index) => (
-                            <div key={index} className="input-field">
-                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px' }}>
-                                    VIDEO TIKTOK THỨ {index + 1}
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="https://www.tiktok.com/@username/video/12345..."
-                                    value={url}
-                                    onChange={(e) => {
-                                        const newUrls = [...tiktokUrls];
-                                        newUrls[index] = e.target.value;
-                                        setTiktokUrls(newUrls);
-                                    }}
-                                    className="form-input"
-                                    style={{ width: '100%', padding: '14px 20px', borderRadius: '15px', border: '2px solid #f0f0f0' }}
-                                />
-                            </div>
-                        ))}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '700px' }}>
+                        {[0, 1, 2].map((index) => {
+                            const video = tiktokVideos[index];
+                            const isDownloading = downloadingIndex === index;
 
-                        <button
-                            onClick={async () => {
-                                setIsSavingSettings(true);
-                                try {
-                                    await saveItem('settings', {
-                                        id: 'tiktok_featured',
-                                        urls: tiktokUrls,
-                                        updatedAt: Date.now()
-                                    });
-                                    alert('✅ Đã lưu cài đặt TikTok!');
-                                } catch (err) {
-                                    alert('❌ Lỗi khi lưu cài đặt TikTok!');
-                                } finally {
-                                    setIsSavingSettings(false);
-                                }
-                            }}
-                            disabled={isSavingSettings}
-                            style={{
-                                marginTop: '1rem',
-                                background: 'var(--pink)',
-                                color: 'white',
-                                padding: '15px',
-                                borderRadius: '15px',
-                                border: 'none',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                opacity: isSavingSettings ? 0.7 : 1
-                            }}
-                        >
-                            {isSavingSettings ? '⌛ ĐANG LƯU...' : '💾 LƯU CÀI ĐẶT TIKTOK'}
-                        </button>
+                            return (
+                                <div
+                                    key={index}
+                                    style={{
+                                        padding: '1.5rem',
+                                        background: video ? '#f0fff4' : '#fafafa',
+                                        borderRadius: '20px',
+                                        border: `2px solid ${video ? 'var(--pink)' : '#e0e0e0'}`
+                                    }}
+                                >
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: '#666', marginBottom: '12px' }}>
+                                        📹 VIDEO {index + 1}
+                                    </label>
+
+                                    {video ? (
+                                        // Show uploaded video preview
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                                            <div style={{ flex: '0 0 120px' }}>
+                                                <video
+                                                    src={video.videoUrl}
+                                                    poster={video.thumbnailUrl}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '160px',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '12px',
+                                                        border: '2px solid var(--pink)'
+                                                    }}
+                                                    controls
+                                                />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: '#666' }}>
+                                                    ✅ Video đã được tải lên Firebase Storage
+                                                </p>
+                                                <button
+                                                    onClick={() => handleDeleteVideo(index)}
+                                                    style={{
+                                                        background: '#ff4444',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        padding: '10px 20px',
+                                                        borderRadius: '10px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.85rem',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                >
+                                                    🗑️ Xóa Video
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // Show input and download button
+                                        <div>
+                                            <input
+                                                type="text"
+                                                placeholder="https://www.tiktok.com/@username/video/12345..."
+                                                value={tiktokInputUrls[index]}
+                                                onChange={(e) => {
+                                                    const newUrls = [...tiktokInputUrls];
+                                                    newUrls[index] = e.target.value;
+                                                    setTiktokInputUrls(newUrls);
+                                                }}
+                                                disabled={isDownloading}
+                                                className="form-input"
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '14px 20px',
+                                                    borderRadius: '15px',
+                                                    border: '2px solid #f0f0f0',
+                                                    marginBottom: '12px'
+                                                }}
+                                            />
+
+                                            <button
+                                                onClick={() => handleDownloadAndUpload(index)}
+                                                disabled={isDownloading || !tiktokInputUrls[index]}
+                                                style={{
+                                                    background: isDownloading ? '#ccc' : 'var(--pink)',
+                                                    color: 'white',
+                                                    padding: '14px 24px',
+                                                    borderRadius: '15px',
+                                                    border: 'none',
+                                                    fontWeight: 'bold',
+                                                    cursor: isDownloading || !tiktokInputUrls[index] ? 'not-allowed' : 'pointer',
+                                                    fontSize: '0.9rem',
+                                                    width: '100%',
+                                                    opacity: isDownloading || !tiktokInputUrls[index] ? 0.6 : 1
+                                                }}
+                                            >
+                                                {isDownloading ? `⏳ ${downloadProgress}` : '⬇️ Download & Upload'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#fff5f7', borderRadius: '20px', border: '1px dashed var(--pink)' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: 'var(--pink)', fontSize: '0.9rem' }}>💡 Mẹo nhỏ:</h4>
-                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#777', lineHeight: '1.6' }}>
-                            Bạn có thể lấy link video bằng cách nhấn nút "Chia sẻ" trên TikTok và chọn "Sao chép liên kết". Video sẽ tự động được hiển thị dưới dạng trình phát mini trên trang chủ!
-                        </p>
+                        <h4 style={{ margin: '0 0 10px 0', color: 'var(--pink)', fontSize: '0.9rem' }}>💡 Hướng dẫn:</h4>
+                        <ol style={{ margin: 0, paddingLeft: '20px', fontSize: '0.85rem', color: '#777', lineHeight: '1.8' }}>
+                            <li>Dán link video TikTok của bạn (từ tài khoản @tiembanh.lulu)</li>
+                            <li>Nhấn "Download & Upload" để tải video về và lưu lên Firebase</li>
+                            <li>Video sẽ hiện trên trang chủ với player tùy chỉnh (không có UI của TikTok)</li>
+                            <li>Mỗi lần chỉ tải được 1 video, vui lòng chờ xong rồi tải tiếp</li>
+                        </ol>
                     </div>
                 </div>
             ) : (
