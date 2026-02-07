@@ -289,10 +289,11 @@ export default function ProductManager() {
 
         setUploadStatus({ total: files.length, processed: 0, duplicates: 0, lastMatch: null });
 
-        files.forEach(file => {
+        files.forEach(async (file) => {
             const reader = new FileReader();
             reader.onloadend = async () => {
-                const vHash = await calculatePHash(reader.result);
+                const imageData = reader.result;
+                const vHash = await calculatePHash(imageData);
 
                 // Fuzzy Match (HAMMING DISTANCE)
                 // 1. Check against DB
@@ -308,36 +309,34 @@ export default function ProductManager() {
                         lastMatch: similarity
                     }));
 
-                    // Reset status after 5s of inactivity
                     if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                     statusTimeoutRef.current = setTimeout(() => {
                         setUploadStatus({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
                     }, 5000);
-
                     return;
                 }
 
-                setStagedImages(prev => {
-                    // 2. Check against CURRENT BATCH (Fuzzy)
-                    const batchDup = findVisualDuplicate(vHash?.bits, prev);
-                    if (batchDup) {
-                        console.warn("Bỏ qua ảnh trùng trong cùng đợt upload.");
-                        return prev;
-                    }
+                // 2. Add to staged list IMMEDIATELY
+                const newImg = {
+                    id: `img_${Date.now()}_${Math.random()}`,
+                    data: imageData,
+                    vHash: vHash?.hex,
+                    vBits: vHash?.bits
+                };
 
-                    return [...prev, {
-                        id: `img_${Date.now()}_${Math.random()}`,
-                        data: reader.result,
-                        vHash: vHash?.hex,
-                        vBits: vHash?.bits
-                    }];
+                setStagedImages(prev => {
+                    // Check against current batch
+                    const batchDup = findVisualDuplicate(vHash?.bits, prev);
+                    if (batchDup) return prev;
+                    return [...prev, newImg];
                 });
 
                 setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1 }));
 
-                const compressed = await compressImage(reader.result);
+                // 3. Compress in background and update
+                const compressed = await compressImage(imageData);
                 setStagedImages(prev => prev.map(img =>
-                    img.vBits === vHash?.bits ? { ...img, data: compressed } : img
+                    img.id === newImg.id ? { ...img, data: compressed } : img
                 ));
             };
             reader.readAsDataURL(file);
@@ -360,7 +359,7 @@ export default function ProductManager() {
 
         setUploadStatus({ total: images.length, processed: 0, duplicates: 0, lastMatch: null });
 
-        images.forEach(file => {
+        images.forEach(async (file) => {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const imageData = reader.result;
@@ -384,26 +383,30 @@ export default function ProductManager() {
                     statusTimeoutRef.current = setTimeout(() => {
                         setUploadStatus({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
                     }, 5000);
-
                     return;
                 }
 
+                // 2. Add to staged list IMMEDIATELY
+                const newImg = {
+                    id: `img_paste_${Date.now()}_${Math.random()}`,
+                    data: imageData,
+                    vHash: vHash?.hex,
+                    vBits: vHash?.bits
+                };
+
                 setStagedImages(prev => {
-                    // 2. Check against CURRENT BATCH (Fuzzy)
+                    // Check against current batch
                     const batchDup = findVisualDuplicate(vHash?.bits, prev);
                     if (batchDup) return prev;
-
-                    return [...prev, {
-                        id: `img_${Date.now()}_${Math.random()}`,
-                        data: imageData,
-                        vHash: vHash?.hex,
-                        vBits: vHash?.bits
-                    }];
+                    return [...prev, newImg];
                 });
 
+                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1 }));
+
+                // 3. Compress and update
                 const compressed = await compressImage(imageData);
                 setStagedImages(prev => prev.map(img =>
-                    img.vBits === vHash?.bits ? { ...img, data: compressed } : img
+                    img.id === newImg.id ? { ...img, data: compressed } : img
                 ));
             };
             reader.readAsDataURL(file);
@@ -1228,33 +1231,36 @@ export default function ProductManager() {
 
 
 
-                        <form className="product-form">
-                            <div className="form-row">
-                                <input
-                                    type="text"
-                                    placeholder="Tên bánh (Tùy chọn)"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="form-input"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Giá (VD: 250k, 500k...)"
-                                    value={formData.price}
-                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                    className="form-input"
-                                />
+                        <form className="product-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            {/* Section 1: Thông tin cơ bản */}
+                            <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                                <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>📝 Thông tin cơ bản</h4>
+                                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Tên bánh (Tùy chọn)"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        className="form-input"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Giá (VD: 250k, 500k...)"
+                                        value={formData.price}
+                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="form-row full-width" style={{ gridColumn: 'span 2' }}>
+                            {/* Section 2: Phân loại & Tags */}
+                            <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                                <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🏷️ Phân loại & Tags</h4>
                                 <div className="smart-tag-container">
-                                    <label className="form-label" style={{ fontWeight: '600', color: 'var(--brown)', display: 'block', marginBottom: '0.5rem' }}>
-                                        🏷️ Gán Tags (Nhập tên & nhấn Enter):
-                                    </label>
                                     <div className="tags-input-wrapper" style={{ position: 'relative' }}>
                                         <input
                                             type="text"
-                                            placeholder="Ví dụ: Bánh Rồng, Bánh Kem, Baby..."
+                                            placeholder="Gán Tag Thể loại (Ví dụ: Bánh Rồng, Baby...)"
                                             value={tagInputText}
                                             onChange={(e) => {
                                                 setTagInputText(e.target.value);
@@ -1301,11 +1307,6 @@ export default function ProductManager() {
                                                             🏷️ {cat.name}
                                                         </div>
                                                     ))}
-                                                {allFilterableCategories.filter(cat => cat.name.toLowerCase().includes(tagInputText.toLowerCase())).length === 0 && (
-                                                    <div style={{ padding: '10px 15px', color: '#888', fontStyle: 'italic' }}>
-                                                        ✨ Nhấn Enter để tạo mới: "{tagInputText}"
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -1339,164 +1340,149 @@ export default function ProductManager() {
                                             </div>
                                         ))}
                                     </div>
-                                    <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.8rem' }}>💡 Nhập tên Tag và nhấn Enter để lưu!</p>
                                 </div>
                             </div>
 
-                            <div className="manager-section" style={{ gridColumn: 'span 2', padding: 0, marginTop: '1rem' }}>
-                                <h3>Ghi chú & Hình ảnh</h3>
-                                <div className="description-wrapper">
+                            {/* Section 3: Ghi chú & Hình ảnh */}
+                            <div className="form-card" style={{ background: '#fdfdfd', border: '1px solid #f0f0f0', padding: '1.5rem', borderRadius: '15px' }}>
+                                <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--brown)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🖼️ Ghi chú & Hình ảnh</h4>
+                                <div className="description-wrapper" style={{ marginBottom: '1.5rem' }}>
                                     <textarea
-                                        placeholder="Mô tả sản phẩm..."
+                                        placeholder="Mô tả sản phẩm (Tùy chọn)..."
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         className="form-textarea"
-                                        rows="3"
+                                        rows="2"
                                     />
-                                    {getUniqueDescriptions().length > 0 && (
-                                        <div className="suggestion-container">
-                                            <button
-                                                type="button"
-                                                className="suggestion-trigger"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const list = e.currentTarget.nextElementSibling;
-                                                    list.style.display = list.style.display === 'none' ? 'block' : 'none';
-                                                }}
-                                            >
-                                                💡 Gợi ý
-                                            </button>
-                                            <div className="suggestion-list" style={{ display: 'none' }}>
-                                                {getUniqueDescriptions().map((desc, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="suggestion-item"
-                                                        onClick={() => setFormData({ ...formData, description: desc })}
-                                                    >
-                                                        {desc}
+                                </div>
+
+                                <div className="image-upload-section">
+                                    {/* Mắt Thần Status Bar */}
+                                    {(uploadStatus.total > 0 || uploadStatus.duplicates > 0) && (
+                                        <div style={{
+                                            background: uploadStatus.duplicates > 0 ? '#fff5f8' : '#f0f9ff',
+                                            border: `1px solid ${uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0ea5e9'}`,
+                                            padding: '12px 20px',
+                                            borderRadius: '15px',
+                                            marginBottom: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            animation: 'fadeIn 0.3s ease',
+                                            fontSize: '0.9rem',
+                                            boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <span style={{ fontSize: '1.2rem' }}>{uploadStatus.duplicates > 0 ? '🧿' : '⏳'}</span>
+                                                <span style={{ fontWeight: '600', color: uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0369a1' }}>
+                                                    {uploadStatus.duplicates > 0
+                                                        ? `Đã chặn ${uploadStatus.duplicates} ảnh trùng (Giống ${uploadStatus.lastMatch || '...'}%)`
+                                                        : 'Đang kiểm tra hình ảnh...'}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'bold' }}>
+                                                {uploadStatus.processed} / {uploadStatus.total || '?'}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
+                                        <label className="image-upload-label" style={{
+                                            flex: 1,
+                                            margin: 0,
+                                            background: 'white',
+                                            color: 'var(--pink)',
+                                            border: '2px solid var(--pink)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            padding: '12px'
+                                        }}>
+                                            📷 Chọn ảnh hoặc Paste (Ctrl+V)
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleImageUpload}
+                                                style={{ display: 'none' }}
+                                            />
+                                        </label>
+
+                                        <label className="bulk-import-btn" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '10px 25px',
+                                            background: importing ? '#eee' : '#ecfdf5',
+                                            color: '#059669',
+                                            border: `2px solid ${importing ? '#ddd' : '#10b981'}`,
+                                            borderRadius: '15px',
+                                            cursor: importing ? 'not-allowed' : 'pointer',
+                                            fontWeight: '800',
+                                            fontSize: '0.9rem',
+                                            transition: 'all 0.2s',
+                                            whiteSpace: 'nowrap'
+                                        }}>
+                                            {importing ? `⚙️ Xử lý...` : '📁 Up Thư Mục'}
+                                            <input
+                                                type="file"
+                                                webkitdirectory="true"
+                                                directory="true"
+                                                onChange={handleFolderImport}
+                                                style={{ display: 'none' }}
+                                                disabled={importing}
+                                            />
+                                        </label>
+                                    </div>
+
+                                    {importing && (
+                                        <div className="import-progress-mini" style={{ marginBottom: '1.5rem' }}>
+                                            <div style={{ height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    height: '100%',
+                                                    background: '#10b981',
+                                                    width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
+                                                    transition: 'width 0.3s'
+                                                }} />
+                                            </div>
+                                            <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '6px', fontWeight: 'bold', textAlign: 'right' }}>
+                                                Đang nhập thư mục: {importStats.current} / {importStats.total}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="paste-hint" style={{ marginTop: 0, fontSize: '0.8rem', color: '#999' }}>💡 Gợi ý: Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
+
+                                    {stagedImages.length > 0 && (
+                                        <div className="staged-images-container">
+                                            <div className="staged-header">
+                                                <span>📦 {stagedImages.length} ảnh trong danh sách</span>
+                                                <button
+                                                    type="button"
+                                                    className="clear-staged-btn"
+                                                    onClick={() => setStagedImages([])}
+                                                >
+                                                    🗑️ Xóa hết
+                                                </button>
+                                            </div>
+                                            <div className="staged-images-grid">
+                                                {stagedImages.map(img => (
+                                                    <div key={img.id} className="staged-image-item">
+                                                        <img src={img.data} alt="Staged" />
+                                                        <button
+                                                            type="button"
+                                                            className="remove-staged-btn"
+                                                            onClick={() => removeStagedImage(img.id)}
+                                                        >
+                                                            ✕
+                                                        </button>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                            </div>
-
-                            <div className="image-upload-section" style={{ gridColumn: 'span 2' }}>
-                                {/* Mắt Thần Status Bar */}
-                                {(uploadStatus.total > 0 || uploadStatus.duplicates > 0) && (
-                                    <div style={{
-                                        background: uploadStatus.duplicates > 0 ? '#fff5f8' : '#f0f9ff',
-                                        border: `1px solid ${uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0ea5e9'}`,
-                                        padding: '12px 20px',
-                                        borderRadius: '15px',
-                                        marginBottom: '1rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        animation: 'fadeIn 0.3s ease',
-                                        fontSize: '0.9rem',
-                                        boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ fontSize: '1.2rem' }}>{uploadStatus.duplicates > 0 ? '🧿' : '⏳'}</span>
-                                            <span style={{ fontWeight: '600', color: uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0369a1' }}>
-                                                {uploadStatus.duplicates > 0
-                                                    ? `Đã chặn ${uploadStatus.duplicates} ảnh trùng (Giống ${uploadStatus.lastMatch || '...'}%)`
-                                                    : 'Đang kiểm tra hình ảnh...'}
-                                            </span>
-                                        </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'bold' }}>
-                                            {uploadStatus.processed} / {uploadStatus.total || '?'}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
-                                    <label className="image-upload-label" style={{ flex: 1, margin: 0 }}>
-                                        📷 Chọn ảnh hoặc Paste (Ctrl+V)
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            onChange={handleImageUpload}
-                                            style={{ display: 'none' }}
-                                        />
-                                    </label>
-
-                                    <label className="bulk-import-btn" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        padding: '10px 20px',
-                                        background: importing ? '#eee' : '#fff0f5',
-                                        color: 'var(--pink)',
-                                        border: '2px dashed var(--pink)',
-                                        borderRadius: '15px',
-                                        cursor: importing ? 'not-allowed' : 'pointer',
-                                        fontWeight: '700',
-                                        fontSize: '0.9rem',
-                                        transition: 'all 0.2s',
-                                        whiteSpace: 'nowrap'
-                                    }}>
-                                        {importing ? `⚙️ Xử lý...` : '📁 Up Thư Mục'}
-                                        <input
-                                            type="file"
-                                            webkitdirectory="true"
-                                            directory="true"
-                                            onChange={handleFolderImport}
-                                            style={{ display: 'none' }}
-                                            disabled={importing}
-                                        />
-                                    </label>
-                                </div>
-
-                                {importing && (
-                                    <div className="import-progress-mini" style={{ marginBottom: '1rem' }}>
-                                        <div style={{ height: '4px', background: '#eee', borderRadius: '2px', overflow: 'hidden' }}>
-                                            <div style={{
-                                                height: '100%',
-                                                background: 'var(--pink)',
-                                                width: `${(importStats.current / (importStats.total || 1)) * 100}%`,
-                                                transition: 'width 0.3s'
-                                            }} />
-                                        </div>
-                                        <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '4px', textAlign: 'right' }}>
-                                            Đang nhập thư mục: {importStats.current} / {importStats.total}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <p className="paste-hint" style={{ marginTop: 0 }}>💡 Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
-
-                                {stagedImages.length > 0 && (
-                                    <div className="staged-images-container">
-                                        <div className="staged-header">
-                                            <span>📦 {stagedImages.length} ảnh trong danh sách</span>
-                                            <button
-                                                type="button"
-                                                className="clear-staged-btn"
-                                                onClick={() => setStagedImages([])}
-                                            >
-                                                🗑️ Xóa hết
-                                            </button>
-                                        </div>
-                                        <div className="staged-images-grid">
-                                            {stagedImages.map(img => (
-                                                <div key={img.id} className="staged-image-item">
-                                                    <img src={img.data} alt="Staged" />
-                                                    <button
-                                                        type="button"
-                                                        className="remove-staged-btn"
-                                                        onClick={() => removeStagedImage(img.id)}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="form-actions" style={{ gridColumn: 'span 2', display: 'flex', gap: '15px', marginTop: '2rem' }}>
