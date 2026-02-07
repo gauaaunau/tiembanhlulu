@@ -35,8 +35,8 @@ export default function ProductManager() {
     const repairExecutedRef = useRef(false);
     const [isRepairing, setIsRepairing] = useState(false);
     const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
-    const [visualSensitivity, setVisualSensitivity] = useState(18);
-    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
+    const [visualSensitivity, setVisualSensitivity] = useState(15);
+    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null });
     const statusTimeoutRef = useRef(null);
 
     useEffect(() => {
@@ -287,7 +287,7 @@ export default function ProductManager() {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        setUploadStatus({ total: files.length, processed: 0, duplicates: 0, lastMatch: null });
+        setUploadStatus({ total: files.length, processed: 0, added: 0, duplicates: 0, lastMatch: null });
 
         files.forEach(async (file) => {
             const reader = new FileReader();
@@ -310,8 +310,9 @@ export default function ProductManager() {
                     }));
 
                     if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+                    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                     statusTimeoutRef.current = setTimeout(() => {
-                        setUploadStatus({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
+                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null });
                     }, 5000);
                     return;
                 }
@@ -357,7 +358,7 @@ export default function ProductManager() {
         if (images.length === 0) return;
         e.preventDefault();
 
-        setUploadStatus({ total: images.length, processed: 0, duplicates: 0, lastMatch: null });
+        setUploadStatus({ total: images.length, processed: 0, added: 0, duplicates: 0, lastMatch: null });
 
         images.forEach(async (file) => {
             const reader = new FileReader();
@@ -381,7 +382,7 @@ export default function ProductManager() {
 
                     if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                     statusTimeoutRef.current = setTimeout(() => {
-                        setUploadStatus({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
+                        setUploadStatus({ total: 0, processed: 0, added: 0, duplicates: 0, lastMatch: null });
                     }, 5000);
                     return;
                 }
@@ -1358,10 +1359,10 @@ export default function ProductManager() {
 
                                 <div className="image-upload-section">
                                     {/* Mắt Thần Status Bar */}
-                                    {(uploadStatus.total > 0 || uploadStatus.duplicates > 0) && (
+                                    {(uploadStatus.total > 0) && (
                                         <div style={{
-                                            background: uploadStatus.duplicates > 0 ? '#fff5f8' : '#f0f9ff',
-                                            border: `1px solid ${uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0ea5e9'}`,
+                                            background: '#fff',
+                                            border: `2px solid ${uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0ea5e9'}`,
                                             padding: '12px 20px',
                                             borderRadius: '15px',
                                             marginBottom: '1rem',
@@ -1370,18 +1371,41 @@ export default function ProductManager() {
                                             justifyContent: 'space-between',
                                             animation: 'fadeIn 0.3s ease',
                                             fontSize: '0.9rem',
-                                            boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+                                            boxShadow: '0 8px 15px rgba(0,0,0,0.05)'
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <span style={{ fontSize: '1.2rem' }}>{uploadStatus.duplicates > 0 ? '🧿' : '⏳'}</span>
-                                                <span style={{ fontWeight: '600', color: uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0369a1' }}>
-                                                    {uploadStatus.duplicates > 0
-                                                        ? `Đã chặn ${uploadStatus.duplicates} ảnh trùng (Giống ${uploadStatus.lastMatch || '...'}%)`
-                                                        : 'Đang kiểm tra hình ảnh...'}
-                                                </span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <span style={{ fontSize: '1.2rem' }}>✅</span>
+                                                    <span style={{ fontWeight: '800', color: '#059669' }}>Nhận: {uploadStatus.added}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <span style={{ fontSize: '1.2rem' }}>🧿</span>
+                                                    <span style={{ fontWeight: '800', color: 'var(--pink)' }}>Chặn: {uploadStatus.duplicates}</span>
+                                                </div>
+                                                {uploadStatus.lastMatch && (
+                                                    <div style={{ fontSize: '0.75rem', color: '#999', fontStyle: 'italic', marginLeft: '5px' }}>
+                                                        (Khớp {uploadStatus.lastMatch}%)
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'bold' }}>
-                                                {uploadStatus.processed} / {uploadStatus.total || '?'}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 'bold' }}>
+                                                    ⏳ {uploadStatus.processed} / {uploadStatus.total}
+                                                </div>
+                                                <div style={{ width: '40px', height: '40px', position: 'relative' }}>
+                                                    <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                                        <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" strokeWidth="3" />
+                                                        <circle
+                                                            cx="18" cy="18" r="16" fill="none" stroke={uploadStatus.processed === uploadStatus.total ? '#059669' : '#0ea5e9'}
+                                                            strokeWidth="3"
+                                                            strokeDasharray={`${(uploadStatus.processed / uploadStatus.total) * 100}, 100`}
+                                                            transition="all 0.4s"
+                                                        />
+                                                    </svg>
+                                                    {uploadStatus.processed === uploadStatus.total && (
+                                                        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.8rem' }}>🎉</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1452,7 +1476,24 @@ export default function ProductManager() {
                                         </div>
                                     )}
 
-                                    <p className="paste-hint" style={{ marginTop: 0, fontSize: '0.8rem', color: '#999' }}>💡 Gợi ý: Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                                        <p className="paste-hint" style={{ margin: 0, fontSize: '0.8rem', color: '#999' }}>💡 Gợi ý: Hệ thống hỗ trợ ảnh Siêu Nét 1600px - Tự động tạo Thể loại khi Up Thư Mục!</p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '5px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#64748b' }}>🎯 Độ nhạy Mắt Thần:</span>
+                                            <select
+                                                value={visualSensitivity}
+                                                onChange={(e) => setVisualSensitivity(Number(e.target.value))}
+                                                style={{ border: 'none', background: 'transparent', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--pink)', outline: 'none', cursor: 'pointer' }}
+                                            >
+                                                <option value={8}>Cực thấp (12%)</option>
+                                                <option value={12}>Thấp (18%)</option>
+                                                <option value={15}>Vừa (23% - Mặc định)</option>
+                                                <option value={18}>Cao (28%)</option>
+                                                <option value={20}>Rất Cao (31%)</option>
+                                                <option value={25}>Cực Cao (39%)</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
                                     {stagedImages.length > 0 && (
                                         <div className="staged-images-container">
