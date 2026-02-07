@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 
 const DB_NAME = 'LuluCakeDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 // Check if Firebase is actually configured
 const isCloudEnabled = !!import.meta.env.VITE_FIREBASE_API_KEY;
@@ -32,6 +32,9 @@ export const openDB = () => {
             }
             if (!db.objectStoreNames.contains('drafts')) {
                 db.createObjectStore('drafts', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('settings')) {
+                db.createObjectStore('settings', { keyPath: 'id' });
             }
         };
 

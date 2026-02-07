@@ -51,6 +51,8 @@ export default function ProductManager() {
     const [inlineEditingId, setInlineEditingId] = useState(null); // v5.1.0
     const [inlinePriceValue, setInlinePriceValue] = useState(''); // v5.1.0
     const [adminSearch, setAdminSearch] = useState(''); // v5.2.0
+    const [tiktokUrls, setTiktokUrls] = useState(['', '', '']); // v5.5.0
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
 
     useEffect(() => {
         console.log("🛠️ ProductManager v4.2.1 - Live");
@@ -113,9 +115,17 @@ export default function ProductManager() {
             }
         });
 
+        const unsubSettings = subscribeToItems('settings', (items) => {
+            const tiktokSettings = items.find(item => item.id === 'tiktok_featured');
+            if (tiktokSettings && tiktokSettings.urls) {
+                setTiktokUrls(tiktokSettings.urls);
+            }
+        });
+
         return () => {
             unsubProducts();
             unsubCategories();
+            unsubSettings();
         };
     }, []);
 
@@ -897,7 +907,7 @@ export default function ProductManager() {
             <h2>Quản Lý Sản Phẩm (LuLuCake - Thông minh & Tốc độ)</h2>
 
             {/* Admin Tabs */}
-            <div className="admin-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '2rem', borderBottom: '2px solid var(--pink)', paddingBottom: '10px' }}>
+            <div className="admin-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '2rem', borderBottom: '2px solid var(--pink)', paddingBottom: '10px', overflowX: 'auto' }}>
                 <button
                     onClick={() => setActiveAdminTab('add')}
                     className={`tab-btn ${activeAdminTab === 'add' ? 'active' : ''}`}
@@ -908,7 +918,8 @@ export default function ProductManager() {
                         color: activeAdminTab === 'add' ? 'white' : 'var(--brown)',
                         borderRadius: '15px 15px 0 0',
                         cursor: 'pointer',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     ➕ Thêm & Sửa Bánh
@@ -923,10 +934,27 @@ export default function ProductManager() {
                         color: activeAdminTab === 'bulk-tag' ? 'white' : 'var(--brown)',
                         borderRadius: '15px 15px 0 0',
                         cursor: 'pointer',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     🏷️ Gán Tag Hàng Loạt
+                </button>
+                <button
+                    onClick={() => setActiveAdminTab('tiktok')}
+                    className={`tab-btn ${activeAdminTab === 'tiktok' ? 'active' : ''}`}
+                    style={{
+                        padding: '10px 20px',
+                        border: 'none',
+                        background: activeAdminTab === 'tiktok' ? 'var(--pink)' : 'var(--white)',
+                        color: activeAdminTab === 'tiktok' ? 'white' : 'var(--brown)',
+                        borderRadius: '15px 15px 0 0',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                    }}
+                >
+                    🎥 Quản Lý TikTok
                 </button>
             </div>
 
@@ -1137,6 +1165,76 @@ export default function ProductManager() {
                         </div>
                     </form>
                 </div>
+            ) : activeAdminTab === 'tiktok' ? (
+                <div className="manager-section tiktok-manager-ui" style={{ background: '#fff', borderRadius: '30px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', padding: '2rem' }}>
+                    <div className="form-header" style={{ marginBottom: '2rem' }}>
+                        <h3 style={{ color: 'var(--brown)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            🎥 Quản Lý TikTok Featured
+                        </h3>
+                        <p style={{ color: '#888', fontSize: '0.9rem' }}>Dán link 3 video TikTok bạn muốn khoe lên trang chủ nhé!</p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
+                        {tiktokUrls.map((url, index) => (
+                            <div key={index} className="input-field">
+                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#666', marginBottom: '8px' }}>
+                                    VIDEO TIKTOK THỨ {index + 1}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="https://www.tiktok.com/@username/video/12345..."
+                                    value={url}
+                                    onChange={(e) => {
+                                        const newUrls = [...tiktokUrls];
+                                        newUrls[index] = e.target.value;
+                                        setTiktokUrls(newUrls);
+                                    }}
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '14px 20px', borderRadius: '15px', border: '2px solid #f0f0f0' }}
+                                />
+                            </div>
+                        ))}
+
+                        <button
+                            onClick={async () => {
+                                setIsSavingSettings(true);
+                                try {
+                                    await saveItem('settings', {
+                                        id: 'tiktok_featured',
+                                        urls: tiktokUrls,
+                                        updatedAt: Date.now()
+                                    });
+                                    alert('✅ Đã lưu cài đặt TikTok!');
+                                } catch (err) {
+                                    alert('❌ Lỗi khi lưu cài đặt TikTok!');
+                                } finally {
+                                    setIsSavingSettings(false);
+                                }
+                            }}
+                            disabled={isSavingSettings}
+                            style={{
+                                marginTop: '1rem',
+                                background: 'var(--pink)',
+                                color: 'white',
+                                padding: '15px',
+                                borderRadius: '15px',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                opacity: isSavingSettings ? 0.7 : 1
+                            }}
+                        >
+                            {isSavingSettings ? '⌛ ĐANG LƯU...' : '💾 LƯU CÀI ĐẶT TIKTOK'}
+                        </button>
+                    </div>
+
+                    <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#fff5f7', borderRadius: '20px', border: '1px dashed var(--pink)' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: 'var(--pink)', fontSize: '0.9rem' }}>💡 Mẹo nhỏ:</h4>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#777', lineHeight: '1.6' }}>
+                            Bạn có thể lấy link video bằng cách nhấn nút "Chia sẻ" trên TikTok và chọn "Sao chép liên kết". Video sẽ tự động được hiển thị dưới dạng trình phát mini trên trang chủ!
+                        </p>
+                    </div>
+                </div>
             ) : (
                 <div className="manager-section" style={{ background: 'var(--white)', padding: '2rem', borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                     <div className="bulk-tagging-header">
@@ -1249,7 +1347,8 @@ export default function ProductManager() {
                         </div>
                     )}
                 </div>
-            )}
+            )
+            }
 
 
             <div className="manager-section">
