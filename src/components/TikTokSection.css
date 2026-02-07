@@ -147,29 +147,28 @@
 /* Cute Custom Video Player Styles */
 .cute-player-wrapper {
     position: relative;
-    width: min(95vw, 450px);
-    /* Constrain width but stay responsive */
-    max-height: 92vh;
+    width: min(92vw, 420px);
+    height: auto;
+    max-height: 95vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    background: #1a1a1a;
+    background: #111;
     overflow: hidden;
-    border-radius: 28px;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-    padding: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 30px;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes slideUp {
     from {
-        transform: translateY(30px);
+        transform: translateY(40px) scale(0.95);
         opacity: 0;
     }
 
     to {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
     }
 }
@@ -177,23 +176,23 @@
 .video-main-area {
     position: relative;
     width: 100%;
-    flex: 1;
-    /* Take up available space */
-    min-height: 0;
-    /* Important for flex child to shrink */
+    height: auto;
+    max-height: 70vh;
     background: #000;
-    border-radius: 20px;
+    border-radius: 22px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .lightbox-player {
     width: 100%;
-    height: 100%;
+    height: auto;
+    max-height: 70vh;
+    display: block;
     object-fit: contain;
-    /* Ensure full video is visible */
     cursor: pointer;
 }
 

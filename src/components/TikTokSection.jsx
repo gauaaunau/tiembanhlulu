@@ -131,6 +131,8 @@ export default function TikTokSection() {
                                     src={selectedVideo.videoUrl}
                                     className="lightbox-player"
                                     autoPlay
+                                    playsInline
+                                    webkit-playsinline="true"
                                     onTimeUpdate={handleTimeUpdate}
                                     onLoadedMetadata={handleLoadedMetadata}
                                     onPlay={() => setIsPlaying(true)}
