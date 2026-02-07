@@ -121,26 +121,33 @@ export default function TikTokSection() {
                     <div
                         className="lightbox-content"
                         onClick={(e) => e.stopPropagation()}
-                        onMouseEnter={() => setShowControls(true)}
-                        onMouseLeave={() => isPlaying && setShowControls(false)}
                     >
                         <button className="close-lightbox" onClick={() => setSelectedVideo(null)}>✕</button>
 
                         <div className="cute-player-wrapper">
-                            <video
-                                ref={videoRef}
-                                src={selectedVideo.videoUrl}
-                                className="lightbox-player"
-                                autoPlay
-                                onTimeUpdate={handleTimeUpdate}
-                                onLoadedMetadata={handleLoadedMetadata}
-                                onPlay={() => setIsPlaying(true)}
-                                onPause={() => setIsPlaying(false)}
-                                onClick={togglePlay}
-                            />
+                            <div className="video-main-area">
+                                <video
+                                    ref={videoRef}
+                                    src={selectedVideo.videoUrl}
+                                    className="lightbox-player"
+                                    autoPlay
+                                    onTimeUpdate={handleTimeUpdate}
+                                    onLoadedMetadata={handleLoadedMetadata}
+                                    onPlay={() => setIsPlaying(true)}
+                                    onPause={() => setIsPlaying(false)}
+                                    onClick={togglePlay}
+                                />
 
-                            {/* Cute Custom Controls */}
-                            <div className={`cute-controls ${showControls ? 'visible' : ''}`}>
+                                {/* Centered Play/Pause Big Icon on Pause - Still inside video area */}
+                                {!isPlaying && (
+                                    <div className="big-play-btn" onClick={togglePlay}>
+                                        ▶
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Cute Custom Controls - Now outside/below video-main-area */}
+                            <div className="cute-controls visible">
                                 <div className="controls-top">
                                     <input
                                         type="range"
@@ -183,13 +190,6 @@ export default function TikTokSection() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Centered Play/Pause Big Icon on Pause */}
-                            {!isPlaying && (
-                                <div className="big-play-btn" onClick={togglePlay}>
-                                    ▶
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
