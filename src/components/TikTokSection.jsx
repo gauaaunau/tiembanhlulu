@@ -11,8 +11,10 @@ export default function TikTokSection() {
         const unsubscribe = subscribeToItems('settings', (items) => {
             const tiktokSettings = items.find(item => item.id === 'tiktok_featured');
             if (tiktokSettings && tiktokSettings.urls) {
-                const activeLinks = tiktokSettings.urls.filter(url => url && url.trim() !== '');
-                setLinks(activeLinks);
+                // Always maintain 3 slots, pad with null if needed
+                const rawUrls = tiktokSettings.urls;
+                const padded = [null, null, null].map((_, i) => rawUrls[i] || null);
+                setLinks(padded);
             }
             setIsLoading(false);
         });
@@ -28,7 +30,7 @@ export default function TikTokSection() {
         return null;
     };
 
-    if (isLoading || links.length === 0) return null;
+    if (isLoading || links.every(l => !l)) return null;
 
     return (
         <section className="tiktok-section">
@@ -38,11 +40,11 @@ export default function TikTokSection() {
             </div>
 
             <div className="tiktok-grid">
-                {links.slice(0, 3).map((url, index) => (
+                {links.map((url, index) => (
                     <div
                         key={index}
-                        className="tiktok-play-card"
-                        onClick={() => setSelectedUrl(url)}
+                        className={`tiktok-play-card ${!url ? 'empty-slot' : ''}`}
+                        onClick={() => url && setSelectedUrl(url)}
                     >
                         <div className="thumbnail-wrapper glass-card">
                             <div className="placeholder-content">
@@ -50,14 +52,14 @@ export default function TikTokSection() {
                                     src="https://img.icons8.com/?size=512&id=118638&format=png"
                                     alt="TikTok"
                                     className="placeholder-logo"
+                                    style={{ opacity: !url ? 0.2 : 0.8 }}
                                 />
                             </div>
-                            <div className="play-overlay">
-                                <span className="play-icon">▶</span>
-                            </div>
-                        </div>
-                        <div className="video-footer-info">
-                            <p className="video-title-text">Video TikTok của shop {index + 1}</p>
+                            {url && (
+                                <div className="play-overlay">
+                                    <span className="play-icon">▶</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}

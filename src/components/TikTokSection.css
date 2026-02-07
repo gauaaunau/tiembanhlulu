@@ -27,16 +27,23 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    max-width: 900px;
+    max-width: 650px;
+    /* Tighter on desktop */
     margin: 0 auto;
 }
 
 .tiktok-play-card {
     cursor: pointer;
     transition: transform 0.3s ease;
+    width: 100%;
 }
 
-.tiktok-play-card:hover {
+.tiktok-play-card.empty-slot {
+    cursor: default;
+    opacity: 0.4;
+}
+
+.tiktok-play-card:not(.empty-slot):hover {
     transform: translateY(-5px);
 }
 
@@ -52,6 +59,11 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.tiktok-play-card.empty-slot .thumbnail-wrapper {
+    border: 1px dashed rgba(255, 255, 255, 0.5);
+    background: transparent;
 }
 
 .video-thumbnail {
