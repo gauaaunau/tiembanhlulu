@@ -163,17 +163,30 @@ export default function ProductManager() {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const compressed = await compressImage(reader.result);
-                if (isImageDuplicate(compressed)) {
-                    console.warn(`Bỏ qua ảnh trùng: ${file.name}`);
-                    return;
-                }
-                setStagedImages(prev => [
-                    ...prev,
-                    {
+
+                setStagedImages(prev => {
+                    // Check local staged (using functional PREV to avoid closure bug)
+                    const isStagedDup = prev.some(img => img.data === compressed);
+                    if (isStagedDup) {
+                        console.warn(`Bỏ qua ảnh trùng trong lượt này: ${file.name}`);
+                        return prev;
+                    }
+
+                    // Check global library (products list is stable enough here)
+                    const isGlobalDup = products.some(p =>
+                        (p.images || [p.image] || []).some(img => img === compressed)
+                    );
+
+                    if (isGlobalDup) {
+                        alert(`⚠️ Mẫu này đã có trong cửa hàng rồi (${file.name})!`);
+                        return prev;
+                    }
+
+                    return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: compressed
-                    }
-                ]);
+                    }];
+                });
             };
             reader.readAsDataURL(file);
         });
@@ -197,17 +210,25 @@ export default function ProductManager() {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const imageData = await compressImage(reader.result);
-                if (isImageDuplicate(imageData)) {
-                    alert('⚠️ Ảnh này đã có trong cửa hàng rồi!');
-                    return;
-                }
-                setStagedImages(prev => [
-                    ...prev,
-                    {
+
+                setStagedImages(prev => {
+                    const isStagedDup = prev.some(img => img.data === imageData);
+                    if (isStagedDup) return prev;
+
+                    const isGlobalDup = products.some(p =>
+                        (p.images || [p.image] || []).some(img => img === imageData)
+                    );
+
+                    if (isGlobalDup) {
+                        alert('⚠️ Ảnh này đã có trong cửa hàng rồi!');
+                        return prev;
+                    }
+
+                    return [...prev, {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: imageData
-                    }
-                ]);
+                    }];
+                });
             };
             reader.readAsDataURL(file);
         });
