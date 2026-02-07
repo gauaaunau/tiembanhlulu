@@ -33,6 +33,8 @@ export default function ProductManager() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const repairExecutedRef = useRef(false);
+    const [isRepairing, setIsRepairing] = useState(false);
+    const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
 
     useEffect(() => {
         console.log("🛠️ ProductManager v2.2.0 - Live");
@@ -151,6 +153,46 @@ export default function ProductManager() {
                 resolve(null);
             };
         });
+    };
+
+    const handleManualRepair = async () => {
+        const toRepair = products.filter(p => !p.visualBits);
+        if (toRepair.length === 0) {
+            alert("✨ Mọi sản phẩm đều đã có dữ liệu thị giác!");
+            return;
+        }
+
+        if (!confirm(`Hệ thống sẽ "học" ${toRepair.length} sản phẩm cũ. Quá trình này có thể mất vài phút. Bạn đồng ý chứ?`)) return;
+
+        setIsRepairing(true);
+        setRepairStats({ current: 0, total: toRepair.length });
+
+        // Process in small batches to stay safe on mobile
+        const batchSize = 3;
+        for (let i = 0; i < toRepair.length; i += batchSize) {
+            const batch = toRepair.slice(i, i + batchSize);
+
+            await Promise.all(batch.map(async (p) => {
+                try {
+                    const imgUrl = (p.images && p.images[0]) || p.image;
+                    if (!imgUrl) return;
+
+                    const vHash = await calculatePHash(imgUrl);
+                    if (vHash) {
+                        await saveItem('products', { ...p, visualHash: vHash.hex, visualBits: vHash.bits });
+                    }
+                } catch (err) {
+                    console.error("Repair failed for:", p.id, err);
+                }
+            }));
+
+            setRepairStats(prev => ({ ...prev, current: Math.min(i + batchSize, toRepair.length) }));
+            // Artificial delay between batches to prevent feedback loop crash
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        setIsRepairing(false);
+        alert("🎉 Đã cập nhật dữ liệu thị giác thành công! Giờ đây nhân viên sẽ không thể up trùng các mẫu này nữa.");
     };
 
     const getHammingDistance = (bits1, bits2) => {
@@ -974,7 +1016,85 @@ export default function ProductManager() {
                 >
                     🏷️ Gán Tag Hàng Loạt
                 </button>
+                <button
+                    onClick={() => setActiveAdminTab('system')}
+                    className={`tab-btn ${activeAdminTab === 'system' ? 'active' : ''}`}
+                    style={{
+                        padding: '10px 20px',
+                        border: 'none',
+                        background: activeAdminTab === 'system' ? 'var(--pink)' : 'var(--white)',
+                        color: activeAdminTab === 'system' ? 'white' : 'var(--brown)',
+                        borderRadius: '15px 15px 0 0',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                    }}
+                >
+                    ⚙️ Hệ Thống
+                </button>
             </div>
+
+            {activeAdminTab === 'system' && (
+                <div className="manager-section shadow-hover" style={{
+                    background: 'white',
+                    padding: '2rem',
+                    borderRadius: '20px',
+                    marginBottom: '2rem',
+                    animation: 'fadeIn 0.3s ease'
+                }}>
+                    <h3 style={{ borderBottom: '2px solid var(--pink)', paddingBottom: '10px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        ⚙️ Quản Trị Hệ Thống
+                    </h3>
+
+                    <div style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <div>
+                                <h4 style={{ margin: 0, color: 'var(--brown)' }}>🧿 Cập nhật Dữ liệu Thị giác (pHash)</h4>
+                                <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#888' }}>
+                                    Giúp "Mắt Thần" học lại các hình ảnh cũ để ngăn chặn nhân viên upload trùng mẫu.
+                                </p>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ marginBottom: '5px', fontWeight: 'bold', color: 'var(--pink)' }}>
+                                    {products.filter(p => !p.visualBits).length} ảnh cần học
+                                </div>
+                                <button
+                                    onClick={handleManualRepair}
+                                    disabled={isRepairing || products.filter(p => !p.visualBits).length === 0}
+                                    className="primary-btn"
+                                    style={{
+                                        padding: '10px 25px',
+                                        borderRadius: '12px',
+                                        opacity: isRepairing || products.filter(p => !p.visualBits).length === 0 ? 0.5 : 1
+                                    }}
+                                >
+                                    {isRepairing ? '⏳ Đang học...' : '🚀 Bắt đầu ngay'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {isRepairing && (
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <div style={{ height: '8px', background: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{
+                                        height: '100%',
+                                        background: 'linear-gradient(90deg, var(--pink), #FFB6C1)',
+                                        width: `${(repairStats.current / (repairStats.total || 1)) * 100}%`,
+                                        transition: 'width 0.4s ease'
+                                    }}></div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--pink)' }}>
+                                    <span>Đã xử lý: {repairStats.current} / {repairStats.total} sản phẩm</span>
+                                    <span>{Math.round((repairStats.current / (repairStats.total || 1)) * 100)}%</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ padding: '1rem', borderLeft: '4px solid var(--pink)', background: '#fff5f8', borderRadius: '0 15px 15px 0', fontSize: '0.85rem', color: '#666' }}>
+                        💡 <strong>Mẹo:</strong> Bạn chỉ cần chạy công cụ này <strong>MỘT LẦN DUY NHẤT</strong> cho các ảnh cũ. Các ảnh upload mới từ nay về sau sẽ tự động được học ngay lập tức!
+                    </div>
+                </div>
+            )}
 
             {isCloudEnabled && (
                 <div className="manager-section cloud-sync-bar" style={{
