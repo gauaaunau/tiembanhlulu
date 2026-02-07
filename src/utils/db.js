@@ -59,7 +59,12 @@ export const getAllItems = async (storeName) => {
     // 1. Try Cloud first if enabled
     if (isCloudEnabled && storeName !== 'drafts') {
         try {
-            const q = query(collection(firestore, storeName), orderBy("createdAt", "desc"));
+            const colRef = collection(firestore, storeName);
+            // Only order by createdAt for specific collections that guarantee it
+            const q = (storeName === 'products' || storeName === 'categories')
+                ? query(colRef, orderBy("createdAt", "desc"))
+                : query(colRef);
+
             const querySnapshot = await getDocs(q);
             const items = querySnapshot.docs.map(doc => doc.data());
 
@@ -89,7 +94,11 @@ export const subscribeToItems = (storeName, callback) => {
 
     // 2. Setup Cloud Listener if enabled
     if (isCloudEnabled && storeName !== 'drafts') {
-        const q = query(collection(firestore, storeName), orderBy("createdAt", "desc"));
+        const colRef = collection(firestore, storeName);
+        const q = (storeName === 'products' || storeName === 'categories')
+            ? query(colRef, orderBy("createdAt", "desc"))
+            : query(colRef);
+
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const items = querySnapshot.docs.map(doc => doc.data());
             // Sync current cloud data to local for offline use
