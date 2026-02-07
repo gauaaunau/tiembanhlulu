@@ -36,6 +36,8 @@ export default function ProductManager() {
     const [isRepairing, setIsRepairing] = useState(false);
     const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
     const [visualSensitivity, setVisualSensitivity] = useState(18);
+    const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
+    const statusTimeoutRef = useRef(null);
 
     useEffect(() => {
         console.log("🛠️ ProductManager v2.2.0 - Live");
@@ -285,6 +287,8 @@ export default function ProductManager() {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
+        setUploadStatus({ total: files.length, processed: 0, duplicates: 0, lastMatch: null });
+
         files.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = async () => {
@@ -294,9 +298,22 @@ export default function ProductManager() {
                 // 1. Check against DB
                 const dupProduct = findVisualDuplicate(vHash?.bits, products);
                 if (dupProduct) {
-                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits);
+                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits || dupProduct.visualHash);
                     const similarity = Math.round((1 - dist / 64) * 100);
-                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu: "${dupProduct.name || 'Bánh không tên'}" - Độ tương đồng ${similarity}%)`);
+
+                    setUploadStatus(prev => ({
+                        ...prev,
+                        duplicates: prev.duplicates + 1,
+                        processed: prev.processed + 1,
+                        lastMatch: similarity
+                    }));
+
+                    // Reset status after 5s of inactivity
+                    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+                    statusTimeoutRef.current = setTimeout(() => {
+                        setUploadStatus({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
+                    }, 5000);
+
                     return;
                 }
 
@@ -315,6 +332,8 @@ export default function ProductManager() {
                         vBits: vHash?.bits
                     }];
                 });
+
+                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1 }));
 
                 const compressed = await compressImage(reader.result);
                 setStagedImages(prev => prev.map(img =>
@@ -339,6 +358,8 @@ export default function ProductManager() {
         if (images.length === 0) return;
         e.preventDefault();
 
+        setUploadStatus({ total: images.length, processed: 0, duplicates: 0, lastMatch: null });
+
         images.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = async () => {
@@ -349,9 +370,21 @@ export default function ProductManager() {
                 // 1. Check against DB
                 const dupProduct = findVisualDuplicate(vHash?.bits, products);
                 if (dupProduct) {
-                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits);
+                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits || dupProduct.visualHash);
                     const similarity = Math.round((1 - dist / 64) * 100);
-                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu "${dupProduct.name || 'Bánh không tên'}" - Độ tương đồng ${similarity}%)`);
+
+                    setUploadStatus(prev => ({
+                        ...prev,
+                        duplicates: prev.duplicates + 1,
+                        processed: prev.processed + 1,
+                        lastMatch: similarity
+                    }));
+
+                    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+                    statusTimeoutRef.current = setTimeout(() => {
+                        setUploadStatus({ total: 0, processed: 0, duplicates: 0, lastMatch: null });
+                    }, 5000);
+
                     return;
                 }
 
@@ -724,6 +757,7 @@ export default function ProductManager() {
 
         setImporting(true);
         setImportStats({ current: 0, total: files.length });
+        setUploadStatus({ total: files.length, processed: 0, duplicates: 0, lastMatch: null });
 
         const newCategories = [...categories];
         const newProducts = [...products];
@@ -766,6 +800,7 @@ export default function ProductManager() {
                     if (products.some(p => p.imageHash === originalHash)) {
                         console.log(`Bỏ qua ảnh đã có trong tiệm: ${file.name}`);
                         processedCount++;
+                        setUploadStatus(prev => ({ ...prev, processed: processedCount }));
                         continue;
                     }
 
@@ -780,6 +815,16 @@ export default function ProductManager() {
                     // Cross-device Visual Check (FUZZY)
                     const dupProduct = findVisualDuplicate(vHash?.bits, products);
                     if (dupProduct) {
+                        const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.visualHash);
+                        const similarity = Math.round((1 - dist / 64) * 100);
+
+                        setUploadStatus(prev => ({
+                            ...prev,
+                            duplicates: prev.duplicates + 1,
+                            processed: prev.processed + 1,
+                            lastMatch: similarity
+                        }));
+
                         console.log(`Bỏ qua ảnh trùng visual (giống bánh ${dupProduct.name}): ${file.name}`);
                         processedCount++;
                         continue;
@@ -837,6 +882,7 @@ export default function ProductManager() {
 
                 processedCount++;
                 setImportStats(prev => ({ ...prev, current: processedCount }));
+                setUploadStatus(prev => ({ ...prev, processed: processedCount }));
             }
         }
 
@@ -1382,6 +1428,34 @@ export default function ProductManager() {
                             </div>
 
                             <div className="image-upload-section" style={{ gridColumn: 'span 2' }}>
+                                {/* Mắt Thần Status Bar (Silent Notification) */}
+                                {(uploadStatus.total > 0 || uploadStatus.duplicates > 0) && (
+                                    <div style={{
+                                        background: uploadStatus.duplicates > 0 ? '#fff5f8' : '#f0f9ff',
+                                        border: `1px solid ${uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0ea5e9'}`,
+                                        padding: '12px 20px',
+                                        borderRadius: '15px',
+                                        marginBottom: '1rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        animation: 'fadeIn 0.3s ease',
+                                        fontSize: '0.9rem',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <span style={{ fontSize: '1.2rem' }}>{uploadStatus.duplicates > 0 ? '🧿' : '⏳'}</span>
+                                            <span style={{ fontWeight: '600', color: uploadStatus.duplicates > 0 ? 'var(--pink)' : '#0369a1' }}>
+                                                {uploadStatus.duplicates > 0
+                                                    ? `Đã chặn ${uploadStatus.duplicates} ảnh trùng (Giống ${uploadStatus.lastMatch || '...'}%)`
+                                                    : 'Đang kiểm tra hình ảnh...'}
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'bold' }}>
+                                            {uploadStatus.processed} / {uploadStatus.total || '?'}
+                                        </div>
+                                    </div>
+                                )}
                                 <label className="image-upload-label">
                                     📷 Chọn ảnh hoặc Paste (Ctrl+V)
                                     <input
