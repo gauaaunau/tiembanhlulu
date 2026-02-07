@@ -48,6 +48,8 @@ export default function ProductManager() {
     const [progressLabel, setProgressLabel] = useState('Đang nhập hàng...'); // v5.0.8 - Moved up
     const wakeLockRef = useRef(null); // v5.0.9
     const statusTimeoutRef = useRef(null);
+    const [inlineEditingId, setInlineEditingId] = useState(null); // v5.1.0
+    const [inlinePriceValue, setInlinePriceValue] = useState(''); // v5.1.0
 
     useEffect(() => {
         console.log("🛠️ ProductManager v4.2.1 - Live");
@@ -446,6 +448,23 @@ export default function ProductManager() {
             await deleteItem('products', id);
             const dbProducts = await getAllItems('products');
             setProducts(dbProducts);
+        }
+    };
+
+    const handleInlinePriceSave = async (product, newPrice) => {
+        if (product.price === newPrice) {
+            setInlineEditingId(null);
+            return;
+        }
+
+        try {
+            const updatedProduct = { ...product, price: newPrice };
+            await saveItem('products', updatedProduct);
+            // Local state is updated via the real-time listener (subscribeToItems)
+            setInlineEditingId(null);
+        } catch (err) {
+            console.error("Inline price save failed:", err);
+            alert("❌ Lỗi lưu giá!");
         }
     };
 
@@ -1305,7 +1324,50 @@ export default function ProductManager() {
                                             })}
                                         </div>
                                     )}
-                                    <p className="product-price">{product.price}</p>
+                                    {inlineEditingId === product.id ? (
+                                        <div className="inline-price-editor" style={{ marginTop: '5px' }}>
+                                            <input
+                                                autoFocus
+                                                type="text"
+                                                value={inlinePriceValue}
+                                                onChange={(e) => setInlinePriceValue(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleInlinePriceSave(product, inlinePriceValue);
+                                                    if (e.key === 'Escape') setInlineEditingId(null);
+                                                }}
+                                                onBlur={() => handleInlinePriceSave(product, inlinePriceValue)}
+                                                placeholder="Nhập giá..."
+                                                style={{
+                                                    width: '100px',
+                                                    padding: '4px 8px',
+                                                    borderRadius: '10px',
+                                                    border: '2px solid var(--pink)',
+                                                    fontSize: '0.85rem',
+                                                    outline: 'none',
+                                                    textAlign: 'center'
+                                                }}
+                                            />
+                                            <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '5px' }}>cành</span>
+                                        </div>
+                                    ) : (
+                                        <p
+                                            className="product-price"
+                                            onClick={() => {
+                                                setInlineEditingId(product.id);
+                                                setInlinePriceValue(product.price === 'Liên hệ' ? '' : product.price);
+                                            }}
+                                            style={{
+                                                cursor: 'pointer',
+                                                padding: '2px 6px',
+                                                borderRadius: '5px',
+                                                transition: 'background 0.2s',
+                                                display: 'inline-block'
+                                            }}
+                                            title="Click để sửa giá nhanh"
+                                        >
+                                            {isNaN(product.price) ? product.price : `${product.price} cành`} ✏️
+                                        </p>
+                                    )}
                                     <p className="product-desc">{product.description}</p>
                                 </div>
                                 <div className="product-item-actions">

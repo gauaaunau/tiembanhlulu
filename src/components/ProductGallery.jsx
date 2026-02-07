@@ -39,7 +39,9 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
                 <p className="product-description">{product.description}</p>
                 <div className="product-footer">
                     {(product.price && product.price !== 'Liên hệ') && (
-                        <span className="product-price">{product.price}</span>
+                        <span className="product-price">
+                            {isNaN(product.price) ? product.price : `${product.price} cành`}
+                        </span>
                     )}
                     <span className="btn-add" onClick={(e) => {
                         e.stopPropagation();
