@@ -144,6 +144,17 @@ export default function ProductManager() {
         });
     };
 
+    const isImageDuplicate = (imageData) => {
+        if (!imageData) return false;
+        // Check current staged batch
+        const stagedDup = stagedImages.some(img => img.data === imageData);
+        if (stagedDup) return true;
+
+        // Check global products list
+        const globalDup = products.some(p => (p.images || [p.image] || []).some(img => img === imageData));
+        return globalDup;
+    };
+
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -152,14 +163,17 @@ export default function ProductManager() {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const compressed = await compressImage(reader.result);
-                setStagedImages(prev => {
-                    const isDuplicate = prev.some(img => img.data === compressed);
-                    if (isDuplicate) return prev; // Silent skip for duplicates during multi-upload
-                    return [...prev, {
+                if (isImageDuplicate(compressed)) {
+                    console.warn(`Bỏ qua ảnh trùng: ${file.name}`);
+                    return;
+                }
+                setStagedImages(prev => [
+                    ...prev,
+                    {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: compressed
-                    }];
-                });
+                    }
+                ]);
             };
             reader.readAsDataURL(file);
         });
@@ -183,17 +197,17 @@ export default function ProductManager() {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const imageData = await compressImage(reader.result);
-                setStagedImages(prev => {
-                    const isDuplicate = prev.some(img => img.data === imageData);
-                    if (isDuplicate) {
-                        alert('⚠️ Ảnh này đã có rồi!');
-                        return prev;
-                    }
-                    return [...prev, {
+                if (isImageDuplicate(imageData)) {
+                    alert('⚠️ Ảnh này đã có trong cửa hàng rồi!');
+                    return;
+                }
+                setStagedImages(prev => [
+                    ...prev,
+                    {
                         id: `img_${Date.now()}_${Math.random()}`,
                         data: imageData
-                    }];
-                });
+                    }
+                ]);
             };
             reader.readAsDataURL(file);
         });
@@ -581,9 +595,8 @@ export default function ProductManager() {
                     });
                     const compressed = await compressImage(imageData);
 
-                    // Duplicate Check (Base64 check still valid for local scope)
-                    const isDuplicate = newProducts.some(p => p.images && p.images[0] === compressed);
-                    if (isDuplicate) {
+                    // Duplicate Check (Centralized & Robust)
+                    if (isImageDuplicate(compressed)) {
                         console.log(`Bỏ qua ảnh trùng: ${file.name}`);
                         processedCount++;
                         continue;
