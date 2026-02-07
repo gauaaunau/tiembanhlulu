@@ -1026,19 +1026,18 @@ export default function ProductManager() {
                                     style={{ width: '100%', borderRadius: '15px', padding: '15px', minHeight: '100px', marginBottom: '1.5rem' }}
                                 />
 
-                                <div className="media-upload-zone" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
-                                    <label className="image-upload-label" style={{ flex: '1 1 300px', margin: 0, background: '#fff', color: 'var(--pink)', border: '2px dashed var(--pink)', borderRadius: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '30px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                                        <span style={{ fontSize: '2rem' }}>📸</span>
+                                <div className="media-upload-zone" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                    <label className="image-upload-label" style={{ flex: '1 1 200px', margin: 0, background: '#fff', color: 'var(--pink)', border: '2px dashed var(--pink)', borderRadius: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '15px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                        <span style={{ fontSize: '1.2rem' }}>📸</span>
                                         <div style={{ textAlign: 'center' }}>
-                                            <p style={{ fontWeight: '800', margin: 0 }}>Bấm để chọn hoặc Dán (Paste)</p>
-                                            <p style={{ fontSize: '0.75rem', color: '#888', margin: '5px 0 0 0' }}>Hỗ trợ nhiều ảnh cùng lúc, Ctrl+V thần thánh</p>
+                                            <p style={{ fontWeight: '800', margin: 0, fontSize: '0.85rem' }}>Bấm chọn/Dán ảnh</p>
                                         </div>
                                         <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
                                     </label>
 
-                                    <label className="bulk-folder-btn" style={{ flex: '0 0 auto', background: '#ecfdf5', border: '2px solid #10b981', color: '#059669', padding: '20px 30px', borderRadius: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '1.5rem' }}>📁</span>
-                                        <p style={{ fontWeight: '800', margin: 0, fontSize: '0.85rem' }}>Up Thư Mục</p>
+                                    <label className="bulk-folder-btn" style={{ flex: '0 0 auto', background: '#ecfdf5', border: '2px solid #10b981', color: '#059669', padding: '10px 20px', borderRadius: '15px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                        <span style={{ fontSize: '1rem' }}>📁</span>
+                                        <p style={{ fontWeight: '800', margin: 0, fontSize: '0.75rem' }}>Up Thư Mục</p>
                                         <input type="file" webkitdirectory="true" directory="true" onChange={handleFolderImport} style={{ display: 'none' }} />
                                     </label>
                                 </div>
@@ -1063,19 +1062,19 @@ export default function ProductManager() {
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="form-footer-sticky" style={{ marginTop: '3rem', borderTop: '1px solid #f0f0f0', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="form-footer-sticky" style={{ marginTop: '3rem', borderTop: '1px solid #f0f0f0', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
                             {stagedImages.length > 1 && !editingId ? (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ background: 'var(--brown)', color: 'white', height: '60px', borderRadius: '20px', fontSize: '1rem', fontWeight: 'bold' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', width: '100%', maxWidth: '600px' }}>
+                                    <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ background: 'var(--brown)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold' }}>
                                         📦 LƯU 1 ALBUM CHUNG
                                     </button>
-                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} style={{ background: 'var(--pink)', color: 'white', height: '60px', borderRadius: '20px', fontSize: '1rem', fontWeight: 'bold', border: 'none' }}>
-                                        🚀 LƯU RIÊNG TỪNG CHIẾC ({stagedImages.length})
+                                    <button type="button" className="submit-btn primary-btn" onClick={() => handleSubmit(null, true)} style={{ background: 'var(--pink)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold', border: 'none' }}>
+                                        🚀 LƯU RIÊNG TỪNG CHIẾC
                                     </button>
                                 </div>
                             ) : (
-                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} style={{ width: '100%', background: 'var(--pink)', color: 'white', height: '60px', borderRadius: '20px', fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px rgba(255, 133, 162, 0.3)', transition: 'transform 0.2s' }}>
-                                    {editingId ? '💾 LƯU THAY ĐỔI NGAY' : '✨ HOÀN TẤT & THÊM VÀO TIỆM'}
+                                <button type="button" className="submit-btn primary-btn" onClick={(e) => handleSubmit(e, false)} style={{ width: '100%', maxWidth: '400px', background: 'var(--pink)', color: 'white', height: '55px', borderRadius: '15px', fontSize: '1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 6px 20px rgba(255, 133, 162, 0.2)', transition: 'transform 0.2s' }}>
+                                    {editingId ? '💾 LƯU THAY ĐỔI' : '✨ HOÀN TẤT & THÊM BÁNH'}
                                 </button>
                             )}
 
