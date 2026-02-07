@@ -318,7 +318,7 @@ export default function ProductManager() {
                 const baseName = formData.name || getCategoryName(formData.categoryId) || 'Bánh';
 
                 // Initialize Import Stats for the Overlay UI
-                setProgressLabel('Đang dọn hàng lên kệ...');
+                setProgressLabel('Đang bày bánh lên kệ...');
                 setImportStats({ current: 0, total: stagedImages.length, startTime: Date.now() });
 
                 for (let i = 0; i < stagedImages.length; i++) {
@@ -608,7 +608,7 @@ export default function ProductManager() {
         if (files.length === 0) return;
 
         setImporting(true);
-        setProgressLabel('Đang dọn món từ thư mục...');
+        setProgressLabel('Đang bày bánh từ thư mục...');
         setImportStats({ current: 0, total: files.length, startTime: Date.now() });
         setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
@@ -753,7 +753,7 @@ export default function ProductManager() {
 
         try {
             setImporting(true); // Reuse progress UI
-            setProgressLabel(isFiltered ? `Đang dọn dẹp ${getCategoryName(adminFilter)}...` : 'Đang dọn sạch cửa hàng...');
+            setProgressLabel(isFiltered ? `Đang dọn dẹp ${getCategoryName(adminFilter)}...` : 'Đang dọn dẹp kệ hàng...');
             setImportStats({ current: 0, total: targetCount, startTime: Date.now() });
 
             // TURBO BATCH DELETE (v5.0.9): Super fast bulk delete
