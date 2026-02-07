@@ -171,6 +171,43 @@ export const saveItem = async (storeName, item) => {
     });
 };
 
+export const deleteItemsBulk = async (storeName, ids) => {
+    if (!ids || ids.length === 0) return;
+
+    // Delete from Cloud (Batch)
+    if (isCloudEnabled && storeName !== 'drafts') {
+        try {
+            const batchSize = 400; // Firestore limit is 500
+            for (let i = 0; i < ids.length; i += batchSize) {
+                const batch = writeBatch(firestore);
+                const chunk = ids.slice(i, i + batchSize);
+
+                chunk.forEach(id => {
+                    batch.delete(doc(firestore, storeName, id));
+                });
+
+                await batch.commit();
+                console.log(`Cloud bulk delete for ${storeName}: ${i + chunk.length}/${ids.length}`);
+                await new Promise(r => setTimeout(r, 100)); // Short throttle
+            }
+        } catch (err) {
+            console.error(`Cloud bulk delete failed for ${storeName}:`, err);
+        }
+    }
+
+    // Delete from Local (Transaction)
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+
+        ids.forEach(id => store.delete(id));
+
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+    });
+};
+
 export const deleteItem = async (storeName, id) => {
     // Delete from Cloud
     if (isCloudEnabled && storeName !== 'drafts') {

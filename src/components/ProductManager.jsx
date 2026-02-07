@@ -43,7 +43,9 @@ export default function ProductManager() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [uploadStatus, setUploadStatus] = useState({ total: 0, processed: 0, added: 0 });
-    const [progressLabel, setProgressLabel] = useState('Đang nhập hàng...'); // v5.0.8
+    const [importing, setImporting] = useState(false); // v5.0.3 - Moved up for init safety
+    const [importStats, setImportStats] = useState({ current: 0, total: 0, startTime: 0 }); // v5.0.3 - Moved up
+    const [progressLabel, setProgressLabel] = useState('Đang nhập hàng...'); // v5.0.8 - Moved up
     const wakeLockRef = useRef(null); // v5.0.9
     const statusTimeoutRef = useRef(null);
 
@@ -129,37 +131,6 @@ export default function ProductManager() {
         };
         saveDrafts();
     }, [stagedImages]);
-
-    // SCREEN WAKE LOCK (v5.0.9): Prevent device sleep during progress
-    useEffect(() => {
-        const handleWakeLock = async () => {
-            if ('wakeLock' in navigator && importing) {
-                try {
-                    wakeLockRef.current = await navigator.wakeLock.request('screen');
-                    console.log("🕯️ Wake Lock Active: Screen will stay awake.");
-                } catch (err) {
-                    console.warn("Wake Lock request failed:", err);
-                }
-            } else if (wakeLockRef.current && !importing) {
-                try {
-                    await wakeLockRef.current.release();
-                    wakeLockRef.current = null;
-                    console.log("🌙 Wake Lock Released: Device can sleep now.");
-                } catch (err) {
-                    console.error("Wake Lock release failed:", err);
-                }
-            }
-        };
-
-        handleWakeLock();
-
-        // Cleanup on unmount
-        return () => {
-            if (wakeLockRef.current) {
-                wakeLockRef.current.release().catch(() => { });
-            }
-        };
-    }, [importing]);
 
     // SCREEN WAKE LOCK (v5.0.9): Prevent device sleep during progress
     useEffect(() => {
@@ -632,9 +603,6 @@ export default function ProductManager() {
         return () => window.removeEventListener('paste', handlePasteEvent);
     }, [formData, products]);
 
-    const [importing, setImporting] = useState(false);
-    const [importStats, setImportStats] = useState({ current: 0, total: 0, startTime: 0 });
-
     const handleFolderImport = async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -788,18 +756,9 @@ export default function ProductManager() {
             setProgressLabel(isFiltered ? `Đang dọn dẹp ${getCategoryName(adminFilter)}...` : 'Đang dọn sạch cửa hàng...');
             setImportStats({ current: 0, total: targetCount, startTime: Date.now() });
 
-            for (let i = 0; i < filteredAdminProducts.length; i++) {
-                const p = filteredAdminProducts[i];
-                await deleteItem('products', p.id);
-
-                setImportStats(prev => ({ ...prev, current: i + 1 }));
-
-                // Keep it stable like uploads
-                await waitForSync();
-                if ((i + 1) % 10 === 0) {
-                    await new Promise(r => setTimeout(r, 500));
-                }
-            }
+            // TURBO BATCH DELETE (v5.0.9): Super fast bulk delete
+            const targetIds = filteredAdminProducts.map(p => p.id);
+            await deleteItemsBulk('products', targetIds);
 
             const dbProducts = await getAllItems('products');
             setProducts(dbProducts);
