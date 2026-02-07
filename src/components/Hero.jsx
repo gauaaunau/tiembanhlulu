@@ -62,8 +62,23 @@ export default function Hero() {
                 Cách bạn <strong>{distance} km</strong>
               </div>
             )}
-            <p className="direction-hint">nhấn nút chỉ đường để được chỉ đường</p>
           </div>
+
+          <div className="social-links">
+            <a href="https://facebook.com/tiembanhlulu" target="_blank" rel="noopener noreferrer" title="Facebook">
+              <img src="https://img.icons8.com/color/48/facebook-new.png" alt="FB" />
+            </a>
+            <a href="https://instagram.com/tiembanhlulu" target="_blank" rel="noopener noreferrer" title="Instagram">
+              <img src="https://img.icons8.com/color/48/instagram-new.png" alt="IG" />
+            </a>
+            <a href="https://tiktok.com/@tiembanhlulu" target="_blank" rel="noopener noreferrer" title="TikTok">
+              <img src="https://img.icons8.com/color/48/tiktok.png" alt="TT" />
+            </a>
+            <a href="https://zalo.me/0376722830" target="_blank" rel="noopener noreferrer" title="Zalo">
+              <img src="https://img.icons8.com/color/48/zalo.png" alt="Zalo" />
+            </a>
+          </div>
+
           <div className="hero-buttons">
             <a
               href="https://maps.app.goo.gl/PD18KjCzbMka5sBE9"
@@ -73,24 +88,24 @@ export default function Hero() {
             >
               Chỉ Đường Đến Tiệm
             </a>
+
+            <div className="scroll-indicator" onClick={() => {
+              const gallery = document.querySelector('.gallery');
+              if (gallery) {
+                gallery.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}>
+              <span className="scroll-text">Xem mẫu bánh</span>
+              <div className="mouse-wheel">
+                <div className="wheel"></div>
+              </div>
+              <div className="arrow-down">
+                <span></span>
+                <span></span>
+              </div>
+            </div>
           </div>
 
-        </div>
-      </div>
-
-      <div className="scroll-indicator" onClick={() => {
-        const gallery = document.querySelector('.gallery');
-        if (gallery) {
-          gallery.scrollIntoView({ behavior: 'smooth' });
-        }
-      }}>
-        <span className="scroll-text">Xem mẫu bánh</span>
-        <div className="mouse-wheel">
-          <div className="wheel"></div>
-        </div>
-        <div className="arrow-down">
-          <span></span>
-          <span></span>
         </div>
       </div>
     </section>
