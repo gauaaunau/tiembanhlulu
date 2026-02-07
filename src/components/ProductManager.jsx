@@ -949,7 +949,7 @@ export default function ProductManager() {
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             className="form-input"
-                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px' }}
+                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px', boxSizing: 'border-box' }}
                                         />
                                     </div>
                                     <div className="input-field">
@@ -960,7 +960,7 @@ export default function ProductManager() {
                                             value={formData.price}
                                             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                             className="form-input"
-                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px' }}
+                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px', boxSizing: 'border-box' }}
                                         />
                                     </div>
                                 </div>
@@ -988,7 +988,7 @@ export default function ProductManager() {
                                             onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
                                             onKeyDown={handleTagInputKeyDown}
                                             className="form-input"
-                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px' }}
+                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '15px', boxSizing: 'border-box' }}
                                         />
                                         {showTagSuggestions && tagInputText && (
                                             <div className="custom-suggestions" style={{ position: 'absolute', top: '103%', left: 0, right: 0, background: 'white', border: '2px solid var(--pink)', borderRadius: '15px', zIndex: 1000, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
