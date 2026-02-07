@@ -32,7 +32,6 @@ export default function ProductManager() {
     const [activeAdminTab, setActiveAdminTab] = useState('add'); // 'add' or 'bulk-tag'
     const [isCloudEnabled] = useState(!!import.meta.env.VITE_FIREBASE_API_KEY);
     const [isStorageEnabled] = useState(false); // REVERTED (v5.0.0): Back to Base64 per user request
-    const [syncingCloud, setSyncingCloud] = useState(false);
     const [uploadingImages, setUploadingImages] = useState(false);
     const [targetTagId, setTargetTagId] = useState('');
     const [bulkSelectedIds, setBulkSelectedIds] = useState([]);
@@ -281,6 +280,9 @@ export default function ProductManager() {
                 // Bulk Mode: Create one product per image
                 const baseName = formData.name || getCategoryName(formData.categoryId) || 'Bánh';
 
+                // Initialize Import Stats for the Overlay UI
+                setImportStats({ current: 0, total: stagedImages.length, startTime: Date.now() });
+
                 for (let i = 0; i < stagedImages.length; i++) {
                     const img = stagedImages[i];
 
@@ -295,6 +297,15 @@ export default function ProductManager() {
                         createdAt: Date.now()
                     };
                     await saveItem('products', productData);
+
+                    // Update UI stats for the progress overlay
+                    setImportStats(prev => ({
+                        ...prev,
+                        current: i + 1
+                    }));
+
+                    // STRICT STREAM SYNC: Prevents "Write stream exhausted"
+                    await waitForSync();
                 }
 
                 alert(`Đã thêm ${stagedImages.length} sản phẩm thành công!`);
@@ -366,24 +377,6 @@ export default function ProductManager() {
             alert('❌ Lỗi lưu dữ liệu!');
         } finally {
             setUploadingImages(false);
-        }
-    };
-
-    const handleCloudMigration = async () => {
-        if (!confirm('Bạn có muốn đẩy toàn bộ dữ liệu từ máy tính này lên Đám mây (Firebase) không? \nLưu ý: Bạn chỉ cần làm việc này 1 lần duy nhất khi bắt đầu sử dụng tên miền mới.')) return;
-
-        setSyncingCloud(true);
-        try {
-            // Push Categories first
-            await saveAllItems('categories', categories);
-            // Push Products
-            await saveAllItems('products', products);
-            alert('🎉 Chúc mừng! Toàn bộ bánh trái đã được đưa lên Đám mây thành công!');
-        } catch (err) {
-            console.error('Migration error:', err);
-            alert('❌ Lỗi khi chuyển đổi dữ liệu!');
-        } finally {
-            setSyncingCloud(false);
         }
     };
 
@@ -833,41 +826,6 @@ export default function ProductManager() {
                 </button>
             </div>
 
-            {isCloudEnabled && (
-                <div className="manager-section cloud-sync-bar" style={{
-                    background: 'linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%)',
-                    padding: '1rem 1.5rem',
-                    borderRadius: '15px',
-                    marginBottom: '1.5rem',
-                    color: 'white',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: '0 4px 15px rgba(255,105,180,0.3)'
-                }}>
-                    <div>
-                        <h4 style={{ margin: 0 }}>🌐 Đã kết nối Đám mây (Firebase)</h4>
-                        <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Dữ liệu của bạn sẽ được đồng bộ trực tiếp lên <strong>tiembanhlulu.com</strong></p>
-                    </div>
-                    <button
-                        onClick={handleCloudMigration}
-                        disabled={syncingCloud}
-                        style={{
-                            padding: '10px 20px',
-                            background: 'white',
-                            color: 'var(--pink)',
-                            border: 'none',
-                            borderRadius: '25px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem'
-                        }}
-                    >
-                        {syncingCloud ? '🚀 Đang đẩy dữ liệu...' : '🚀 Chuyển dữ liệu lên Mây'}
-                    </button>
-                </div>
-            )}
-
             {activeAdminTab === 'add' ? (
                 <div className="manager-section modern-admin-form" style={{ background: '#fff', borderRadius: '30px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', padding: '0', overflow: 'hidden' }}>
                     <div className="form-header" style={{ background: 'linear-gradient(135deg, #fff5f7 0%, #fff 100%)', padding: '2rem', borderBottom: '1px solid #f0f0f0' }}>
@@ -1148,7 +1106,7 @@ export default function ProductManager() {
             )}
 
             {/* PROGRESS OVERLAY (v4.6.0) */}
-            {importing && (
+            {(importing || (uploadingImages && stagedImages.length > 1)) && (
                 <div style={{
                     position: 'fixed',
                     top: 0,
