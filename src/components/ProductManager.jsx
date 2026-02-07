@@ -931,7 +931,7 @@ export default function ProductManager() {
                         <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Điền thông tin và hình ảnh để hiển thị lên tiệm bánh Lulu</p>
                     </div>
 
-                    <form className="product-form" style={{ padding: '2rem' }} onSubmit={(e) => handleSubmit(e, false)}>
+                    <form className="product-form" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }} onSubmit={(e) => handleSubmit(e, false)}>
                         <div className="form-sections-container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                             {/* Section 1: Thông tin cơ bản */}
@@ -1026,18 +1026,18 @@ export default function ProductManager() {
                                     style={{ width: '100%', borderRadius: '15px', padding: '15px', minHeight: '100px', marginBottom: '1.5rem' }}
                                 />
 
-                                <div className="media-upload-zone" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                    <label className="image-upload-label" style={{ flex: '1 1 200px', margin: 0, background: '#fff', color: 'var(--pink)', border: '2px dashed var(--pink)', borderRadius: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '15px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                                        <span style={{ fontSize: '1.2rem' }}>📸</span>
+                                <div className="media-upload-zone" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    <label className="image-upload-label" style={{ flex: '1 1 120px', margin: 0, background: '#fff', color: 'var(--pink)', border: '2px dashed var(--pink)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', padding: '8px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                        <span style={{ fontSize: '0.9rem' }}>📸</span>
                                         <div style={{ textAlign: 'center' }}>
-                                            <p style={{ fontWeight: '800', margin: 0, fontSize: '0.85rem' }}>Bấm chọn/Dán ảnh</p>
+                                            <p style={{ fontWeight: '800', margin: 0, fontSize: '0.75rem' }}>Chọn/Dán ảnh</p>
                                         </div>
                                         <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
                                     </label>
 
-                                    <label className="bulk-folder-btn" style={{ flex: '0 0 auto', background: '#ecfdf5', border: '2px solid #10b981', color: '#059669', padding: '10px 20px', borderRadius: '15px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                                        <span style={{ fontSize: '1rem' }}>📁</span>
-                                        <p style={{ fontWeight: '800', margin: 0, fontSize: '0.75rem' }}>Up Thư Mục</p>
+                                    <label className="bulk-folder-btn" style={{ flex: '0 0 auto', background: '#ecfdf5', border: '2px solid #10b981', color: '#059669', padding: '6px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                                        <span style={{ fontSize: '0.8rem' }}>📁</span>
+                                        <p style={{ fontWeight: '800', margin: 0, fontSize: '0.65rem' }}>Up Folder</p>
                                         <input type="file" webkitdirectory="true" directory="true" onChange={handleFolderImport} style={{ display: 'none' }} />
                                     </label>
                                 </div>
@@ -1062,7 +1062,7 @@ export default function ProductManager() {
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="form-footer-sticky" style={{ marginTop: '3rem', borderTop: '1px solid #f0f0f0', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                        <div className="form-footer-sticky" style={{ borderTop: '1px solid #f0f0f0', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
                             {stagedImages.length > 1 && !editingId ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', width: '100%', maxWidth: '600px' }}>
                                     <button type="button" className="submit-btn secondary-btn" onClick={() => handleSubmit(null, false)} style={{ background: 'var(--brown)', color: 'white', height: '50px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold' }}>
