@@ -50,6 +50,7 @@ export default function ProductManager() {
     const statusTimeoutRef = useRef(null);
     const [inlineEditingId, setInlineEditingId] = useState(null); // v5.1.0
     const [inlinePriceValue, setInlinePriceValue] = useState(''); // v5.1.0
+    const [adminSearch, setAdminSearch] = useState(''); // v5.2.0
 
     useEffect(() => {
         console.log("🛠️ ProductManager v4.2.1 - Live");
@@ -854,6 +855,12 @@ export default function ProductManager() {
     };
 
     const filteredAdminProducts = products.filter(p => {
+        // Search Filter (v5.2.0)
+        const searchNorm = adminSearch.toLowerCase().trim();
+        if (searchNorm && !p.name.toLowerCase().includes(searchNorm) && !(p.description || '').toLowerCase().includes(searchNorm)) {
+            return false;
+        }
+
         if (adminFilter === 'All') return true;
         if (adminFilter === 'newest') {
             const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
@@ -1249,11 +1256,28 @@ export default function ProductManager() {
                     </div>
 
                     <div className="list-controls" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div className="filter-group">
+                        <div className="filter-group" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                            <div className="search-box-admin" style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="🔍 Tìm tên bánh..."
+                                    style={{ margin: 0, paddingLeft: '35px', minWidth: '200px' }}
+                                    value={adminSearch}
+                                    onChange={(e) => setAdminSearch(e.target.value)}
+                                />
+                                {adminSearch && (
+                                    <span
+                                        onClick={() => setAdminSearch('')}
+                                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.5 }}
+                                    >✕</span>
+                                )}
+                            </div>
                             <select
                                 className="form-select"
                                 value={adminFilter}
                                 onChange={(e) => setAdminFilter(e.target.value)}
+                                style={{ margin: 0 }}
                             >
                                 <option value="All">🌈 Tất cả sản phẩm</option>
                                 <option value="newest" style={{ fontWeight: 'bold', color: 'var(--pink)' }}>🔥 Mới nhất (24h)</option>

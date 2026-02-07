@@ -65,6 +65,7 @@ export default function ProductGallery() {
     const [isLoading, setIsLoading] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
     const [catSearch, setCatSearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const galleryRef = useRef(null);
 
     useEffect(() => {
@@ -146,7 +147,10 @@ export default function ProductGallery() {
 
     // PRE-CALCULATE UNCATEGORIZED (v5.1.1): Products missing valid tags/categories
     const uncategorizedProducts = useMemo(() => {
+        const searchNorm = searchTerm.toLowerCase().trim();
         return products.filter(p => {
+            if (searchNorm && !p.name.toLowerCase().includes(searchNorm)) return false;
+
             const hasCategory = p.categoryId && categories.find(c => c.id === p.categoryId);
             const hasTags = (p.tags || []).some(t => {
                 const tClean = t.replace(/^(#)/, '').trim();
@@ -154,7 +158,7 @@ export default function ProductGallery() {
             });
             return !hasCategory && !hasTags;
         });
-    }, [products, categories]);
+    }, [products, categories, searchTerm]);
 
     // 2. Filter categories based on search
     const allFilterableCategories = useMemo(() => {
@@ -176,10 +180,14 @@ export default function ProductGallery() {
 
     const groupedProducts = useMemo(() => {
         if (filter !== 'All') return [];
+        const searchNorm = searchTerm.toLowerCase().trim();
 
         const groups = rawCategories.map(cat => {
             const catNameLower = cat.name.toLowerCase();
             const productsInCat = products.filter(p => {
+                // Name filter
+                if (searchNorm && !p.name.toLowerCase().includes(searchNorm)) return false;
+
                 const pCatName = getCategoryName(p.categoryId).toLowerCase();
                 if (pCatName === catNameLower) return true;
                 return (p.tags || []).some(t => {
@@ -201,7 +209,7 @@ export default function ProductGallery() {
         }
 
         return groups.filter(cat => cat && cat.items && cat.items.length > 0);
-    }, [products, rawCategories, uncategorizedProducts]); // Products grouped by ALL categories, search NO LONGER filters this
+    }, [products, rawCategories, uncategorizedProducts, filter, searchTerm]);
 
     const handleMouseMove = (e) => {
         // Disable zoom on mobile/touch devices to prevent "cấn" behavior
@@ -217,15 +225,25 @@ export default function ProductGallery() {
         img.style.transformOrigin = `${x}% ${y}%`;
     };
 
-    const filteredProducts = filter === 'All'
-        ? products
-        : products.filter(p => {
-            const filterName = filter.toLowerCase();
-            const primaryCatName = getCategoryName(p.categoryId).toLowerCase();
+    const filteredProducts = useMemo(() => {
+        const searchNorm = searchTerm.toLowerCase().trim();
+        const baseFiltered = filter === 'All'
+            ? products
+            : products.filter(p => {
+                const filterName = filter.toLowerCase();
+                const primaryCatName = getCategoryName(p.categoryId).toLowerCase();
 
-            return primaryCatName === filterName ||
-                (p.tags || []).some(t => t.toLowerCase() === filterName);
-        });
+                return primaryCatName === filterName ||
+                    (p.tags || []).some(t => t.toLowerCase() === filterName);
+            });
+
+        if (!searchNorm) return baseFiltered;
+
+        return baseFiltered.filter(p =>
+            p.name.toLowerCase().includes(searchNorm) ||
+            (p.description || '').toLowerCase().includes(searchNorm)
+        );
+    }, [products, filter, searchTerm, categories]);
 
     const openLightbox = (product, startRevealed = false) => {
         setSelectedProduct(product);
@@ -261,6 +279,23 @@ export default function ProductGallery() {
             <div className="gallery-container" style={{ position: 'relative', zIndex: 1 }}>
                 <h2 className="gallery-title">Mẫu Bánh</h2>
                 <div className="gallery-divider"></div>
+
+                {/* Product Search Bar (v5.2.0) */}
+                <div className="product-search-bar">
+                    <div className="search-input-wrapper">
+                        <span className="search-icon">🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm mẫu bánh..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="search-input"
+                        />
+                        {searchTerm && (
+                            <button className="clear-search" onClick={() => setSearchTerm('')} title="Xoá tìm kiếm">✕</button>
+                        )}
+                    </div>
+                </div>
 
                 {rawCategories.length > 0 && (
                     <div className="category-picker-container">
