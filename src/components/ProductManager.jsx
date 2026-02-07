@@ -35,6 +35,7 @@ export default function ProductManager() {
     const repairExecutedRef = useRef(false);
     const [isRepairing, setIsRepairing] = useState(false);
     const [repairStats, setRepairStats] = useState({ current: 0, total: 0 });
+    const [visualSensitivity, setVisualSensitivity] = useState(15);
 
     useEffect(() => {
         console.log("🛠️ ProductManager v2.2.0 - Live");
@@ -210,7 +211,7 @@ export default function ProductManager() {
         return dist;
     };
 
-    const findVisualDuplicate = (newHashBits, listToSearch, threshold = 12) => {
+    const findVisualDuplicate = (newHashBits, listToSearch, threshold = visualSensitivity) => {
         if (!newHashBits || !listToSearch) return null;
         return listToSearch.find(item => {
             const targetBits = item.visualBits || item.vBits;
@@ -293,7 +294,10 @@ export default function ProductManager() {
                 // 1. Check against DB
                 const dupProduct = findVisualDuplicate(vHash?.bits, products);
                 if (dupProduct) {
-                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu: "${dupProduct.name || 'Bánh không tên'}")`);
+                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits);
+                    const similarity = Math.round((1 - dist / 64) * 100);
+                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu: "${dupProduct.name || 'Bánh không tên'}" - Độ tương đồng ${similarity}%)`);
+                    processedFiles++;
                     return;
                 }
 
@@ -346,7 +350,9 @@ export default function ProductManager() {
                 // 1. Check against DB
                 const dupProduct = findVisualDuplicate(vHash?.bits, products);
                 if (dupProduct) {
-                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu "${dupProduct.name || 'Bánh không tên'}")`);
+                    const dist = getHammingDistance(vHash?.bits, dupProduct.visualBits || dupProduct.vBits);
+                    const similarity = Math.round((1 - dist / 64) * 100);
+                    alert(`⚠️ Bánh này đã có trong tiệm! (Giống mẫu "${dupProduct.name || 'Bánh không tên'}" - Độ tương đồng ${similarity}%)`);
                     return;
                 }
 
@@ -820,7 +826,8 @@ export default function ProductManager() {
                         tags: [catName], // Only folder name, no ID
                         imageHash: originalHash,
                         visualHash: vHash?.hex,
-                        visualBits: vHash?.bits
+                        visualBits: vHash?.bits,
+                        visualVersion: 2
                     };
 
                     newProducts.push(newProd);
@@ -1096,6 +1103,34 @@ export default function ProductManager() {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem' }}>
+                        <h4 style={{ margin: 0, color: 'var(--brown)', marginBottom: '0.5rem' }}>🎯 Độ nhạy Mắt Thần</h4>
+                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#888' }}>
+                            Điều chỉnh mức độ "khắt khe" khi phát hiện ảnh trùng.
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            {[10, 12, 15, 18].map((val) => (
+                                <button
+                                    key={val}
+                                    onClick={() => setVisualSensitivity(val)}
+                                    style={{
+                                        padding: '8px 15px',
+                                        borderRadius: '10px',
+                                        border: `2px solid ${visualSensitivity === val ? 'var(--pink)' : '#eee'}`,
+                                        background: visualSensitivity === val ? '#fff5f8' : 'white',
+                                        color: visualSensitivity === val ? 'var(--pink)' : '#666',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.2s',
+                                        fontSize: '0.85rem'
+                                    }}
+                                >
+                                    {val === 10 ? '🔒 Cao (15%)' : val === 12 ? '⚖️ Vừa (18%)' : val === 15 ? '🧿 Rộng (23%)' : '🔓 Cực rộng (28%)'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div style={{ padding: '1rem', borderLeft: '4px solid var(--pink)', background: '#fff5f8', borderRadius: '0 15px 15px 0', fontSize: '0.85rem', color: '#666' }}>
