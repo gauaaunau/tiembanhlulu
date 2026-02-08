@@ -37,14 +37,14 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
                     ))}
             </div>
             <div className="product-info">
-                <h3 className="product-name">{product.name}</h3>
+                <h3 className="product-name">
+                    {product.name.match(/^Bánh \d+$/) ? product.name.replace('Bánh ', 'Mã: ') : product.name}
+                </h3>
                 <p className="product-description">{product.description}</p>
                 <div className="product-footer">
-                    {(product.price && product.price !== 'Liên hệ') && (
-                        <span className="product-price">
-                            {isNaN(product.price) ? product.price : `${product.price} cành`}
-                        </span>
-                    )}
+                    <span className="product-price">
+                        Giá: {(!product.price || product.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(product.price) ? product.price : `${product.price} cành`)}
+                    </span>
                     <span className="btn-add" onClick={(e) => {
                         e.stopPropagation();
                         onOpenLightbox(product, true);
@@ -452,13 +452,13 @@ export default function ProductGallery() {
 
                                         {i === currentImgIndex && (
                                             <div className="carousel-external-info">
-                                                <h3>{selectedProduct.name}</h3>
+                                                <h3>
+                                                    {selectedProduct.name.match(/^Bánh \d+$/) ? selectedProduct.name.replace('Bánh ', 'Mã: ') : selectedProduct.name}
+                                                </h3>
                                                 <div className="external-footer">
-                                                    {(selectedProduct.price && selectedProduct.price !== 'Liên hệ') && (
-                                                        <span className="external-price">
-                                                            {isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`}
-                                                        </span>
-                                                    )}
+                                                    <span className="external-price">
+                                                        Giá: {(!selectedProduct.price || selectedProduct.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`)}
+                                                    </span>
 
                                                     {!showContactOptions ? (
                                                         <button

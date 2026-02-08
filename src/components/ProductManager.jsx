@@ -1672,7 +1672,10 @@ export default function ProductManager() {
                                     )}
                                 </div>
                                 <div className="product-item-info">
-                                    <h4 style={{ display: 'none' }}>{product.name}</h4>
+                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '2px', color: '#555' }}>
+                                        {/* Auto-format "Bánh 123" to "Mã: 123" for cleaner look */}
+                                        {product.name.match(/^Bánh \d+$/) ? product.name.replace('Bánh ', 'Mã: ') : product.name}
+                                    </h4>
                                     <p className="product-category" style={{ display: 'none' }}>
                                         📁 {getCategoryName(product.categoryId)}
                                     </p>
@@ -1766,7 +1769,7 @@ export default function ProductManager() {
                                             }}
                                             title="Click để sửa giá nhanh"
                                         >
-                                            {isNaN(product.price) ? product.price : `${product.price} cành`}
+                                            Giá: {(!product.price || product.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(product.price) ? product.price : `${product.price} cành`)}
                                         </div>
                                     )}
                                     <p className="product-desc">{product.description}</p>
