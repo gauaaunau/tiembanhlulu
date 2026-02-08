@@ -270,7 +270,7 @@ export default function ProductManager() {
     };
 
 
-    const compressImage = (base64Str, maxWidth = 1200, maxHeight = 1200) => {
+    const compressImage = (base64Str, maxWidth = 1600, maxHeight = 1600) => {
         return new Promise((resolve) => {
             const img = new Image();
             img.src = base64Str;
@@ -295,7 +295,7 @@ export default function ProductManager() {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                resolve(canvas.toDataURL('image/jpeg', 0.85)); // Increased quality slightly for 1600px
             };
         });
     };
