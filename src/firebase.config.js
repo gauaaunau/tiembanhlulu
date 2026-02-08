@@ -15,5 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
+    // Database was recreated with name 'tiembanhlulu', not '(default)'
+    databaseId: "tiembanhlulu"
 });
 export const storage = getStorage(app);
