@@ -33,7 +33,7 @@ export default function ProductManager() {
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [activeAdminTab, setActiveAdminTab] = useState('add'); // 'add' or 'bulk-tag'
     const [isCloudEnabled] = useState(!!import.meta.env.VITE_FIREBASE_API_KEY);
-    const [isStorageEnabled] = useState(false); // REVERTED (v5.0.0): Back to Base64 per user request
+    const [isStorageEnabled] = useState(true); // Enabled to prevent Firestore 1MB limit error
     const [uploadingImages, setUploadingImages] = useState(false);
     const [batchResting, setBatchResting] = useState(false); // v5.0.5
     const [targetTagId, setTargetTagId] = useState('');
@@ -325,8 +325,8 @@ export default function ProductManager() {
 
                         const newImg = {
                             id: `img_${Date.now()}_${Math.random()}`,
-                            data: imageData,
-                            preview: previewUrl // Use this for <img> src
+                            data: await compressImage(imageData), // Compress immediately
+                            preview: previewUrl
                         };
                         resolve(newImg);
                     };
@@ -334,10 +334,11 @@ export default function ProductManager() {
                 });
             }));
 
-            allNewStaged = [...allNewStaged, ...batchResults];
+            // Update UI with compressed images
+            const compressedResults = await Promise.all(batchResults);
+            allNewStaged = [...allNewStaged, ...compressedResults];
 
-            // Update state periodically to show progress without flooding main thread
-            setStagedImages(prev => [...prev, ...batchResults]);
+            setStagedImages(prev => [...prev, ...compressedResults]);
             setUploadStatus(prev => ({
                 ...prev,
                 processed: Math.min(files.length, i + BATCH_SIZE),
