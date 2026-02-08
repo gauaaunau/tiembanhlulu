@@ -288,12 +288,14 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
-.filter-btn:hover {
-    transform: translateY(-3px) scale(1.05);
-    background: var(--light-pink);
-    border-color: var(--pink);
-    color: var(--pink);
-    box-shadow: 0 10px 25px rgba(255, 126, 179, 0.2);
+@media (hover: hover) {
+    .filter-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        background: var(--light-pink);
+        border-color: var(--pink);
+        color: var(--pink);
+        box-shadow: 0 10px 25px rgba(255, 126, 179, 0.2);
+    }
 }
 
 .filter-btn.active {
@@ -329,9 +331,11 @@
 }
 
 
-.cute-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+@media (hover: hover) {
+    .cute-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
 }
 
 .product-card {
@@ -494,9 +498,11 @@
     transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.btn-add:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 0 var(--dark-brown);
+@media (hover: hover) {
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 var(--dark-brown);
+    }
 }
 
 .btn-add:active {
@@ -743,9 +749,11 @@
     font-family: var(--font-body);
 }
 
-.btn-reveal-contact:hover {
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.6);
+@media (hover: hover) {
+    .btn-reveal-contact:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(255, 105, 180, 0.6);
+    }
 }
 
 .order-options {
