@@ -445,7 +445,7 @@ export default function ProductManager() {
                     const chunk = stagedImages.slice(i, i + UPLOAD_BATCH_SIZE);
 
                     // 1. Parallel Upload for this chunk
-                    // Note: processImagesForUpload now handles File objects/stagedImage objects directly
+                    // FIX: Pass the full object (contains .file) not just .data (which is null for new files)
                     const chunkUrls = await processImagesForUpload(chunk);
 
                     // 2. Prepare Product Objects
@@ -499,7 +499,8 @@ export default function ProductManager() {
 
 
 
-        const productImages = stagedImages.map(img => img.data);
+
+        const productImages = stagedImages; // FIX: Pass full objects with .file
         if (productImages.length === 0) {
             alert('Vui lòng chọn hoặc paste ít nhất 1 ảnh!');
             setUploadingImages(false);
@@ -508,6 +509,7 @@ export default function ProductManager() {
 
         try {
             // Upload all images
+            // processImagesForUpload handles {file, data, preview} objects now
             const finalImages = await processImagesForUpload(productImages);
 
             const finalName = formData.name.trim() || `Bánh ${products.length + 1}`;
