@@ -798,6 +798,45 @@
     padding: 12px;
 }
 
+
+
+/* QUICK TAG INPUT (v7.2.4) */
+.quick-tag-input {
+    width: 40px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 24px;
+    padding: 0 !important;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: rgba(255, 240, 245, 0.4) !important;
+    border: 1px solid rgba(255, 105, 180, 0.3) !important;
+    color: var(--pink) !important;
+    border-radius: 12px !important;
+    cursor: text;
+}
+
+.quick-tag-input:focus {
+    width: 100px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+    border-color: var(--pink) !important;
+    outline: none !important;
+}
+
+.quick-tag-input::placeholder {
+    color: var(--pink);
+    opacity: 0.7;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.quick-tag-input:focus::placeholder {
+    opacity: 0.5;
+    font-size: 10px;
+    font-weight: normal;
+}
+
 .contact-logo-container.hotline svg {
     width: 100%;
     height: 100%;

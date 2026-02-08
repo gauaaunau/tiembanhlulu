@@ -1707,46 +1707,26 @@ export default function ProductManager() {
                                         </div>
                                     )}
 
-                                    {/* QUICK TAG INPUT (v7.2.3 - Fixed Size) */}
+                                    {/* QUICK TAG INPUT (v7.2.5 - Continuous Entry) */}
                                     <div style={{ marginTop: '6px', textAlign: 'center' }}>
                                         <input
                                             type="text"
                                             placeholder="+"
                                             className="quick-tag-input"
-                                            style={{
-                                                width: '40px',
-                                                minWidth: 'unset',
-                                                maxWidth: 'unset',
-                                                height: '24px',
-                                                fontSize: '0.75rem',
-                                                padding: '0',
-                                                borderRadius: '12px',
-                                                border: '1px solid rgba(255, 105, 180, 0.3)',
-                                                background: 'rgba(255, 240, 245, 0.4)',
-                                                backdropFilter: 'blur(5px)',
-                                                color: 'var(--pink)',
-                                                textAlign: 'center',
-                                                transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                                                boxShadow: '0 2px 5px rgba(255, 105, 180, 0.1)',
-                                                outline: 'none',
-                                                display: 'inline-block'
-                                            }}
+                                            list={`tag-suggestions-${product.id}`}
                                             onFocus={(e) => {
-                                                e.target.style.width = '100px';
-                                                e.target.style.background = 'rgba(255, 255, 255, 0.95)';
                                                 e.target.placeholder = 'Tag...';
                                             }}
                                             onBlur={(e) => {
-                                                e.target.style.width = '40px';
-                                                e.target.style.background = 'rgba(255, 240, 245, 0.4)';
                                                 e.target.value = '';
                                                 e.target.placeholder = '+';
                                             }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
+                                                    e.stopPropagation();
                                                     handleQuickTagAdd(product, e.target.value);
                                                     e.target.value = '';
-                                                    e.target.blur();
+                                                    // KEEP FOCUS for continuous entry
                                                 }
                                             }}
                                         />
