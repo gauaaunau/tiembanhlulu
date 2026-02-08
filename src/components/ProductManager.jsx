@@ -1707,32 +1707,41 @@ export default function ProductManager() {
                                         </div>
                                     )}
 
-                                    {/* QUICK TAG INPUT (v7.2.1) */}
+                                    {/* QUICK TAG INPUT (v7.2.2 - Glassmorphism) */}
                                     <div style={{ marginTop: '6px' }}>
                                         <input
                                             type="text"
-                                            placeholder="+Tag"
+                                            placeholder="+"
                                             className="form-input quick-tag-input"
                                             style={{
-                                                width: '60px',
-                                                fontSize: '0.7rem',
-                                                padding: '2px 8px',
-                                                borderRadius: '10px',
-                                                border: '1px dashed var(--pink)',
-                                                background: '#fff0f5', // Pinkish bg to match tags
+                                                width: '40px',
+                                                fontSize: '0.75rem',
+                                                padding: '2px 0',
+                                                borderRadius: '12px',
+                                                border: '1px solid rgba(255, 105, 180, 0.3)',
+                                                background: 'rgba(255, 240, 245, 0.4)',
+                                                backdropFilter: 'blur(5px)',
                                                 color: 'var(--pink)',
                                                 textAlign: 'center',
-                                                transition: 'all 0.2s'
+                                                transition: 'all 0.3s ease',
+                                                boxShadow: '0 2px 5px rgba(255, 105, 180, 0.1)',
+                                                outline: 'none'
                                             }}
-                                            onFocus={(e) => e.target.style.width = '120px'}
+                                            onFocus={(e) => {
+                                                e.target.style.width = '100px';
+                                                e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+                                                e.target.placeholder = 'Tag...';
+                                            }}
                                             onBlur={(e) => {
-                                                e.target.style.width = '60px';
+                                                e.target.style.width = '40px';
+                                                e.target.style.background = 'rgba(255, 240, 245, 0.4)';
                                                 e.target.value = '';
+                                                e.target.placeholder = '+';
                                             }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     handleQuickTagAdd(product, e.target.value);
-                                                    e.target.value = ''; // Clear input
+                                                    e.target.value = '';
                                                     e.target.blur();
                                                 }
                                             }}
