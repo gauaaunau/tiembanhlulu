@@ -61,7 +61,7 @@ export default function ProductManager() {
     const [isSavingSettings, setIsSavingSettings] = useState(false);
 
     useEffect(() => {
-        console.log("ProductManager v6.1.6 - Live");
+        console.log("ProductManager v7.0.0 - Live");
         // 1. Initial Migration Check (only once)
         const checkMigration = async () => {
             const dbProducts = await getAllItems('products');
@@ -304,34 +304,53 @@ export default function ProductManager() {
         return false; // Decommissioned: Pure Upload
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
+        setUploadingImages(true);
         setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
-        files.forEach(async (file) => {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const imageData = reader.result;
+        const BATCH_SIZE = 15; // Process 15 images at a time for stability
+        let allNewStaged = [];
 
-                // Add to staged list IMMEDIATELY
-                const newImg = {
-                    id: `img_${Date.now()}_${Math.random()}`,
-                    data: imageData
-                };
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+            const batch = files.slice(i, i + BATCH_SIZE);
+            const batchResults = await Promise.all(batch.map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const imageData = reader.result;
+                        const previewUrl = URL.createObjectURL(file); // Ultra-light preview
 
-                setStagedImages(prev => [...prev, newImg]);
-                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1, added: prev.added + 1 }));
+                        const newImg = {
+                            id: `img_${Date.now()}_${Math.random()}`,
+                            data: imageData,
+                            preview: previewUrl // Use this for <img> src
+                        };
+                        resolve(newImg);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }));
 
-                // Compress in background and update
-                const compressed = await compressImage(imageData);
-                setStagedImages(prev => prev.map(img =>
-                    img.id === newImg.id ? { ...img, data: compressed } : img
-                ));
-            };
-            reader.readAsDataURL(file);
-        });
+            allNewStaged = [...allNewStaged, ...batchResults];
+
+            // Update state periodically to show progress without flooding main thread
+            setStagedImages(prev => [...prev, ...batchResults]);
+            setUploadStatus(prev => ({
+                ...prev,
+                processed: Math.min(files.length, i + BATCH_SIZE),
+                added: prev.added + batchResults.length
+            }));
+
+            // Mini-break to let UI breathe
+            if (files.length > BATCH_SIZE) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
+        setUploadingImages(false);
     };
 
     const handlePaste = (e) => {
@@ -1055,7 +1074,7 @@ export default function ProductManager() {
                     <div className="form-header" style={{ background: 'linear-gradient(135deg, #fff5f7 0%, #fff 100%)', padding: '2rem', borderBottom: '1px solid #f0f0f0' }}>
                         <h3 style={{ margin: 0, color: 'var(--brown)', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             {editingId ? '✏️ Cập nhật sản phẩm' : '✨ Thêm bánh mới'}
-                            <span style={{ fontSize: '0.8rem', background: 'var(--pink)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontWeight: 'bold' }}>VERSION 4.4.0</span>
+                            <span style={{ fontSize: '0.8rem', background: 'var(--pink)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontWeight: 'bold' }}>VERSION 7.0.0</span>
                         </h3>
                         <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Điền thông tin và hình ảnh để hiển thị lên tiệm bánh Lulu</p>
                     </div>
@@ -1178,12 +1197,18 @@ export default function ProductManager() {
                                             <button type="button" onClick={() => setStagedImages([])} style={{ background: 'none', border: 'none', color: '#e11d48', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>🗑️ XÓA HẾT</button>
                                         </div>
                                         <div className="mini-staged-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px' }}>
-                                            {stagedImages.map(img => (
+                                            {/* PERFORMANCE FIX: Limit rendered preview to 40 items (v7.0.0) */}
+                                            {stagedImages.slice(0, 40).map(img => (
                                                 <div key={img.id} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                                                    <img src={img.data} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="staged-mini" />
+                                                    <img src={img.preview || img.data} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="staged-mini" />
                                                     <button type="button" onClick={() => removeStagedImage(img.id)} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', width: '20px', height: '20px', borderRadius: '50%', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                                                 </div>
                                             ))}
+                                            {stagedImages.length > 40 && (
+                                                <div style={{ aspectScale: '1/1', background: '#f0f0f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '0.7rem', fontWeight: 'bold', color: '#999', border: '2px dashed #ddd' }}>
+                                                    +{stagedImages.length - 40}<br />ẢNH KHÁC
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
