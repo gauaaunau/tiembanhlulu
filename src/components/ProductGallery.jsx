@@ -278,6 +278,19 @@ export default function ProductGallery() {
         setShowContactOptions(false); // Reset reveal when changing image
     };
 
+    // PAGINATION LOGIC
+    const totalPages = filter !== 'All'
+        ? Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
+        : Math.ceil(groupedProducts.length / GROUPS_PER_PAGE);
+
+    const paginatedProducts = filter !== 'All'
+        ? filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+        : [];
+
+    const paginatedGroups = filter === 'All'
+        ? groupedProducts.slice((currentPage - 1) * GROUPS_PER_PAGE, currentPage * GROUPS_PER_PAGE)
+        : [];
+
     if (isLoading) return <LoadingScreen />;
 
     return (
@@ -375,214 +388,184 @@ export default function ProductGallery() {
                     </div>
                 )}
 
-    // PAGINATION LOGIC
-                const totalPages = filter !== 'All'
-                ? Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
-                : Math.ceil(groupedProducts.length / GROUPS_PER_PAGE);
 
-                const paginatedProducts = filter !== 'All'
-                ? filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                : [];
-
-                const paginatedGroups = filter === 'All'
-                ? groupedProducts.slice((currentPage - 1) * GROUPS_PER_PAGE, currentPage * GROUPS_PER_PAGE)
-                : [];
-
-                return (
-                <section className="gallery" ref={galleryRef}>
-                    {/* ... keeping existing header ... */}
-                    <div className="wave-top">
-                        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '60px' }}>
-                            <path
-                                fill="white"
-                                d="M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,58.7C672,43,768,21,864,16C960,11,1056,21,1152,37.3C1248,53,1344,75,1392,85.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-                            ></path>
-                        </svg>
-                    </div>
-
-                    <div className="gallery-container" style={{ position: 'relative', zIndex: 1 }}>
-
-                        {/* ... existing Search/Filter/Categories UI (omitted from replace chunk to keep concise, assuming correct context) ... */}
-                        {/* Note: In replace_file_content, I only provide valid chunks. I will target lines 366-412 for the grid rendering */}
-
-                        {/* REPLACING GRID SECTION TO USE PAGINATED DATA */}
-                        <div className="products-grid-container">
-                            {filter !== 'All' ? (
-                                <div className="products-grid">
-                                    {paginatedProducts.length === 0 ? (
-                                        <div className="empty-state">
-                                            <p>🎂 Chưa có sản phẩm cho mục này</p>
-                                        </div>
-                                    ) : (
-                                        paginatedProducts.map((product, index) => (
-                                            <ProductCard
-                                                key={product.id}
-                                                product={product}
-                                                index={index}
-                                                onOpenLightbox={openLightbox}
-                                            />
-                                        ))
-                                    )}
+                <div className="products-grid-container">
+                    {filter !== 'All' ? (
+                        <div className="products-grid">
+                            {paginatedProducts.length === 0 ? (
+                                <div className="empty-state">
+                                    <p>🎂 Chưa có sản phẩm cho mục này</p>
                                 </div>
                             ) : (
-                                /* Optimized Grouped View with Pagination */
-                                paginatedGroups.map((cat, groupIndex) => (
-                                    <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
-                                        <h3 className="section-title" style={{
-                                            fontSize: '1.8rem',
-                                            color: 'var(--brown)',
-                                            marginBottom: '1.5rem',
-                                            paddingLeft: '1rem',
-                                            borderLeft: '5px solid var(--pink)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px'
-                                        }}>
-                                            ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({cat.items.length})</span>
-                                        </h3>
-                                        <div className="products-grid">
-                                            {cat.items.map((product, index) => (
-                                                <ProductCard
-                                                    key={product.id}
-                                                    product={product}
-                                                    index={index}
-                                                    onOpenLightbox={openLightbox}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
+                                paginatedProducts.map((product, index) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        index={index}
+                                        onOpenLightbox={openLightbox}
+                                    />
                                 ))
                             )}
-
-                            {/* Pagination Controls (v8.0.0) */}
-                            {totalPages > 1 && (
-                                <div className="pagination-controls">
-                                    <button
-                                        className="pagination-btn"
-                                        disabled={currentPage === 1}
-                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    >
-                                        ← Trang trước
-                                    </button>
-
-                                    <span className="pagination-info">
-                                        Trang <b>{currentPage}</b> / {totalPages}
-                                    </span>
-
-                                    <button
-                                        className="pagination-btn"
-                                        disabled={currentPage === totalPages}
-                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    >
-                                        Trang sau →
-                                    </button>
-                                </div>
-                            )}
-
-                            {products.length === 0 && (
-                                <div className="empty-state">
-                                    <p>🎂 Chưa có sản phẩm nào</p>
-                                    <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                                        Admin vui lòng vào <a href="/AdminLulucake" style={{ color: 'var(--pink)', fontWeight: '600' }}>trang quản trị</a> để thêm sản phẩm
-                                    </p>
-                                </div>
-                            )}
                         </div>
-                    </div>
-
-                    {/* Lightbox Carousel Modal */}
-                    {selectedProduct && (
-                        <div className="lightbox-overlay" onClick={closeLightbox}>
-                            <button className="lightbox-close" onClick={closeLightbox}>✕</button>
-
-                            <div className="carousel-window">
-                                <div
-                                    className="carousel-track"
-                                    style={{
-                                        transform: `translateX(calc(50% - (var(--sw) / 2) - (${currentImgIndex} * var(--sw))))`
-                                    }}
-                                >
-                                    {(selectedProduct.images || [selectedProduct.image]).map((img, i) => (
-                                        <div
-                                            key={i}
-                                            className={`carousel-slide ${i === currentImgIndex ? 'active' : ''}`}
-                                            onClick={(e) => {
-                                                if (i !== currentImgIndex) {
-                                                    setCurrentImgIndex(i);
-                                                    setShowContactOptions(false); // Reset reveal when changing image
-                                                }
-                                            }}
-                                        >
-                                            <div className="carousel-card-wrapper" onClick={(e) => e.stopPropagation()}>
-                                                <div className="carousel-card" onMouseMove={handleMouseMove}>
-                                                    <img src={img} alt={`${selectedProduct.name} ${i}`} className="carousel-img" />
-                                                </div>
-
-                                                {i === currentImgIndex && (
-                                                    <div className="carousel-external-info">
-                                                        <h3>
-                                                            {selectedProduct.name.match(/^Bánh \d+$/) ? selectedProduct.name.replace('Bánh ', 'Mã: ') : selectedProduct.name}
-                                                        </h3>
-                                                        <div className="external-footer">
-                                                            <span className="external-price">
-                                                                Giá: {(!selectedProduct.price || selectedProduct.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`)}
-                                                            </span>
-
-                                                            {!showContactOptions ? (
-                                                                <button
-                                                                    className="btn-reveal-contact"
-                                                                    onClick={() => setShowContactOptions(true)}
-                                                                >
-                                                                    Đặt Ngay
-                                                                </button>
-                                                            ) : (
-                                                                <div className="order-options reveal-anim">
-                                                                    <a href="https://zalo.me/0798341868" target="_blank" rel="noopener noreferrer" className="contact-item">
-                                                                        <div className="contact-logo-container zalo">
-                                                                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/1200px-Icon_of_Zalo.svg.png" alt="Zalo" />
-                                                                        </div>
-                                                                        <span className="contact-label">Zalo</span>
-                                                                    </a>
-                                                                    <a href="https://m.me/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="contact-item">
-                                                                        <div className="contact-logo-container facebook">
-                                                                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1200px-Facebook_Logo_%282019%29.png" alt="Facebook" />
-                                                                        </div>
-                                                                        <span className="contact-label">Facebook</span>
-                                                                    </a>
-                                                                    <a href="tel:0798341868" className="contact-item">
-                                                                        <div className="contact-logo-container hotline">
-                                                                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                                                                <path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" />
-                                                                            </svg>
-                                                                        </div>
-                                                                        <span className="contact-label">Hotline</span>
-                                                                    </a>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {(selectedProduct.images?.length > 1) && (
-                                <div className="carousel-dots-fixed">
-                                    {selectedProduct.images.map((_, i) => (
-                                        <span
-                                            key={i}
-                                            className={`dot ${i === currentImgIndex ? 'active' : ''}`}
-                                            onClick={() => setCurrentImgIndex(i)}
+                    ) : (
+                        /* Optimized Grouped View with Pagination */
+                        paginatedGroups.map((cat, groupIndex) => (
+                            <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
+                                <h3 className="section-title" style={{
+                                    fontSize: '1.8rem',
+                                    color: 'var(--brown)',
+                                    marginBottom: '1.5rem',
+                                    paddingLeft: '1rem',
+                                    borderLeft: '5px solid var(--pink)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({cat.items.length})</span>
+                                </h3>
+                                <div className="products-grid">
+                                    {cat.items.map((product, index) => (
+                                        <ProductCard
+                                            key={product.id}
+                                            product={product}
+                                            index={index}
+                                            onOpenLightbox={openLightbox}
                                         />
                                     ))}
                                 </div>
-                            )}
+                            </div>
+                        ))
+                    )}
+
+                    {/* Pagination Controls (v8.0.0) */}
+                    {totalPages > 1 && (
+                        <div className="pagination-controls">
+                            <button
+                                className="pagination-btn"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            >
+                                ← Trang trước
+                            </button>
+
+                            <span className="pagination-info">
+                                Trang <b>{currentPage}</b> / {totalPages}
+                            </span>
+
+                            <button
+                                className="pagination-btn"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            >
+                                Trang sau →
+                            </button>
                         </div>
                     )}
-                </section>
-                );
+
+                    {products.length === 0 && (
+                        <div className="empty-state">
+                            <p>🎂 Chưa có sản phẩm nào</p>
+                            <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                                Admin vui lòng vào <a href="/AdminLulucake" style={{ color: 'var(--pink)', fontWeight: '600' }}>trang quản trị</a> để thêm sản phẩm
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Lightbox Carousel Modal */}
+            {selectedProduct && (
+                <div className="lightbox-overlay" onClick={closeLightbox}>
+                    <button className="lightbox-close" onClick={closeLightbox}>✕</button>
+
+                    <div className="carousel-window">
+                        <div
+                            className="carousel-track"
+                            style={{
+                                transform: `translateX(calc(50% - (var(--sw) / 2) - (${currentImgIndex} * var(--sw))))`
+                            }}
+                        >
+                            {(selectedProduct.images || [selectedProduct.image]).map((img, i) => (
+                                <div
+                                    key={i}
+                                    className={`carousel-slide ${i === currentImgIndex ? 'active' : ''}`}
+                                    onClick={(e) => {
+                                        if (i !== currentImgIndex) {
+                                            setCurrentImgIndex(i);
+                                            setShowContactOptions(false); // Reset reveal when changing image
+                                        }
+                                    }}
+                                >
+                                    <div className="carousel-card-wrapper" onClick={(e) => e.stopPropagation()}>
+                                        <div className="carousel-card" onMouseMove={handleMouseMove}>
+                                            <img src={img} alt={`${selectedProduct.name} ${i}`} className="carousel-img" />
+                                        </div>
+
+                                        {i === currentImgIndex && (
+                                            <div className="carousel-external-info">
+                                                <h3>
+                                                    {selectedProduct.name.match(/^Bánh \d+$/) ? selectedProduct.name.replace('Bánh ', 'Mã: ') : selectedProduct.name}
+                                                </h3>
+                                                <div className="external-footer">
+                                                    <span className="external-price">
+                                                        Giá: {(!selectedProduct.price || selectedProduct.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`)}
+                                                    </span>
+
+                                                    {!showContactOptions ? (
+                                                        <button
+                                                            className="btn-reveal-contact"
+                                                            onClick={() => setShowContactOptions(true)}
+                                                        >
+                                                            Đặt Ngay
+                                                        </button>
+                                                    ) : (
+                                                        <div className="order-options reveal-anim">
+                                                            <a href="https://zalo.me/0798341868" target="_blank" rel="noopener noreferrer" className="contact-item">
+                                                                <div className="contact-logo-container zalo">
+                                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/1200px-Icon_of_Zalo.svg.png" alt="Zalo" />
+                                                                </div>
+                                                                <span className="contact-label">Zalo</span>
+                                                            </a>
+                                                            <a href="https://m.me/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="contact-item">
+                                                                <div className="contact-logo-container facebook">
+                                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1200px-Facebook_Logo_%282019%29.png" alt="Facebook" />
+                                                                </div>
+                                                                <span className="contact-label">Facebook</span>
+                                                            </a>
+                                                            <a href="tel:0798341868" className="contact-item">
+                                                                <div className="contact-logo-container hotline">
+                                                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                                                        <path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" />
+                                                                    </svg>
+                                                                </div>
+                                                                <span className="contact-label">Hotline</span>
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {(selectedProduct.images?.length > 1) && (
+                        <div className="carousel-dots-fixed">
+                            {selectedProduct.images.map((_, i) => (
+                                <span
+                                    key={i}
+                                    className={`dot ${i === currentImgIndex ? 'active' : ''}`}
+                                    onClick={() => setCurrentImgIndex(i)}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </section>
+    );
 
 
 }
