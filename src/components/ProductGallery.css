@@ -621,36 +621,50 @@
     cursor: default;
 }
 
+/* LIGHTBOX: Adjust to natural aspect ratio (v7.1.0) */
 .carousel-card {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: white;
-    border-radius: 35px;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 65vh; /* Limit height to prevent overflow on mobile */
+    aspect-ratio: auto; /* Remove forced square */
+    background: transparent; /* Remove white box if image is PNG/transparent */
+    border-radius: 20px;
     position: relative;
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
-    overflow: hidden;
+    /* box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8); Remove heavy shadow for cleaner look */
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5)); /* Better shadow for irregular shapes */
+    overflow: visible; /* Allow shadow to bleed */
     border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .carousel-card-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 90%;
-    max-width: 550px;
-    gap: 2rem;
+    justify-content: center;
+    width: 100%; /* Allow full width use */
+    max-width: 800px; /* Increase max width slightly for landscape photos */
+    gap: 1.5rem;
+    height: 100%; /* crucial for vertical centering */
 }
 
 .carousel-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Ensure full image is visible */
+    border-radius: 20px;
     transition: transform 0.3s ease;
 }
 
 @media (hover: hover) {
+    /* Disable extreme zoom on hover for lightbox images as it might break layout */
     .carousel-card:hover .carousel-img {
-        transform: scale(2.2);
+        transform: scale(1.05);
     }
 }
 

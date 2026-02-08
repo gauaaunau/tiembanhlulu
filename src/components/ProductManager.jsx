@@ -750,7 +750,7 @@ export default function ProductManager() {
         if (files.length === 0) return;
 
         setImporting(true);
-        setProgressLabel('Đang bày bánh từ thư mục...');
+        setProgressLabel('Đang bày bánh từ thư mục (Tốc độ cao)... 🚀');
         setImportStats({ current: 0, total: files.length, startTime: Date.now() });
         setUploadStatus({ total: files.length, processed: 0, added: 0 });
 
@@ -771,19 +771,18 @@ export default function ProductManager() {
 
         const categoryNames = Object.keys(folderGroups);
         let globalProcessedCount = 0;
+        const UPLOAD_BATCH_SIZE = 10;
 
         for (const catName of categoryNames) {
-            // 1. Find or create category (Stream Mode: Check & Save immediately if new)
+            // 1. Find or create category
             let cat = allFilterableCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
             if (!cat) {
-                // Check if we just added it in this session's newCategories
                 cat = newCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
             }
 
             if (!cat) {
                 cat = { id: `cat_${Date.now()}_${Math.random()}`, name: catName, subCategories: [] };
                 newCategories.push(cat);
-                // Save Category IMMEDIATELY
                 try {
                     await saveItem('categories', cat);
                 } catch (err) {
@@ -792,71 +791,45 @@ export default function ProductManager() {
             }
 
             const catFiles = folderGroups[catName];
-            for (const file of catFiles) {
-                try {
-                    const reader = new FileReader();
-                    const imageData = await new Promise((resolve) => {
-                        reader.onload = (re) => resolve(re.target.result);
-                        reader.readAsDataURL(file);
-                    });
 
-                    const compressed = await compressImage(imageData);
+            // Process files in batches for this category
+            for (let i = 0; i < catFiles.length; i += UPLOAD_BATCH_SIZE) {
+                const chunk = catFiles.slice(i, i + UPLOAD_BATCH_SIZE);
 
-                    let finalUrl = compressed;
-                    if (isStorageEnabled) {
-                        try {
-                            const blob = await base64ToBlob(compressed);
-                            const uploadFile = new File([blob], file.name || "image.jpg", { type: "image/jpeg" });
-                            finalUrl = await uploadImage(uploadFile);
-                        } catch (uErr) {
-                            console.warn("Storage upload failed, using Base64 fallback.", uErr);
-                        }
-                    }
+                // 1. Parallel Upload
+                // We map files to a format processImagesForUpload understands {file: file}
+                const chunkItems = chunk.map(f => ({ file: f, data: null }));
+                const chunkUrls = await processImagesForUpload(chunkItems);
 
-                    const newProd = {
-                        id: `prod_${Date.now()}_${Math.random()}`,
-                        name: `Bánh ${newProducts.length + 1}`,
+                // 2. Prepare Products
+                const chunkProducts = chunkUrls.map((url, idx) => {
+                    if (!url) return null;
+                    return {
+                        id: `prod_${Date.now()}_${globalProcessedCount + idx}`,
+                        name: `Bánh ${newProducts.length + 1 + idx}`, // Note: this might desync with concurrent adds, but acceptable for bulk
                         categoryId: cat.id,
                         price: 'Liên hệ',
                         description: '',
-                        images: [finalUrl],
+                        images: [url],
                         createdAt: Date.now(),
                         tags: [catName]
                     };
+                }).filter(p => p !== null);
 
-                    // STREAM SAVE: Save Product IMMEDIATELY
-                    await saveItem('products', newProd);
-
-                    // Update Local State appropriately
-                    newProducts.push(newProd);
-
-                } catch (err) {
-                    console.error(`Lỗi xử lý file ${file.name}:`, err);
+                // 3. Batch Save
+                if (chunkProducts.length > 0) {
+                    await saveAllItems('products', chunkProducts);
+                    newProducts.push(...chunkProducts);
                 }
 
-                globalProcessedCount++;
+                globalProcessedCount += chunk.length;
 
-                // UPDATE PROGRESS (Real-time based on SAVED items)
+                // Update UI Stats
                 setImportStats(prev => ({
                     ...prev,
-                    current: globalProcessedCount
+                    current: Math.min(globalProcessedCount, files.length)
                 }));
-                // Update ETA in UploadStatus for optional specialized display
                 setUploadStatus(prev => ({ ...prev, processed: globalProcessedCount }));
-
-                // STRICT STREAM SYNC (v4.6.4)
-                // Sync after EVERY image to prevent "Write stream exhausted"
-                // This relies on network latency as the natural throttle.
-                await waitForSync();
-                // GENTLE THROTTLE (v5.0.4): Prevent SDK buffer overflow
-                await new Promise(r => setTimeout(r, 500));
-
-                // CHUNKED SYNC (v5.0.5): Pause every 10 images
-                if (globalProcessedCount % 10 === 0 && globalProcessedCount < files.length) {
-                    setBatchResting(true);
-                    await new Promise(r => setTimeout(r, 3000));
-                    setBatchResting(false);
-                }
             }
         }
 
@@ -864,7 +837,7 @@ export default function ProductManager() {
         localStorage.setItem('cached_categories', JSON.stringify(newCategories));
         setProducts(newProducts);
         setImporting(false);
-        alert(`🎉 Thành công! Đã thêm ${globalProcessedCount} món mới.`);
+        alert(`🎉 Thành công! Đã thêm ${globalProcessedCount} món mới (Siêu tốc).`);
     };
 
     const [adminFilter, setAdminFilter] = useState('All');
