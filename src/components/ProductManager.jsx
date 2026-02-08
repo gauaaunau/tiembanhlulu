@@ -270,7 +270,7 @@ export default function ProductManager() {
     };
 
 
-    const compressImage = (base64Str, maxWidth = 1600, maxHeight = 1600) => {
+    const compressImage = (base64Str, maxWidth = 1200, maxHeight = 1200) => {
         return new Promise((resolve) => {
             const img = new Image();
             img.src = base64Str;
@@ -295,7 +295,7 @@ export default function ProductManager() {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.9));
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
             };
         });
     };
@@ -405,25 +405,26 @@ export default function ProductManager() {
         // provided we save sequentially.
         if (!isStorageEnabled) return imageList;
 
-        const processed = [];
-        for (const imgData of imageList) {
+        // PARALLEL UPLOAD: Use map instead of for..of
+        const uploadPromises = imageList.map(async (imgData) => {
             if (imgData.startsWith('http')) {
-                processed.push(imgData);
+                return imgData;
             } else if (imgData.startsWith('data:image')) {
                 try {
                     const blob = await base64ToBlob(imgData);
                     const file = new File([blob], "image.jpg", { type: "image/jpeg" });
                     const url = await uploadImage(file);
-                    processed.push(url);
+                    return url;
                 } catch (e) {
                     console.warn("Storage upload failed (likely payment required). Using Base64 fallback.", e);
-                    processed.push(imgData); // Fallback to Base64
+                    return imgData; // Fallback to Base64
                 }
             } else {
-                processed.push(imgData);
+                return imgData;
             }
-        }
-        return processed;
+        });
+
+        return await Promise.all(uploadPromises);
     };
 
     const handleSubmit = async (e, forceBulkMode = false) => {
@@ -443,42 +444,43 @@ export default function ProductManager() {
                 const baseName = formData.name || getCategoryName(formData.categoryId) || 'Bánh';
 
                 // Initialize Import Stats for the Overlay UI
-                setProgressLabel('Đang bày bánh lên kệ...');
+                setProgressLabel('Đang upload ảnh cực nhanh...');
                 setImportStats({ current: 0, total: stagedImages.length, startTime: Date.now() });
 
-                for (let i = 0; i < stagedImages.length; i++) {
-                    const img = stagedImages[i];
+                const newProducts = [];
+                const UPLOAD_BATCH_SIZE = 10; // Upload 10 images concurrently
 
-                    // Upload image FIRST
-                    const [finalUrl] = await processImagesForUpload([img.data]);
+                for (let i = 0; i < stagedImages.length; i += UPLOAD_BATCH_SIZE) {
+                    const chunk = stagedImages.slice(i, i + UPLOAD_BATCH_SIZE);
 
-                    const productData = {
-                        ...formData,
-                        id: `prod_${Date.now()}_${i}`,
-                        name: stagedImages.length > 1 ? `${baseName} ${i + 1}` : baseName,
-                        images: [finalUrl],
-                        createdAt: Date.now()
-                    };
-                    await saveItem('products', productData);
+                    // 1. Parallel Upload for this chunk
+                    const chunkImageDatas = chunk.map(img => img.data);
+                    const chunkUrls = await processImagesForUpload(chunkImageDatas);
 
-                    // Update UI stats for the progress overlay
+                    // 2. Prepare Product Objects
+                    chunkUrls.forEach((url, idx) => {
+                        const globalIndex = i + idx;
+                        const productData = {
+                            ...formData,
+                            id: `prod_${Date.now()}_${globalIndex}`,
+                            name: stagedImages.length > 1 ? `${baseName} ${globalIndex + 1}` : baseName,
+                            images: [url],
+                            createdAt: Date.now()
+                        };
+                        newProducts.push(productData);
+                    });
+
+                    // Update stats
                     setImportStats(prev => ({
                         ...prev,
-                        current: i + 1
+                        current: Math.min(i + UPLOAD_BATCH_SIZE, stagedImages.length)
                     }));
-
-                    // STRICT STREAM SYNC: Prevents "Write stream exhausted"
-                    await waitForSync();
-                    // GENTLE THROTTLE (v5.0.4)
-                    await new Promise(r => setTimeout(r, 500));
-
-                    // CHUNKED SYNC (v5.0.5): Pause every 10 images to clear SDK buffer
-                    if ((i + 1) % 10 === 0 && i + 1 < stagedImages.length) {
-                        setBatchResting(true);
-                        await new Promise(r => setTimeout(r, 3000));
-                        setBatchResting(false);
-                    }
                 }
+
+                setProgressLabel('Đang lưu vào cơ sở dữ liệu...');
+
+                // 3. Batch Save to Firestore (much faster than loop)
+                await saveAllItems('products', newProducts);
 
                 alert(`Đã thêm ${stagedImages.length} sản phẩm thành công!`);
                 const dbProducts = await getAllItems('products');
