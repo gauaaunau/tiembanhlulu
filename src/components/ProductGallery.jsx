@@ -16,6 +16,8 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
                     src={product.images ? product.images[0] : product.image}
                     alt={product.name}
                     className="cake-image"
+                    loading="lazy"
+                    decoding="async"
                 />
                 {product.images && product.images.length > 1 && (
                     <div className="album-badge">🖼️ {product.images.length} Ảnh</div>

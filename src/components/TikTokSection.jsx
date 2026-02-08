@@ -142,7 +142,7 @@ export default function TikTokSection() {
                         <div className="thumbnail-wrapper">
                             {video ? (
                                 <>
-                                    <img src={video.thumbnailUrl} alt="TikTok video" className="video-thumbnail" />
+                                    <img src={video.thumbnailUrl} alt="TikTok video" className="video-thumbnail" loading="lazy" />
                                     <div className="play-overlay">
                                         <div className="play-icon-svg">
                                             <PlayIcon />

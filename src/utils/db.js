@@ -189,7 +189,7 @@ export const deleteItemsBulk = async (storeName, ids) => {
     // Delete from Cloud (Batch)
     if (isCloudEnabled && storeName !== 'drafts') {
         try {
-            const batchSize = 400; // Firestore limit is 500
+            const batchSize = storeName === 'products' ? 50 : 400; // Safer batch size for heavy docs
             for (let i = 0; i < ids.length; i += batchSize) {
                 const batch = writeBatch(firestore);
                 const chunk = ids.slice(i, i + batchSize);
@@ -287,7 +287,7 @@ export const deleteAllItems = async (storeName) => {
             const q = query(collection(firestore, storeName));
             // We need to fetch all docs to delete them
             const snapshot = await getDocs(q);
-            const batchSize = 400; // Firestore limit is 500
+            const batchSize = storeName === 'products' ? 50 : 400; // Increase safety for products
             const docs = snapshot.docs;
 
             // Process in batches
