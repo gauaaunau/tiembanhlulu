@@ -634,8 +634,8 @@
 .carousel-card {
     width: auto;
     max-width: 100%;
-    height: auto;
-    max-height: 65vh;
+    /* Reduced height to prevent cutoff on smaller screens */
+    max-height: 50vh;
     /* Limit height to prevent overflow on mobile */
     aspect-ratio: auto;
     /* Remove forced square */
