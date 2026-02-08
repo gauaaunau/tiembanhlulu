@@ -368,9 +368,15 @@ export default function ProductManager() {
 
         // PARALLEL UPLOAD: Use map instead of for..of
         const uploadPromises = imageItems.map(async (item) => {
-            // Case 1: Already uploaded URL (from edit mode)
+            // Case 1: Already uploaded URL (from edit mode) - String or Object wrapper
             if (typeof item === 'string' && item.startsWith('http')) {
                 return item;
+            }
+            if (item.data && typeof item.data === 'string' && item.data.startsWith('http')) {
+                return item.data;
+            }
+            if (item.preview && typeof item.preview === 'string' && item.preview.startsWith('http')) {
+                return item.preview;
             }
 
             // Case 2: Base64 Data (from Paste or Legacy)
