@@ -154,9 +154,16 @@ export default function ProductGallery() {
             }
         });
 
-        return Array.from(nameMap.values()).sort((a, b) =>
-            a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
-        );
+        return Array.from(nameMap.values()).sort((a, b) => {
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
+
+            // PRIORITIZE "BEST SELLER" (v8.2.0)
+            if (nameA.includes('best seller') || nameA.includes('bestseller')) return -1;
+            if (nameB.includes('best seller') || nameB.includes('bestseller')) return 1;
+
+            return a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
+        });
     }, [products, categories]);
 
     // PRE-CALCULATE UNCATEGORIZED (v5.1.1): Products missing valid tags/categories
