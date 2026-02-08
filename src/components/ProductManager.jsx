@@ -559,9 +559,18 @@ export default function ProductManager() {
     };
 
     const handleEdit = (product) => {
+        // CLEANUP: If existing tags are IDs, try to resolve them to Names.
+        const cleanedTags = (product.tags || []).map(tag => {
+            if (tag.startsWith('cat_')) {
+                const cat = allFilterableCategories.find(c => c.id === tag);
+                return cat ? cat.name : tag;
+            }
+            return tag;
+        });
+
         setFormData({
             ...product,
-            tags: product.tags || []
+            tags: cleanedTags
         });
         const images = product.images || [product.image] || [];
         setStagedImages(images.map((img, idx) => ({
@@ -667,12 +676,18 @@ export default function ProductManager() {
                         nameMap.set(key, { id: existing.id, name: existing.name.trim(), subCategories: [] });
                     }
                 } else {
-                    // Orphaned ID: guess a name or use ID
-                    const guessedName = (p.tags && p.tags.length > 0) ? p.tags[0] : p.categoryId;
-                    const key = String(guessedName).toLowerCase().trim();
-                    if (!nameMap.has(key)) {
-                        nameMap.set(key, { id: p.categoryId, name: String(guessedName).trim(), subCategories: [] });
+                    // Orphaned ID: try to guess from tags, but NEVER use the ID itself as name
+                    if (p.tags && p.tags.length > 0) {
+                        const guessedName = p.tags[0];
+                        // Only use if it's NOT an ID
+                        if (!guessedName.startsWith('cat_')) {
+                            const key = String(guessedName).toLowerCase().trim();
+                            if (!nameMap.has(key)) {
+                                nameMap.set(key, { id: p.categoryId, name: String(guessedName).trim(), subCategories: [] });
+                            }
+                        }
                     }
+                    // If no valid tags, we just ignore this ID. It won't appear in filters.
                 }
             }
         });
