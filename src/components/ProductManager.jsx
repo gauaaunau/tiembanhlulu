@@ -613,6 +613,29 @@ export default function ProductManager() {
         }
     };
 
+    const handleQuickTagAdd = async (product, newTag) => {
+        if (!newTag || !newTag.trim()) return;
+        const cleanTag = newTag.trim();
+
+        // Prevent duplicate tags
+        if (product.tags && product.tags.includes(cleanTag)) return;
+
+        const updatedTags = [...(product.tags || []), cleanTag];
+
+        try {
+            // Optimistic update
+            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, tags: updatedTags } : p));
+
+            // Save to DB
+            await saveItem('products', { ...product, tags: updatedTags });
+        } catch (error) {
+            console.error("Quick tag error:", error);
+            alert("❌ Lỗi thêm tag!");
+            // Revert on error
+            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, tags: product.tags } : p));
+        }
+    };
+
     const getSubCategories = () => {
         const cat = categories.find(c => c.id === formData.categoryId);
         return cat ? cat.subCategories : [];
@@ -1654,6 +1677,30 @@ export default function ProductManager() {
                                             })}
                                         </div>
                                     )}
+
+                                    {/* QUICK TAG INPUT (v7.2.0) */}
+                                    <div style={{ marginTop: '8px' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="+Tag nhanh..."
+                                            className="form-input"
+                                            style={{
+                                                width: '100%',
+                                                fontSize: '0.8rem',
+                                                padding: '6px 10px',
+                                                borderRadius: '8px',
+                                                border: '1px dashed #ccc',
+                                                background: '#fafafa'
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleQuickTagAdd(product, e.target.value);
+                                                    e.target.value = ''; // Clear input
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
                                     {inlineEditingId === product.id ? (
                                         <div className="inline-price-editor">
                                             <input
