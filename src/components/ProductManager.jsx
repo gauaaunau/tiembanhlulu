@@ -304,54 +304,22 @@ export default function ProductManager() {
         return false; // Decommissioned: Pure Upload
     };
 
-    const handleImageUpload = async (e) => {
+    const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        setUploadingImages(true);
-        setUploadStatus({ total: files.length, processed: 0, added: 0 });
+        // INSTANT PREVIEW: Create Object URL immediately
+        const newItems = files.map(file => ({
+            id: `img_${Date.now()}_${Math.random()}`,
+            file: file, // Store raw file for later processing
+            preview: URL.createObjectURL(file), // Instant assignment
+            data: null // Deferred compression
+        }));
 
-        const BATCH_SIZE = 15; // Process 15 images at a time for stability
-        let allNewStaged = [];
+        setStagedImages(prev => [...prev, ...newItems]);
 
-        for (let i = 0; i < files.length; i += BATCH_SIZE) {
-            const batch = files.slice(i, i + BATCH_SIZE);
-            const batchResults = await Promise.all(batch.map(file => {
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        const imageData = reader.result;
-                        const previewUrl = URL.createObjectURL(file); // Ultra-light preview
-
-                        const newImg = {
-                            id: `img_${Date.now()}_${Math.random()}`,
-                            data: await compressImage(imageData), // Compress immediately
-                            preview: previewUrl
-                        };
-                        resolve(newImg);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }));
-
-            // Update UI with compressed images
-            const compressedResults = await Promise.all(batchResults);
-            allNewStaged = [...allNewStaged, ...compressedResults];
-
-            setStagedImages(prev => [...prev, ...compressedResults]);
-            setUploadStatus(prev => ({
-                ...prev,
-                processed: Math.min(files.length, i + BATCH_SIZE),
-                added: prev.added + batchResults.length
-            }));
-
-            // Mini-break to let UI breathe
-            if (files.length > BATCH_SIZE) {
-                await new Promise(r => setTimeout(r, 100));
-            }
-        }
-
-        setUploadingImages(false);
+        // Reset input
+        e.target.value = '';
     };
 
     const handlePaste = (e) => {
@@ -368,63 +336,86 @@ export default function ProductManager() {
         if (images.length === 0) return;
         e.preventDefault();
 
-        setUploadStatus({ total: images.length, processed: 0, added: 0 });
-
+        // Paste still requires reading to display, but usually fewer images than file select
         images.forEach(async (file) => {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const imageData = reader.result;
-
-                // Add to staged list IMMEDIATELY
                 const newImg = {
                     id: `img_paste_${Date.now()}_${Math.random()}`,
-                    data: imageData
+                    data: await compressImage(imageData), // Compress pasted image immediately (usually small qty)
+                    preview: null // Will use data as preview fallback
                 };
-
                 setStagedImages(prev => [...prev, newImg]);
-                setUploadStatus(prev => ({ ...prev, processed: prev.processed + 1, added: prev.added + 1 }));
-
-                // Compress and update
-                const compressed = await compressImage(imageData);
-                setStagedImages(prev => prev.map(img =>
-                    img.id === newImg.id ? { ...img, data: compressed } : img
-                ));
             };
             reader.readAsDataURL(file);
         });
     };
 
     const removeStagedImage = (id) => {
-        setStagedImages(prev => prev.filter(img => img.id !== id));
+        setStagedImages(prev => {
+            const imgToRemove = prev.find(img => img.id === id);
+            if (imgToRemove && imgToRemove.preview && !imgToRemove.data) {
+                URL.revokeObjectURL(imgToRemove.preview); // Cleanup memory
+            }
+            return prev.filter(img => img.id !== id);
+        });
     };
 
-    // Helper to process and upload a list of image data (Base64 or URL)
-    const processImagesForUpload = async (imageList) => {
-        // Fallback to Base64 for Free Tier stability
-        // We only upload if explicitly enabled and working, otherwise Base64 is fine
-        // provided we save sequentially.
-        if (!isStorageEnabled) return imageList;
+    // Helper to process and upload list of images (File objects or Base64)
+    const processImagesForUpload = async (imageItems) => {
+        if (!isStorageEnabled) return imageItems.map(item => item.data || item.preview);
 
         // PARALLEL UPLOAD: Use map instead of for..of
-        const uploadPromises = imageList.map(async (imgData) => {
-            if (imgData.startsWith('http')) {
-                return imgData;
-            } else if (imgData.startsWith('data:image')) {
-                try {
-                    const blob = await base64ToBlob(imgData);
-                    const file = new File([blob], "image.jpg", { type: "image/jpeg" });
-                    const url = await uploadImage(file);
-                    return url;
-                } catch (e) {
-                    console.warn("Storage upload failed (likely payment required). Using Base64 fallback.", e);
-                    return imgData; // Fallback to Base64
-                }
-            } else {
-                return imgData;
+        const uploadPromises = imageItems.map(async (item) => {
+            // Case 1: Already uploaded URL (from edit mode)
+            if (typeof item === 'string' && item.startsWith('http')) {
+                return item;
             }
+
+            // Case 2: Base64 Data (from Paste or Legacy)
+            if (item.data && item.data.startsWith('data:image')) {
+                try {
+                    const blob = await base64ToBlob(item.data);
+                    const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+                    return await uploadImage(file);
+                } catch (e) {
+                    console.warn("Upload failed, using base64 fallback", e);
+                    return item.data;
+                }
+            }
+
+            // Case 3: Raw File Object (New Instant Upload)
+            if (item.file) {
+                try {
+                    // Compress before upload to save bandwidth
+                    // We need to read the file to compress it first
+                    const base64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(item.file);
+                    });
+
+                    const compressedBase64 = await compressImage(base64);
+                    const blob = await base64ToBlob(compressedBase64);
+                    const file = new File([blob], item.file.name, { type: "image/jpeg" });
+                    return await uploadImage(file);
+                } catch (e) {
+                    console.error("Compression/Upload failed for file:", item.file.name, e);
+                    // Fallback: Try uploading raw file
+                    try {
+                        return await uploadImage(item.file);
+                    } catch (err) {
+                        return null; // Failed completely
+                    }
+                }
+            }
+
+            return null;
         });
 
-        return await Promise.all(uploadPromises);
+        const results = await Promise.all(uploadPromises);
+        return results.filter(r => r !== null);
     };
 
     const handleSubmit = async (e, forceBulkMode = false) => {
@@ -444,7 +435,7 @@ export default function ProductManager() {
                 const baseName = formData.name || getCategoryName(formData.categoryId) || 'Bánh';
 
                 // Initialize Import Stats for the Overlay UI
-                setProgressLabel('Đang upload ảnh cực nhanh...');
+                setProgressLabel('Đang bắn ảnh lên mây (Max Speed)... 🚀');
                 setImportStats({ current: 0, total: stagedImages.length, startTime: Date.now() });
 
                 const newProducts = [];
@@ -454,8 +445,8 @@ export default function ProductManager() {
                     const chunk = stagedImages.slice(i, i + UPLOAD_BATCH_SIZE);
 
                     // 1. Parallel Upload for this chunk
-                    const chunkImageDatas = chunk.map(img => img.data);
-                    const chunkUrls = await processImagesForUpload(chunkImageDatas);
+                    // Note: processImagesForUpload now handles File objects/stagedImage objects directly
+                    const chunkUrls = await processImagesForUpload(chunk);
 
                     // 2. Prepare Product Objects
                     chunkUrls.forEach((url, idx) => {
@@ -477,12 +468,12 @@ export default function ProductManager() {
                     }));
                 }
 
-                setProgressLabel('Đang lưu vào cơ sở dữ liệu...');
+                setProgressLabel('Đang ghi dữ liệu (Không nghỉ)...');
 
                 // 3. Batch Save to Firestore (much faster than loop)
                 await saveAllItems('products', newProducts);
 
-                alert(`Đã thêm ${stagedImages.length} sản phẩm thành công!`);
+                alert(`Đã thêm ${stagedImages.length} sản phẩm (Tốc độ ánh sáng)! ⚡`);
                 const dbProducts = await getAllItems('products');
                 setProducts(dbProducts);
 
@@ -505,6 +496,8 @@ export default function ProductManager() {
             }
             return;
         }
+
+
 
         const productImages = stagedImages.map(img => img.data);
         if (productImages.length === 0) {
