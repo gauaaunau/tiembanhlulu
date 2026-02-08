@@ -636,6 +636,20 @@ export default function ProductManager() {
         }
     };
 
+    const handleQuickTagRemove = async (product, tagToRemove) => {
+        const updatedTags = (product.tags || []).filter(t => t !== tagToRemove);
+        try {
+            // Optimistic update
+            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, tags: updatedTags } : p));
+            await saveItem('products', { ...product, tags: updatedTags });
+        } catch (error) {
+            console.error("Quick tag remove error:", error);
+            alert("❌ Lỗi xóa tag!");
+            // Revert on error
+            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, tags: product.tags } : p));
+        }
+    };
+
     const getSubCategories = () => {
         const cat = categories.find(c => c.id === formData.categoryId);
         return cat ? cat.subCategories : [];
@@ -1662,40 +1676,64 @@ export default function ProductManager() {
                                                 if (!displayName || displayName.startsWith('cat_')) return null;
 
                                                 return (
-                                                    <span key={tagId} style={{
-                                                        fontSize: '0.7rem',
-                                                        background: '#fff0f5',
-                                                        color: 'var(--pink)',
-                                                        padding: '2px 8px',
-                                                        borderRadius: '10px',
-                                                        border: '1px solid var(--pink)',
-                                                        opacity: 0.8
-                                                    }}>
+                                                    <span
+                                                        key={tagId}
+                                                        className="tag-pill"
+                                                        style={{
+                                                            fontSize: '0.7rem',
+                                                            background: '#fff0f5',
+                                                            color: 'var(--pink)',
+                                                            padding: '2px 8px',
+                                                            borderRadius: '10px',
+                                                            border: '1px solid var(--pink)',
+                                                            opacity: 0.8,
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px'
+                                                        }}
+                                                        onClick={() => {
+                                                            if (window.confirm(`Xóa tag "${displayName}"?`)) {
+                                                                handleQuickTagRemove(product, tagId);
+                                                            }
+                                                        }}
+                                                        title="Nhấn để xóa"
+                                                    >
                                                         #{displayName}
+                                                        <span style={{ fontSize: '10px', opacity: 0.6 }}>✖</span>
                                                     </span>
                                                 );
                                             })}
                                         </div>
                                     )}
 
-                                    {/* QUICK TAG INPUT (v7.2.0) */}
-                                    <div style={{ marginTop: '8px' }}>
+                                    {/* QUICK TAG INPUT (v7.2.1) */}
+                                    <div style={{ marginTop: '6px' }}>
                                         <input
                                             type="text"
-                                            placeholder="+Tag nhanh..."
-                                            className="form-input"
+                                            placeholder="+Tag"
+                                            className="form-input quick-tag-input"
                                             style={{
-                                                width: '100%',
-                                                fontSize: '0.8rem',
-                                                padding: '6px 10px',
-                                                borderRadius: '8px',
-                                                border: '1px dashed #ccc',
-                                                background: '#fafafa'
+                                                width: '60px',
+                                                fontSize: '0.7rem',
+                                                padding: '2px 8px',
+                                                borderRadius: '10px',
+                                                border: '1px dashed var(--pink)',
+                                                background: '#fff0f5', // Pinkish bg to match tags
+                                                color: 'var(--pink)',
+                                                textAlign: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onFocus={(e) => e.target.style.width = '120px'}
+                                            onBlur={(e) => {
+                                                e.target.style.width = '60px';
+                                                e.target.value = '';
                                             }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     handleQuickTagAdd(product, e.target.value);
                                                     e.target.value = ''; // Clear input
+                                                    e.target.blur();
                                                 }
                                             }}
                                         />
