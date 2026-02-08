@@ -1598,6 +1598,14 @@ export default function ProductManager() {
                         <h3>Danh Sách Sản Phẩm ({filteredAdminProducts.length})</h3>
                     </div>
 
+
+                    {/* Shared Datalist for Quick Tag Suggestions (v7.2.6) */}
+                    <datalist id="all-tags-list">
+                        {allFilterableCategories.map(cat => (
+                            <option key={cat.id} value={cat.name} />
+                        ))}
+                    </datalist>
+
                     <div className="list-controls" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         <div className="filter-group" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                             <div className="search-box-admin" style={{ position: 'relative' }}>
@@ -1713,7 +1721,7 @@ export default function ProductManager() {
                                             type="text"
                                             placeholder="+"
                                             className="quick-tag-input"
-                                            list={`tag-suggestions-${product.id}`}
+                                            list="all-tags-list"
                                             onFocus={(e) => {
                                                 e.target.placeholder = 'Tag...';
                                             }}
