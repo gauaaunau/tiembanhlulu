@@ -457,11 +457,18 @@ export default function ProductManager() {
                     // 2. Prepare Product Objects
                     chunkUrls.forEach((url, idx) => {
                         const globalIndex = i + idx;
+                        const originalImage = chunk[idx];
+
+                        // Merge GLOBAL tags + SPECIFIC image tags
+                        const specificTags = originalImage.tags || [];
+                        const mergedTags = [...new Set([...(formData.tags || []), ...specificTags])];
+
                         const productData = {
                             ...formData,
                             id: `prod_${Date.now()}_${globalIndex}`,
                             name: stagedImages.length > 1 ? `${baseName} ${globalIndex + 1}` : baseName,
                             images: [url],
+                            tags: mergedTags,
                             createdAt: Date.now()
                         };
                         newProducts.push(productData);
@@ -1190,12 +1197,46 @@ export default function ProductManager() {
                                         </div>
                                         <div className="mini-staged-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px' }}>
                                             {/* PERFORMANCE FIX: Limit rendered preview to 40 items (v7.0.0) */}
-                                            {stagedImages.slice(0, 40).map(img => (
-                                                <div key={img.id} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                                                    <img src={img.preview || img.data} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="staged-mini" />
-                                                    <button type="button" onClick={() => removeStagedImage(img.id)} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', width: '20px', height: '20px', borderRadius: '50%', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-                                                </div>
-                                            ))}
+                                            {/* PERFORMANCE FIX: Limit rendered preview to 40 items (v7.0.0) */
+                                                stagedImages.slice(0, 40).map(img => (
+                                                    <div key={img.id} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                                                        <img src={img.preview || img.data} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="staged-mini" />
+
+                                                        {/* Quick Tagging Overlay */}
+                                                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)' }}>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', marginBottom: '2px' }}>
+                                                                {(img.tags || []).map((t, i) => (
+                                                                    <span key={i} style={{ fontSize: '8px', background: 'var(--pink)', color: 'white', padding: '1px 3px', borderRadius: '4px' }}>{t}</span>
+                                                                ))}
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="+Tag"
+                                                                style={{ width: '100%', fontSize: '10px', padding: '2px 4px', border: '1px solid #ddd', borderRadius: '4px', background: 'rgba(255,255,255,0.9)' }}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        const val = e.target.value.trim();
+                                                                        if (val) {
+                                                                            setStagedImages(prev => prev.map(p => {
+                                                                                if (p.id === img.id) {
+                                                                                    const currentTags = p.tags || [];
+                                                                                    if (!currentTags.includes(val)) {
+                                                                                        return { ...p, tags: [...currentTags, val] };
+                                                                                    }
+                                                                                }
+                                                                                return p;
+                                                                            }));
+                                                                            e.target.value = '';
+                                                                        }
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+
+                                                        <button type="button" onClick={() => removeStagedImage(img.id)} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', width: '20px', height: '20px', borderRadius: '50%', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                                    </div>
+                                                ))}
                                             {stagedImages.length > 40 && (
                                                 <div style={{ aspectScale: '1/1', background: '#f0f0f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '0.7rem', fontWeight: 'bold', color: '#999', border: '2px dashed #ddd' }}>
                                                     +{stagedImages.length - 40}<br />ẢNH KHÁC
