@@ -57,13 +57,13 @@
 
 .hero-card {
     padding: 3rem 2rem;
-    background: rgba(255, 255, 255, 0.4);
-    /* Slightly more transparent for glass effect */
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(0, 0, 0, 0.25);
+    /* Darker and more transparent */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 35px;
-    box-shadow: 0 15px 40px rgba(139, 90, 60, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .hero.night-theme .hero-card {
@@ -73,17 +73,18 @@
 }
 
 .hero-subtitle {
-    /* font-family: 'Dancing Script', cursive; Removed to use global font */
     font-size: clamp(1.5rem, 3vw, 2.5rem);
-    color: var(--dark-brown);
+    color: var(--white);
+    /* White for dark glass */
     margin-bottom: 1.5rem;
     font-weight: 700;
-    text-shadow: none;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .hero-description {
     font-size: clamp(1rem, 2vw, 1.2rem);
-    color: var(--brown);
+    color: rgba(255, 255, 255, 0.9);
+    /* Lighter text for dark glass */
     margin-bottom: 2rem;
     line-height: 1.8;
 }
@@ -106,7 +107,8 @@
     gap: 0.8rem;
     font-size: 1rem;
     font-weight: 600;
-    color: var(--dark-brown);
+    color: white;
+    /* White for dark box */
 }
 
 .distance-info {
