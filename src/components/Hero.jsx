@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import './Hero.css';
 
-export default function Hero() {
+export default function Hero({ isDayTime, setIsDayTime }) {
   const [logoUrl, setLogoUrl] = useState('');
   const [distance, setDistance] = useState(null);
-  const [isDayTime, setIsDayTime] = useState(() => {
-    const currentHour = new Date().getHours();
-    return currentHour >= 6 && currentHour < 18;
-  });
+  // Remove local isDayTime state
   const bakeryCoords = { lat: 10.817505, lng: 106.634351 }; // Estimated coordinates for 66/17 Tổ 23 KP.2A
 
   useEffect(() => {

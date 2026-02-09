@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './EntranceOverlay.css';
 
-const EntranceOverlay = ({ onEnter, isDayTime }) => {
+const EntranceOverlay = ({ onEnter, isDayTime, setIsDayTime }) => {
 
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const [isExiting, setIsExiting] = useState(false);
@@ -60,6 +60,18 @@ const EntranceOverlay = ({ onEnter, isDayTime }) => {
                                 className="enter-shop-btn"
                             />
                         </div>
+
+                        {/* Add Day/Night Toggle for Entrance */}
+                        <button
+                            className="entrance-theme-toggle"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsDayTime(!isDayTime);
+                            }}
+                            title={isDayTime ? "Chuyển sang Đêm" : "Chuyển sang Ngày"}
+                        >
+                            {isDayTime ? '☀️ Chuyển sang Đêm' : '🌙 Chuyển sang Ngày'}
+                        </button>
                     </div>
                 </div>
             )}

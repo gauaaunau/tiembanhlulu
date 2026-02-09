@@ -78,7 +78,8 @@ function App() {
             {showEntrance && (
               <EntranceOverlay
                 onEnter={() => setShowEntrance(false)}
-                isDayTime={isDayTime} // Pass state down
+                isDayTime={isDayTime}
+                setIsDayTime={setIsDayTime} // Pass setter
               />
             )}
 
@@ -90,7 +91,7 @@ function App() {
                 // Add padding to ensure content doesn't stick to edges if needed, 
                 // but components like Hero handle their own layout.
               }}>
-                <Hero />
+                <Hero isDayTime={isDayTime} setIsDayTime={setIsDayTime} />
                 <TikTokSection />
                 <ProductGallery />
               </div>
