@@ -700,7 +700,7 @@
     width: auto;
     max-width: 90vw;
     /* Ensure it fits width */
-    max-height: 80vh;
+    max-height: 55vh;
     /* Ensure it fits height */
     aspect-ratio: auto;
     /* Remove forced square */
@@ -898,7 +898,7 @@
 .contact-logo-container.hotline {
     background: #4caf50;
     color: white;
-    padding: 18px;
+    padding: 22px;
     /* Increase padding to shrink icon */
 }
 
