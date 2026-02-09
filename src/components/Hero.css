@@ -73,7 +73,7 @@
 }
 
 .hero-subtitle {
-    font-family: 'Dancing Script', cursive;
+    /* font-family: 'Dancing Script', cursive; Removed to use global font */
     font-size: clamp(1.5rem, 3vw, 2.5rem);
     color: var(--dark-brown);
     margin-bottom: 1.5rem;

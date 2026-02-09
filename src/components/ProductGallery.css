@@ -99,7 +99,7 @@
     background: transparent;
     outline: none;
     font-size: 1.1rem;
-    font-family: var(--font-body);
+    /* font-family: var(--font-body); Inherit global */
     font-weight: 600;
     color: var(--brown);
     padding: 8px 0;
