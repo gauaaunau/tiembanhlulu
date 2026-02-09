@@ -477,7 +477,7 @@ export default function ProductGallery() {
             {/* Lightbox Carousel Modal */}
             {selectedProduct && (
                 <div className="lightbox-overlay" onClick={closeLightbox}>
-                    <button className="lightbox-close" onClick={closeLightbox}>✕</button>
+                    {/* Global close button removed, moved to card */}
 
                     <div className="carousel-window">
                         <div
@@ -500,6 +500,14 @@ export default function ProductGallery() {
                                     <div className="carousel-card-wrapper" onClick={(e) => e.stopPropagation()}>
                                         <div className="carousel-card" onMouseMove={handleMouseMove}>
                                             <img src={img} alt={`${selectedProduct.name} ${i}`} className="carousel-img" />
+                                            {/* Close button inside card for "next to image" placement */}
+                                            <button
+                                                className="lightbox-close-card"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    closeLightbox();
+                                                }}
+                                            >✕</button>
                                         </div>
 
                                         {i === currentImgIndex && (
