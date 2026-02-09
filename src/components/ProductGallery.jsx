@@ -27,7 +27,7 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
             <div className="product-info">
                 <h3 className="product-name">
                     {product.name.match(/^Bánh \d+$/) ? product.name.replace('Bánh ', 'Mã: ') : product.name}
-                    <div className="product-tags-row">
+                    <span className="product-tags-row">
                         {(product.tags || [])
                             .filter(tag => {
                                 if (tag.includes('_') && !isNaN(tag.split('_')[0])) return false;
@@ -37,7 +37,7 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
                             .map((tag, i) => (
                                 <span key={i} className="product-tag-badge">#{tag}</span>
                             ))}
-                    </div>
+                    </span>
                 </h3>
                 <p className="product-description">{product.description}</p>
                 <div className="product-footer">
@@ -441,7 +441,7 @@ export default function ProductGallery() {
                         </div>
                     ) : (
                         /* Optimized Grouped View with Pagination */
-                        paginatedGroups.map((cat, groupIndex) => (
+                        paginatedGroups.map((cat) => (
                             <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
                                 <h3 className="section-title" style={{
                                     fontSize: '1.8rem',

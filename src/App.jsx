@@ -24,6 +24,23 @@ function App() {
       setIsDayTime(hour >= 6 && hour < 18);
     }, 60000);
 
+    // GLOBAL ZOOM LOCK (v10.2.0)
+    const blockZoom = (e) => {
+      if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    const blockWheel = (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    };
+
+    // Passive: false is required to preventDefault
+    document.addEventListener('touchstart', blockZoom, { passive: false });
+    document.addEventListener('wheel', blockWheel, { passive: false });
+
     // Delay loading main content by 3 seconds
     const timer = setTimeout(() => {
       setIsMainContentReady(true);
@@ -32,6 +49,8 @@ function App() {
     return () => {
       clearInterval(interval);
       clearTimeout(timer);
+      document.removeEventListener('touchstart', blockZoom);
+      document.removeEventListener('wheel', blockWheel);
     };
   }, []);
 
