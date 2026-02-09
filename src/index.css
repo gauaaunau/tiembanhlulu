@@ -3,6 +3,16 @@
   line-height: 1.5;
   font-weight: 400;
 
+  /* Color Palette */
+  --pink: #ff69b4;
+  --light-pink: #fff0f5;
+  --dark-brown: #3e2723;
+  --brown: #5d4037;
+  --beige: #f5f5dc;
+  --peach: #ffdab9;
+  --white: #ffffff;
+  --font-body: Inter, system-ui, sans-serif;
+
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
