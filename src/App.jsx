@@ -11,11 +11,8 @@ function App() {
   const [showEntrance, setShowEntrance] = useState(true);
   const [isMainContentReady, setIsMainContentReady] = useState(false);
 
-  // Day/Night Logic
-  const [isDayTime, setIsDayTime] = useState(() => {
-    const currentHour = new Date().getHours();
-    return currentHour >= 6 && currentHour < 18;
-  });
+  // Day/Night Logic - LOCKED TO DAY PER USER REQUEST
+  const isDayTime = true;
 
   useEffect(() => {
     // Delay loading main content by 3 seconds to prioritize Entrance Overlay
@@ -28,11 +25,7 @@ function App() {
   // Background Image Path
   const getBackgroundImage = () => {
     const isMobile = window.innerWidth <= 768;
-    if (isDayTime) {
-      return isMobile ? '/bakery-day-mobile.jpg' : '/bakery-day.jpg';
-    } else {
-      return isMobile ? '/bakery-night-mobile.jpg' : '/bakery-night.jpg';
-    }
+    return isMobile ? '/bakery-day-mobile.jpg' : '/bakery-day.jpg';
   };
 
 
@@ -78,8 +71,6 @@ function App() {
             {showEntrance && (
               <EntranceOverlay
                 onEnter={() => setShowEntrance(false)}
-                isDayTime={isDayTime}
-                setIsDayTime={setIsDayTime} // Pass setter
               />
             )}
 
@@ -88,10 +79,8 @@ function App() {
               <div className="main-content-glass" style={{
                 position: 'relative',
                 zIndex: 1,
-                // Add padding to ensure content doesn't stick to edges if needed, 
-                // but components like Hero handle their own layout.
               }}>
-                <Hero isDayTime={isDayTime} setIsDayTime={setIsDayTime} />
+                <Hero />
                 <TikTokSection />
                 <ProductGallery />
               </div>
