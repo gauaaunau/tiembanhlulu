@@ -7,31 +7,54 @@ const EntranceOverlay = ({ onEnter }) => {
         return currentHour >= 6 && currentHour < 18;
     });
 
-    const [isExiting, setIsExiting] = useState(false);
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-    const handleEnter = () => {
-        setIsExiting(true);
-        setTimeout(() => {
-            onEnter();
-        }, 800); // Wait for exit animation
-    };
+    useEffect(() => {
+        const bgImage = new Image();
+        const isMobile = window.innerWidth <= 768;
+        let imageUrl = '';
+
+        if (isDayTime) {
+            imageUrl = isMobile ? '/bakery-day-mobile.jpg?v=3' : '/bakery-day.jpg?v=3';
+        } else {
+            imageUrl = isMobile ? '/bakery-night-mobile.jpg?v=3' : '/bakery-night.jpg?v=3';
+        }
+
+        bgImage.src = imageUrl;
+        bgImage.onload = () => {
+            setIsImageLoaded(true);
+        };
+    }, [isDayTime]);
 
     return (
-        <div className={`entrance-overlay ${isDayTime ? 'day-theme' : 'night-theme'} ${isExiting ? 'fade-out' : ''}`}>
-            <div className="entrance-content">
-                <div className="entrance-card">
-                    <h1 className="entrance-title">Tiệm Bánh LuLu</h1>
-                    <p className="entrance-subtitle">Chào mừng bạn đến với thế giới ngọt ngào!</p>
+        <div
+            className={`entrance-overlay ${isDayTime ? 'day-theme' : 'night-theme'} ${isExiting ? 'fade-out' : ''}`}
+            style={{
+                opacity: isImageLoaded ? 1 : 1, // Always visible container
+                backgroundColor: isImageLoaded ? 'transparent' : '#000', // Black bg while loading
+                backgroundImage: isImageLoaded ? undefined : 'none' // No image while loading
+            }}
+        >
+            {/* Show nothing or a simple spinner while loading image? 
+                User said "Wait for image to finish loading". 
+                For now, just black screen until image pops in. 
+            */}
 
-                    <div className="enter-shop-container" onClick={handleEnter}>
-                        <img
-                            src="/enter-shop-button.png"
-                            alt="Vào Tiệm"
-                            className="enter-shop-btn"
-                        />
+            {isImageLoaded && (
+                <div className="entrance-content">
+                    <div className="entrance-card">
+                        {/* Text removed per request */}
+
+                        <div className="enter-shop-container" onClick={handleEnter}>
+                            <img
+                                src="/enter-shop-button.png"
+                                alt="Vào Tiệm"
+                                className="enter-shop-btn"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
