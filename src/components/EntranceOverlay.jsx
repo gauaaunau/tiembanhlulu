@@ -28,10 +28,23 @@ const EntranceOverlay = ({ onEnter }) => {
             imageUrl = isMobile ? '/bakery-night-mobile.jpg?v=3' : '/bakery-night.jpg?v=3';
         }
 
-        bgImage.src = imageUrl;
         bgImage.onload = () => {
             setIsImageLoaded(true);
         };
+
+        bgImage.onerror = () => {
+            // Fallback if image fails, still show content but maybe without bg or let css handle it
+            setIsImageLoaded(true);
+        };
+
+        bgImage.src = imageUrl;
+
+        // Fallback safety timer in case onload never fires
+        const timer = setTimeout(() => {
+            setIsImageLoaded(true);
+        }, 2000);
+
+        return () => clearTimeout(timer);
     }, [isDayTime]);
 
     return (
