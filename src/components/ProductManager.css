@@ -25,7 +25,7 @@
     border: 3px solid var(--pink) !important;
     border-radius: 20px !important;
     background: white !important;
-    font-family: var(--font-body);
+    /* font-family: var(--font-body); */
     font-size: 1.05rem;
     color: var(--brown);
     transition: all 0.3s ease;
