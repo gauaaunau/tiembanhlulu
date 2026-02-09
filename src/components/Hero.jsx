@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Hero.css';
 
-export default function Hero({ isDayTime, setIsDayTime }) {
+export default function Hero() {
   const [logoUrl, setLogoUrl] = useState('');
   const [distance, setDistance] = useState(null);
   // Remove local isDayTime state
@@ -39,7 +39,7 @@ export default function Hero({ isDayTime, setIsDayTime }) {
   };
 
   return (
-    <section className={`hero ${isDayTime ? 'day-theme' : 'night-theme'}`}>
+    <section className="hero day-theme">
       <div className="hero-content">
         <div className="hero-card">
           {logoUrl && (
@@ -94,16 +94,7 @@ export default function Hero({ isDayTime, setIsDayTime }) {
 
           </div>
 
-          <div className="theme-toggle-container">
-            <button
-              className="theme-toggle-btn"
-              onClick={() => setIsDayTime(!isDayTime)}
-              title={isDayTime ? "Chuyển sang Đêm" : "Chuyển sang Ngày"}
-            >
-              <span className="toggle-icon">{isDayTime ? '☀️' : '🌙'}</span>
-              <span className="toggle-label">{isDayTime ? 'Ban Ngày' : 'Ban Đêm'}</span>
-            </button>
-          </div>
+
         </div>
       </div>
     </section>
