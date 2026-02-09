@@ -36,9 +36,8 @@ const EntranceOverlay = ({ onEnter }) => {
 
     return (
         <div
-            className={`entrance-overlay ${isDayTime ? 'day-theme' : 'night-theme'} ${isExiting ? 'fade-out' : ''}`}
+            className={`entrance-overlay ${isDayTime ? 'day-theme' : 'night-theme'} ${isExiting ? 'fade-out' : ''} ${isImageLoaded ? 'loaded' : ''}`}
             style={{
-                opacity: isImageLoaded ? 1 : 1, // Always visible container
                 backgroundColor: isImageLoaded ? 'transparent' : '#000', // Black bg while loading
                 backgroundImage: isImageLoaded ? undefined : 'none' // No image while loading
             }}
