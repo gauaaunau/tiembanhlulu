@@ -4,7 +4,6 @@ import TikTokSection from './components/TikTokSection';
 import ProductGallery from './components/ProductGallery';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
-import HangingDecor from './components/HangingDecor';
 
 function App() {
   return (
@@ -12,7 +11,6 @@ function App() {
       <Routes>
         <Route path="/" element={
           <div className="app">
-            <HangingDecor />
             <Hero />
             <TikTokSection />
             <ProductGallery />
