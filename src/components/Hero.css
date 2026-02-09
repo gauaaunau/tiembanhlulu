@@ -201,11 +201,48 @@
     }
 }
 
+/* Button Styles */
+.btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--pink);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+    border: 2px solid white;
+}
+
+.btn-primary:hover {
+    background: var(--pink-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 105, 180, 0.6);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+    .hero {
+        padding: 1rem;
+        /* Reduce padding to prevent overflow */
+    }
+
     .hero-card {
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem;
+        /* Compact card padding */
         width: 100%;
+        margin: 0;
+        /* Reset margin */
+        box-sizing: border-box;
+        /* Ensure padding includes border */
     }
 
     .logo-image-circular {

@@ -24,8 +24,7 @@
     margin-bottom: 2rem;
     font-weight: 800;
     text-align: center;
-    text-shadow: 2px 2px 0px var(--pink), 4px 4px 10px rgba(0, 0, 0, 0.2);
-    /* Pop effect */
+    /* text-shadow removed */
     letter-spacing: 1px;
 }
 
@@ -355,7 +354,6 @@
     justify-content: center !important;
     color: var(--white) !important;
     /* Force white */
-    text-shadow: 2px 2px 0px var(--pink), 3px 3px 8px rgba(0, 0, 0, 0.15) !important;
     font-size: 2.2rem !important;
     /* Adjust for new font */
 }
@@ -619,6 +617,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    /* More visible bg */
 }
 
 .nav-arrow-fixed {
@@ -698,10 +698,10 @@
 /* LIGHTBOX: Adjust to natural aspect ratio (v7.1.0) */
 .carousel-card {
     width: auto;
-    max-width: 100%;
-    /* Reduced height to prevent cutoff on smaller screens */
-    max-height: 50vh;
-    /* Limit height to prevent overflow on mobile */
+    max-width: 90vw;
+    /* Ensure it fits width */
+    max-height: 80vh;
+    /* Ensure it fits height */
     aspect-ratio: auto;
     /* Remove forced square */
     background: transparent;
@@ -871,7 +871,8 @@
 .contact-logo-container.hotline {
     background: #4caf50;
     color: white;
-    padding: 12px;
+    padding: 18px;
+    /* Increase padding to shrink icon */
 }
 
 
@@ -922,7 +923,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    /* text-shadow removed */
 }
 
 .contact-item:hover {
