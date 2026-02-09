@@ -93,19 +93,7 @@ export default function Hero() {
               Chỉ Đường Đến Tiệm
             </a>
 
-            {/* Nút VÀO TIỆM mới */}
-            <div className="enter-shop-container" onClick={() => {
-              const gallery = document.querySelector('.gallery');
-              if (gallery) {
-                gallery.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}>
-              <img
-                src="/enter-shop-button.png"
-                alt="Vào Tiệm"
-                className="enter-shop-btn"
-              />
-            </div>
+
 
           </div>
 

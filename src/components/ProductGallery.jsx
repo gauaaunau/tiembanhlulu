@@ -298,7 +298,8 @@ export default function ProductGallery() {
         ? groupedProducts.slice((currentPage - 1) * GROUPS_PER_PAGE, currentPage * GROUPS_PER_PAGE)
         : [];
 
-    if (isLoading) return <LoadingScreen />;
+    // LOADING SCREEN REMOVED - using EntranceOverlay instead
+    // if (isLoading) return <LoadingScreen />;
 
     return (
         <section className="gallery" ref={galleryRef}>
