@@ -8,6 +8,14 @@ const EntranceOverlay = ({ onEnter }) => {
     });
 
     const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const [isExiting, setIsExiting] = useState(false);
+
+    const handleEnter = () => {
+        setIsExiting(true);
+        setTimeout(() => {
+            onEnter();
+        }, 800);
+    };
 
     useEffect(() => {
         const bgImage = new Image();
