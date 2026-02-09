@@ -3,18 +3,24 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* Color Palette */
-  --pink: #ff69b4;
+  /* Pastel Color Palette */
+  --pink: #ffb7b2;
+  /* Soft pastel pink */
+  --pink-hover: #ff9aa2;
   --light-pink: #fff0f5;
-  --dark-brown: #3e2723;
-  --brown: #5d4037;
-  --beige: #f5f5dc;
-  --peach: #ffdab9;
+  --dark-brown: #4a3b32;
+  /* Softer dark brown */
+  --brown: #795548;
+  --beige: #fdfbf7;
   --white: #ffffff;
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+
   --font-body: Inter, system-ui, sans-serif;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color: #4a3b32;
+  /* Default text color to dark brown */
   background-color: #242424;
 
   font-synthesis: none;

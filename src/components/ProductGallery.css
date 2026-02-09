@@ -362,26 +362,25 @@
 }
 
 
-/* Cute Card */
+/* Pastel Glass Card */
 .cute-card {
-    background: #ffffff !important;
-    /* Force white background */
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 25px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    /* Stronger shadow */
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
     position: relative;
     overflow: hidden;
-    border: 3px solid #f0f0f0;
-    /* Distinct border */
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 2px solid var(--glass-border);
+    /* White glass border */
+    transition: all 0.3s ease;
 }
 
 @media (hover: hover) {
     .cute-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(255, 183, 178, 0.2);
         border-color: var(--pink);
-        /* Pink border on hover */
     }
 }
 
@@ -393,12 +392,12 @@
 @keyframes popIn {
     0% {
         opacity: 0;
-        transform: scale(0.5) rotate(-5deg);
+        transform: scale(0.95);
     }
 
     100% {
         opacity: 1;
-        transform: scale(1) rotate(0deg);
+        transform: scale(1);
     }
 }
 
@@ -410,16 +409,16 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #fdfbf7;
-    /* Light beige for image bg */
+    background: transparent;
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .cake-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: bottom center;
-    transition: transform 0.4s ease;
+    object-position: center;
+    transition: transform 0.5s ease;
 }
 
 .product-badge {
@@ -427,35 +426,37 @@
 }
 
 .product-tags-row {
-    padding: 0.8rem 1.5rem 0.5rem;
+    padding: 0.8rem 1.2rem 0.5rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    background: #ffffff;
+    gap: 8px;
+    background: transparent;
+    /* Transparent to let card glass show */
     position: relative;
     z-index: 2;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: none;
 }
 
 .product-tag-badge {
     font-size: 0.75rem;
-    padding: 4px 12px;
-    background: #fff0f5;
-    /* Light pink background */
-    color: var(--pink);
-    /* Pink text */
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.5);
+    /* Subtle white fill */
+    color: #333;
+    /* Black text */
     border-radius: 20px;
-    border: 1px solid var(--pink);
-    font-weight: 700;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Very subtle border */
+    font-weight: 600;
     transition: all 0.2s;
-    text-shadow: none;
-    /* Ensure no text shadow blurs it */
+    backdrop-filter: blur(4px);
 }
 
 .product-tag-badge:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px);
     background: var(--pink);
     color: white;
+    border-color: var(--pink);
 }
 
 .album-badge {
@@ -478,22 +479,24 @@
 
 .product-info {
     padding: 1.5rem;
-    background: #ffffff;
-    border-top: 1px solid #f5f5f5;
+    background: transparent;
+    /* Allow glass card bg */
+    border-top: none;
 }
 
 .product-name {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     margin-bottom: 0.5rem;
     color: var(--dark-brown);
     font-weight: 800;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 .product-description {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #666;
-    margin-bottom: 1.5rem;
+    /* Softer gray */
+    margin-bottom: 1.2rem;
     line-height: 1.5;
 }
 
@@ -501,29 +504,31 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.8rem;
+    margin-top: auto;
 }
 
 .product-price {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--pink);
-    background: #fff0f5;
-    /* Light pink bg */
-    padding: 8px 18px;
-    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--brown);
+    /* Dark brown for price */
+    background: rgba(255, 255, 255, 0.5);
+    padding: 6px 16px;
+    border-radius: 12px;
     box-shadow: none;
-    border: 2px solid rgba(255, 126, 179, 0.3);
+    border: 1px solid var(--glass-border);
     display: inline-flex;
     align-items: center;
     gap: 5px;
 }
 
 .btn-add {
-    padding: 0.7rem 1.5rem;
+    padding: 0.7rem 2rem;
     background: var(--pink);
-    color: var(--white);
-    border: none;
+    color: white;
+    border: 2px solid white;
+    /* Pastel button with white border */
     border-radius: 50px;
     font-weight: 700;
     font-family: var(--font-body);
@@ -531,7 +536,7 @@
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
-    box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 183, 178, 0.4);
     transition: all 0.2s;
     position: relative;
     z-index: 10;
@@ -539,15 +544,16 @@
 
 @media (hover: hover) {
     .btn-add:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(255, 105, 180, 0.6);
-        background: #ff4d88;
+        transform: translateY(-2px);
+        background: var(--pink-hover);
+        box-shadow: 0 6px 20px rgba(255, 183, 178, 0.6);
+        border-color: white;
     }
 }
 
 .btn-add:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 10px rgba(255, 105, 180, 0.3);
+    box-shadow: 0 2px 10px rgba(255, 183, 178, 0.3);
 }
 
 @media (max-width: 768px) {
