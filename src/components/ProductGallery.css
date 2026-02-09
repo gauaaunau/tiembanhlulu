@@ -421,7 +421,8 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
+    /* Placeholder shimmer */
     border-bottom: 1px solid var(--glass-border);
 }
 
@@ -430,7 +431,7 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
-    transition: transform 0.5s ease;
+    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .product-badge {
@@ -497,17 +498,17 @@
 }
 
 .product-name {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    color: white;
+    /* White for dark glass */
     margin-bottom: 0.5rem;
-    color: var(--dark-brown);
-    font-weight: 800;
-    letter-spacing: -0.3px;
+    font-weight: 700;
 }
 
 .product-description {
-    font-size: 0.9rem;
-    color: #666;
-    /* Softer gray */
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    /* Lighter gray for dark background */
     margin-bottom: 1.2rem;
     line-height: 1.5;
 }
