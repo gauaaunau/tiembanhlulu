@@ -343,13 +343,14 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    /* Adjusted for better fit */
-    gap: 1.5rem;
-    /* Reduced gap for mobile fit */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    /* Increased min-width for larger cards */
+    gap: 2rem;
+    /* Larger gap for premium feel */
     justify-items: center;
     width: 100%;
-    padding: 0 1rem;
+    padding: 0;
+    /* Let container handle padding */
     box-sizing: border-box;
 }
 
