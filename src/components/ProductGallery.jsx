@@ -498,16 +498,16 @@ export default function ProductGallery() {
                                     }}
                                 >
                                     <div className="carousel-card-wrapper" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                            className="lightbox-close-card"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                closeLightbox();
+                                            }}
+                                        >✕</button>
+
                                         <div className="carousel-card" onMouseMove={handleMouseMove}>
                                             <img src={img} alt={`${selectedProduct.name} ${i}`} className="carousel-img" />
-                                            {/* Close button inside card for "next to image" placement */}
-                                            <button
-                                                className="lightbox-close-card"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    closeLightbox();
-                                                }}
-                                            >✕</button>
                                         </div>
 
                                         {i === currentImgIndex && (
