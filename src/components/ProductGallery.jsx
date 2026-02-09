@@ -311,7 +311,7 @@ export default function ProductGallery() {
                     ></path>
                 </svg>
             </div>
-            <div className="gallery-container" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="gallery-container glass-panel" style={{ position: 'relative', zIndex: 1, padding: '2rem', marginTop: '1rem' }}>
                 <h2 className="gallery-title">Mẫu Bánh</h2>
                 <div className="gallery-divider"></div>
 

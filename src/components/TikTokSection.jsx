@@ -131,7 +131,7 @@ export default function TikTokSection() {
     if (isLoading || videos.every(v => !v)) return null;
 
     return (
-        <section className="tiktok-section">
+        <section className="tiktok-section glass-panel" style={{ padding: '2rem', margin: '2rem auto', maxWidth: '1200px' }}>
             <div className="tiktok-grid">
                 {videos.map((video, index) => (
                     <div
