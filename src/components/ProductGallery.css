@@ -714,19 +714,13 @@
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     border: 3px solid rgba(255, 255, 255, 0.8);
-    cursor: zoom-in;
     transition: transform 0.3s ease;
 }
 
-/* Controlled zoom-in state */
-.lightbox-img:active {
-    transform: scale(1.5);
-    z-index: 100;
-}
-
 @media (max-width: 768px) {
-    .lightbox-img:active {
-        transform: scale(2);
+    * {
+        touch-action: pan-x pan-y;
+        /* Disable browser pinch zoom */
     }
 }
 

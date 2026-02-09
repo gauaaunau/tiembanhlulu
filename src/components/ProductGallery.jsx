@@ -73,6 +73,7 @@ export default function ProductGallery() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const galleryRef = useRef(null);
+    const lightboxCardRef = useRef(null);
 
     useEffect(() => {
         console.log("ProductGallery v6.1.6 - Live");
@@ -507,8 +508,15 @@ export default function ProductGallery() {
 
             {/* Lightbox Carousel Modal v9.0.0 */}
             {selectedProduct && (
-                <div className="lightbox-overlay" onClick={closeLightbox}>
-                    {/* Fixed Close Button - Top Right of screen */}
+                <div
+                    className="lightbox-overlay"
+                    onClick={(e) => {
+                        // Better sensitivity: If click target is NOT inside the card, close.
+                        if (lightboxCardRef.current && !lightboxCardRef.current.contains(e.target)) {
+                            closeLightbox();
+                        }
+                    }}
+                >
                     <button
                         className="lightbox-close-fixed"
                         onClick={closeLightbox}
@@ -527,16 +535,11 @@ export default function ProductGallery() {
                                     <div
                                         key={i}
                                         className={`carousel-slide ${i === currentImgIndex ? 'active' : ''}`}
-                                        onClick={(e) => {
-                                            // Only handle navigation if clicking the slide but NOT the card
-                                            if (i !== currentImgIndex) {
-                                                e.stopPropagation();
-                                                setCurrentImgIndex(i);
-                                            }
-                                            // Otherwise let click bubble to overlay to close
-                                        }}
                                     >
-                                        <div className="modern-lightbox-card" onClick={(e) => e.stopPropagation()}>
+                                        <div
+                                            ref={i === currentImgIndex ? lightboxCardRef : null}
+                                            className="modern-lightbox-card"
+                                        >
                                             <div className="lightbox-image-container">
                                                 <img src={img} alt={`${selectedProduct.name} ${i}`} className="lightbox-img" />
                                             </div>
