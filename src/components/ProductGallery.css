@@ -767,19 +767,20 @@
 .external-price {
     font-size: 2rem;
     font-weight: 800;
-    color: #fff;
-    background: rgba(255, 105, 180, 0.85);
-    /* Pink background for contrast */
+    color: var(--pink);
+    /* Pastel pink text */
+    background: rgba(255, 255, 255, 0.9);
+    /* White glass background */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     padding: 12px 30px;
     border-radius: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border: 2px solid white;
+    text-shadow: none;
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 5px 20px rgba(255, 20, 147, 0.3);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 .external-price::after {
