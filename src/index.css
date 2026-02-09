@@ -1,5 +1,13 @@
+@font-face {
+  font-family: 'iCiel Be Cool';
+  src: url('/fonts/iCielBeCool-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'iCiel Be Cool', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -16,7 +24,7 @@
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-bg: rgba(255, 255, 255, 0.85);
 
-  --font-body: Inter, system-ui, sans-serif;
+  --font-body: 'iCiel Be Cool', system-ui, sans-serif;
 
   color-scheme: light dark;
   color: #4a3b32;
