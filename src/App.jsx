@@ -41,7 +41,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={
-          <div className="app">
+          <div className="app" style={{ width: '100%', minHeight: '100vh', position: 'relative' }}>
             {/* Fixed Background Layer */}
             {/* Fixed Background Layer */}
             <div
