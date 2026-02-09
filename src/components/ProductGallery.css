@@ -701,7 +701,11 @@
     max-width: 90vw;
     /* Ensure it fits width */
     max-height: 55vh;
-    /* Ensure it fits height */
+    /* Reduced to fit */
+    flex: 1;
+    /* Allow to shrink/grow */
+    min-height: 0;
+    /* Crucial for flex shrinking */
     aspect-ratio: auto;
     /* Remove forced square */
     background: transparent;
@@ -755,9 +759,13 @@
     /* Allow full width use */
     max-width: 800px;
     /* Increase max width slightly for landscape photos */
-    gap: 1.5rem;
-    height: 100%;
-    /* crucial for vertical centering */
+    gap: 0.5rem;
+    /* Reduced gap */
+    height: auto;
+    max-height: 90vh;
+    /* Constraint entire wrapper */
+    overflow: hidden;
+    /* Prevent overflow */
 }
 
 .carousel-img {
@@ -784,14 +792,19 @@
     color: white;
     text-align: center;
     background: rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
-    border-radius: 25px;
+    padding: 0.8rem;
+    /* Reduced padding */
+    border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    /* Don't shrink info */
 }
 
 .carousel-external-info h3 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    /* Reduced font size */
+    margin-bottom: 0.5rem;
+    /* Reduced margin */
     color: var(--pink);
 }
 
@@ -803,7 +816,8 @@
 }
 
 .external-price {
-    font-size: 2rem;
+    font-size: 1.3rem;
+    /* Reduced font size */
     font-weight: 800;
     color: var(--pink);
     /* Pastel pink text */
@@ -811,8 +825,9 @@
     /* White glass background */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    padding: 12px 30px;
-    border-radius: 20px;
+    padding: 8px 20px;
+    /* Reduced padding */
+    border-radius: 15px;
     border: 2px solid white;
     text-shadow: none;
     display: flex;
