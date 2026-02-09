@@ -35,6 +35,16 @@ function App() {
     }
   };
 
+  // Background Image Path
+  const getBackgroundImage = () => {
+    const isMobile = window.innerWidth <= 768;
+    if (isDayTime) {
+      return isMobile ? '/bakery-day-mobile.jpg' : '/bakery-day.jpg';
+    } else {
+      return isMobile ? '/bakery-night-mobile.jpg' : '/bakery-night.jpg';
+    }
+  };
+
   return (
     <BrowserRouter>
       <Routes>

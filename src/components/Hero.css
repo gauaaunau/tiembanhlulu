@@ -57,13 +57,13 @@
 
 .hero-card {
     padding: 3rem 2rem;
-    background: rgba(255, 255, 255, 0.6);
-    /* More opaque white for better contrast */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.4);
+    /* Slightly more transparent for glass effect */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border-radius: 35px;
     box-shadow: 0 15px 40px rgba(139, 90, 60, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .hero.night-theme .hero-card {
