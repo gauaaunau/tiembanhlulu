@@ -17,27 +17,27 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: 100% 100%;
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     opacity: 0;
-    /* Start invisible */
+    will-change: opacity;
+    z-index: 1;
     transition: opacity 1.5s ease-out;
 }
 
 .entrance-bg.loaded {
     opacity: 1;
-    /* Fade in */
 }
 
 .entrance-bg.day-theme {
-    background-image: url('/bakery-day.jpg?v=3');
+    background-image: url('/bakery-day.jpg');
 }
 
 .entrance-bg.night-theme {
-    background-image: url('/bakery-night.jpg?v=3');
+    background-image: url('/bakery-night.jpg');
 }
 
 .entrance-overlay.fade-out {
@@ -55,6 +55,7 @@
     display: flex;
     justify-content: center;
     padding-bottom: 20px;
+    z-index: 10;
 }
 
 .entrance-card {
@@ -113,11 +114,11 @@
 
 @media (max-width: 768px) {
     .entrance-bg.day-theme {
-        background-image: url('/bakery-day-mobile.jpg?v=3');
+        background-image: url('/bakery-day-mobile.jpg');
     }
 
     .entrance-bg.night-theme {
-        background-image: url('/bakery-night-mobile.jpg?v=3');
+        background-image: url('/bakery-night-mobile.jpg');
     }
 
     .entrance-content {

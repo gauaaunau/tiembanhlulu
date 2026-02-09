@@ -23,9 +23,9 @@ const EntranceOverlay = ({ onEnter }) => {
         let imageUrl = '';
 
         if (isDayTime) {
-            imageUrl = isMobile ? '/bakery-day-mobile.jpg?v=3' : '/bakery-day.jpg?v=3';
+            imageUrl = isMobile ? '/bakery-day-mobile.jpg' : '/bakery-day.jpg';
         } else {
-            imageUrl = isMobile ? '/bakery-night-mobile.jpg?v=3' : '/bakery-night.jpg?v=3';
+            imageUrl = isMobile ? '/bakery-night-mobile.jpg' : '/bakery-night.jpg';
         }
 
         bgImage.onload = () => {
