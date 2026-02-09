@@ -32,6 +32,26 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <a
+                    href="/AdminLulucake/tools/bg-remover"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        display: 'inline-block',
+                        padding: '10px 20px',
+                        backgroundColor: '#9C27B0',
+                        color: 'white',
+                        textDecoration: 'none',
+                        borderRadius: '5px',
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}
+                >
+                    🪄 Công Cụ Tách Nền (Mới)
+                </a>
+            </div>
+
             <div className="admin-content" style={{ marginTop: '2rem' }}>
                 <ProductManager />
             </div>
