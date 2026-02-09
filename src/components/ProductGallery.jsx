@@ -414,15 +414,13 @@ export default function ProductGallery() {
                             <div key={cat.id} className="category-section" style={{ marginBottom: '3rem' }}>
                                 <h3 className="section-title" style={{
                                     fontSize: '1.8rem',
-                                    color: 'var(--brown)',
                                     marginBottom: '1.5rem',
                                     paddingLeft: '0',
                                     borderLeft: 'none',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center', // Center content
-                                    gap: '10px',
-                                    textShadow: '0 1px 2px rgba(255,255,255,0.8)'
+                                    gap: '10px'
                                 }}>
                                     ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({cat.items.length})</span>
                                 </h3>
