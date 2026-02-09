@@ -23,19 +23,7 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
                     <div className="album-badge">🖼️ {product.images.length} Ảnh</div>
                 )}
             </div>
-            {/* RESTORED TAGS PER USER REQUEST (Sanitized to hide internal IDs) */}
-            <div className="product-tags-row">
-                {(product.tags || [])
-                    .filter(tag => {
-                        // Hide internal IDs like "1770363107410_0.0907..."
-                        if (tag.includes('_') && !isNaN(tag.split('_')[0])) return false;
-                        if (!isNaN(tag) && tag.length > 8) return false;
-                        return true;
-                    })
-                    .map((tag, i) => (
-                        <span key={i} className="product-tag-badge">#{tag}</span>
-                    ))}
-            </div>
+
             <div className="product-info">
                 <h3 className="product-name">
                     {product.name.match(/^Bánh \d+$/) ? product.name.replace('Bánh ', 'Mã: ') : product.name}

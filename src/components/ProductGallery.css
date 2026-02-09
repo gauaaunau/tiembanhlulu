@@ -439,15 +439,11 @@
 }
 
 .product-tags-row {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 5px;
-    z-index: 10;
-    pointer-events: none;
-    /* Let clicks pass to card */
+    gap: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
 }
 
 .product-tag-badge {
