@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import './EntranceOverlay.css';
 
-const EntranceOverlay = ({ onEnter }) => {
-    const [isDayTime, setIsDayTime] = useState(() => {
-        const currentHour = new Date().getHours();
-        return currentHour >= 6 && currentHour < 18;
-    });
+const EntranceOverlay = ({ onEnter, isDayTime }) => {
 
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const [isExiting, setIsExiting] = useState(false);
