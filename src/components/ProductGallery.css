@@ -39,7 +39,8 @@
     position: relative;
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.85);
+    /* Increased opacity */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.8);
@@ -47,6 +48,34 @@
     padding: 8px 15px;
     box-shadow: 0 8px 32px rgba(255, 126, 179, 0.08);
     transition: all 0.3s ease;
+    z-index: 20;
+    /* Ensure on top */
+}
+
+/* ... */
+
+.btn-filter-all,
+.btn-toggle-themes {
+    /* ... */
+    background: var(--white);
+    /* Ensure solid background */
+    z-index: 10;
+    position: relative;
+}
+
+/* ... */
+
+.product-tags-row {
+    padding: 0.8rem 1.5rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.9);
+    /* Solidify background */
+    border-radius: 0 0 25px 25px;
+    /* Match card radius if needed, or just let it be part of card */
+    z-index: 2;
+    position: relative;
 }
 
 .search-input-wrapper:focus-within {
@@ -395,6 +424,8 @@
     flex-wrap: wrap;
     gap: 6px;
     background: var(--white);
+    position: relative;
+    z-index: 2;
 }
 
 .product-tag-badge {
@@ -496,6 +527,8 @@
     display: inline-block;
     box-shadow: 0 3px 0 var(--dark-brown);
     transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    z-index: 10;
 }
 
 @media (hover: hover) {
