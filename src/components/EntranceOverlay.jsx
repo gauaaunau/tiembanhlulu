@@ -14,6 +14,9 @@ const EntranceOverlay = ({ onEnter }) => {
     };
 
     useEffect(() => {
+        // Lock scroll while entrance is active
+        document.body.style.overflow = 'hidden';
+
         const bgImage = new Image();
         const isMobile = window.innerWidth <= 768;
         // Forced to Day per user request
@@ -33,7 +36,11 @@ const EntranceOverlay = ({ onEnter }) => {
             setIsImageLoaded(true);
         }, 2000);
 
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            // Restore scroll when overlay is gone
+            document.body.style.overflow = 'auto';
+        };
     }, []);
 
     return (
