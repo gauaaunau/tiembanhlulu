@@ -416,11 +416,13 @@ export default function ProductGallery() {
                                     fontSize: '1.8rem',
                                     color: 'var(--brown)',
                                     marginBottom: '1.5rem',
-                                    paddingLeft: '1rem',
-                                    borderLeft: '5px solid var(--pink)',
+                                    paddingLeft: '0',
+                                    borderLeft: 'none',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '10px'
+                                    justifyContent: 'center', // Center content
+                                    gap: '10px',
+                                    textShadow: '0 1px 2px rgba(255,255,255,0.8)'
                                 }}>
                                     ✨ {cat.name} <span style={{ fontSize: '1rem', opacity: 0.6 }}>({cat.items.length})</span>
                                 </h3>

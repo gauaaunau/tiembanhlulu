@@ -1,23 +1,19 @@
 .gallery {
     padding: 0 0 5rem 0;
-    background: linear-gradient(180deg,
-            var(--beige) 0%,
-            var(--peach) 100%);
+    /* Background removed for global fixed background */
     position: relative;
+    width: 100%;
 }
 
 .gallery .wave-top {
-    width: 100%;
-    line-height: 0;
-    margin-top: -5px;
-    /* Deeper overlap for shadow handling */
-    position: relative;
-    z-index: 5;
+    display: none;
+    /* Ensure wave is gone */
 }
 
 .gallery-container {
     max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
 }
 
 .gallery-title {
@@ -25,6 +21,10 @@
     color: var(--dark-brown);
     margin-bottom: 1.5rem;
     font-weight: 800;
+    text-align: center;
+    /* Center title */
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+    /* Add shadow for readability against glass */
 }
 
 /* SEARCH BAR STYLES (v5.2.0) */
@@ -339,8 +339,18 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    /* Adjusted for better fit */
     gap: 2.5rem;
+    justify-content: center;
+    /* Center grid items */
+    width: 100%;
+}
+
+/* Ensure Category Headers are centered too */
+.section-title {
+    text-align: center !important;
+    justify-content: center !important;
 }
 
 .empty-state {
