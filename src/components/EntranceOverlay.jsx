@@ -33,13 +33,13 @@ const EntranceOverlay = ({ onEnter }) => {
         };
 
         bgImage.onerror = () => {
-            // Fallback if image fails, still show content but maybe without bg or let css handle it
+            // Fallback if image fails
             setIsImageLoaded(true);
         };
 
         bgImage.src = imageUrl;
 
-        // Fallback safety timer in case onload never fires
+        // Fallback safety timer
         const timer = setTimeout(() => {
             setIsImageLoaded(true);
         }, 2000);
@@ -48,23 +48,15 @@ const EntranceOverlay = ({ onEnter }) => {
     }, [isDayTime]);
 
     return (
-        <div
-            className={`entrance-overlay ${isDayTime ? 'day-theme' : 'night-theme'} ${isExiting ? 'fade-out' : ''} ${isImageLoaded ? 'loaded' : ''}`}
-            style={{
-                backgroundColor: isImageLoaded ? 'transparent' : '#000', // Black bg while loading
-                backgroundImage: isImageLoaded ? undefined : 'none' // No image while loading
-            }}
-        >
-            {/* Show nothing or a simple spinner while loading image? 
-                User said "Wait for image to finish loading". 
-                For now, just black screen until image pops in. 
-            */}
+        <div className={`entrance-overlay ${isExiting ? 'fade-out' : ''}`}>
+            {/* Background Image Element - Fades in over black */}
+            <div
+                className={`entrance-bg ${isDayTime ? 'day-theme' : 'night-theme'} ${isImageLoaded ? 'loaded' : ''}`}
+            ></div>
 
             {isImageLoaded && (
                 <div className="entrance-content">
                     <div className="entrance-card">
-                        {/* Text removed per request */}
-
                         <div className="enter-shop-container" onClick={handleEnter}>
                             <img
                                 src="/enter-shop-button.png"
