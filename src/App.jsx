@@ -43,6 +43,7 @@ function App() {
         <Route path="/" element={
           <div className="app">
             {/* Fixed Background Layer */}
+            {/* Fixed Background Layer */}
             <div
               style={{
                 position: 'fixed',
@@ -53,8 +54,24 @@ function App() {
                 backgroundImage: `url(${getBackgroundImage()})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                zIndex: -1,
+                zIndex: -2, // Moved further back
                 transition: 'background-image 1s ease-in-out'
+              }}
+            />
+
+            {/* Global Glass Overlay */}
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                background: 'rgba(0, 0, 0, 0.2)', // Slight dark tint for contrast
+                backdropFilter: 'blur(8px)', // Global blur
+                WebkitBackdropFilter: 'blur(8px)',
+                zIndex: -1,
+                pointerEvents: 'none' // Let clicks pass through
               }}
             />
 
