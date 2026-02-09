@@ -697,30 +697,18 @@
 
 /* LIGHTBOX: Adjust to natural aspect ratio (v7.1.0) */
 .carousel-card {
-    width: auto;
-    max-width: 90vw;
-    /* Ensure it fits width */
-    max-height: 55vh;
-    /* Reduced to fit */
+    width: 100%;
     flex: 1;
-    /* Allow to shrink/grow */
     min-height: 0;
-    /* Crucial for flex shrinking */
-    aspect-ratio: auto;
-    /* Remove forced square */
-    background: transparent;
-    /* Remove white box if image is PNG/transparent */
-    border-radius: 20px;
-    position: relative;
-    /* box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8); Remove heavy shadow for cleaner look */
-    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
-    /* Better shadow for irregular shapes */
-    overflow: visible;
-    /* Allow shadow to bleed */
-    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    background: transparent;
+    border-radius: 20px;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+    overflow: visible;
+    border: none;
 }
 
 .lightbox-close-card {
@@ -755,17 +743,14 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    /* Allow full width use */
+    width: 90vw;
     max-width: 800px;
-    /* Increase max width slightly for landscape photos */
+    height: 90vh;
+    /* Fixed viewport constraint */
     gap: 0.5rem;
-    /* Reduced gap */
-    height: auto;
-    max-height: 90vh;
-    /* Constraint entire wrapper */
+    padding: 10px;
+    box-sizing: border-box;
     overflow: hidden;
-    /* Prevent overflow */
 }
 
 .carousel-img {
