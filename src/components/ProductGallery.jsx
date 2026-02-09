@@ -474,103 +474,77 @@ export default function ProductGallery() {
                 </div>
             </div>
 
-            {/* Lightbox Carousel Modal */}
+            {/* Lightbox Carousel Modal v9.0.0 */}
             {selectedProduct && (
                 <div className="lightbox-overlay" onClick={closeLightbox}>
-                    {/* Global close button removed, moved to card */}
+                    {/* Fixed Close Button - Top Right of screen */}
+                    <button
+                        className="lightbox-close-fixed"
+                        onClick={closeLightbox}
+                        title="Đóng (Esc)"
+                    >✕</button>
 
-                    <div className="carousel-window">
-                        <div
-                            className="carousel-track"
-                            style={{
-                                transform: `translateX(calc(50% - (var(--sw) / 2) - (${currentImgIndex} * var(--sw))))`
-                            }}
-                        >
-                            {(selectedProduct.images || [selectedProduct.image]).map((img, i) => (
-                                <div
-                                    key={i}
-                                    className={`carousel-slide ${i === currentImgIndex ? 'active' : ''}`}
-                                    onClick={(e) => {
-                                        if (i !== currentImgIndex) {
-                                            setCurrentImgIndex(i);
-                                            setShowContactOptions(false); // Reset reveal when changing image
-                                        }
-                                    }}
-                                >
-                                    <div className="carousel-card-wrapper" onClick={(e) => e.stopPropagation()}>
-                                        <button
-                                            className="lightbox-close-card"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                closeLightbox();
-                                            }}
-                                        >✕</button>
+                    <div className="lightbox-content-outer" onClick={(e) => e.stopPropagation()}>
+                        <div className="carousel-window">
+                            <div
+                                className="carousel-track"
+                                style={{
+                                    transform: `translateX(calc(50% - (var(--sw) / 2) - (${currentImgIndex} * var(--sw))))`
+                                }}
+                            >
+                                {(selectedProduct.images || [selectedProduct.image]).map((img, i) => (
+                                    <div
+                                        key={i}
+                                        className={`carousel-slide ${i === currentImgIndex ? 'active' : ''}`}
+                                        onClick={() => i !== currentImgIndex && setCurrentImgIndex(i)}
+                                    >
+                                        <div className="modern-lightbox-card">
+                                            <div className="lightbox-image-container">
+                                                <img src={img} alt={`${selectedProduct.name} ${i}`} className="lightbox-img" />
+                                            </div>
 
-                                        <div className="carousel-card" onMouseMove={handleMouseMove}>
-                                            <img src={img} alt={`${selectedProduct.name} ${i}`} className="carousel-img" />
-                                        </div>
-
-                                        {i === currentImgIndex && (
-                                            <div className="carousel-external-info">
-                                                <h3>
-                                                    {selectedProduct.name.match(/^Bánh \d+$/) ? selectedProduct.name.replace('Bánh ', 'Mã: ') : selectedProduct.name}
-                                                </h3>
-                                                <div className="external-footer">
-                                                    <span className="external-price">
-                                                        Giá: {(!selectedProduct.price || selectedProduct.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`)}
-                                                    </span>
+                                            {i === currentImgIndex && (
+                                                <div className="lightbox-caption">
+                                                    <h3 className="caption-title">
+                                                        {selectedProduct.name.match(/^Bánh \d+$/) ? selectedProduct.name.replace('Bánh ', 'Mã: ') : selectedProduct.name}
+                                                    </h3>
+                                                    <div className="caption-price">
+                                                        {(!selectedProduct.price || selectedProduct.price === 'Liên hệ') ? 'Liên hệ tiệm' : (isNaN(selectedProduct.price) ? selectedProduct.price : `${selectedProduct.price} cành`)}
+                                                    </div>
 
                                                     {!showContactOptions ? (
                                                         <button
-                                                            className="btn-reveal-contact"
-                                                            onClick={() => setShowContactOptions(true)}
+                                                            className="btn-reveal-caption"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setShowContactOptions(true);
+                                                            }}
                                                         >
-                                                            Đặt Ngay
+                                                            Liên hệ đặt bánh
                                                         </button>
                                                     ) : (
-                                                        <div className="order-options reveal-anim">
-                                                            <a href="https://zalo.me/0798341868" target="_blank" rel="noopener noreferrer" className="contact-item">
-                                                                <div className="contact-logo-container zalo">
-                                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/1200px-Icon_of_Zalo.svg.png" alt="Zalo" />
-                                                                </div>
-                                                                <span className="contact-label">Zalo</span>
-                                                            </a>
-                                                            <a href="https://m.me/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="contact-item">
-                                                                <div className="contact-logo-container facebook">
-                                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1200px-Facebook_Logo_%282019%29.png" alt="Facebook" />
-                                                                </div>
-                                                                <span className="contact-label">Facebook</span>
-                                                            </a>
-                                                            <a href="tel:0798341868" className="contact-item">
-                                                                <div className="contact-logo-container hotline">
-                                                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                                                        <path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" />
-                                                                    </svg>
-                                                                </div>
-                                                                <span className="contact-label">Hotline</span>
-                                                            </a>
+                                                        <div className="caption-contact-options reveal-anim">
+                                                            <a href="https://zalo.me/0798341868" target="_blank" rel="noopener noreferrer" className="mini-contact-btn zalo">Zalo</a>
+                                                            <a href="https://m.me/tiembanhlulu" target="_blank" rel="noopener noreferrer" className="mini-contact-btn facebook">Messenger</a>
+                                                            <a href="tel:0798341868" className="mini-contact-btn hotline">Gọi Hotline</a>
                                                         </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    {(selectedProduct.images?.length > 1) && (
-                        <div className="carousel-dots-fixed">
-                            {selectedProduct.images.map((_, i) => (
-                                <span
-                                    key={i}
-                                    className={`dot ${i === currentImgIndex ? 'active' : ''}`}
-                                    onClick={() => setCurrentImgIndex(i)}
-                                />
-                            ))}
-                        </div>
-                    )}
+                        {/* Navigation Arrows */}
+                        {(selectedProduct.images?.length > 1) && (
+                            <>
+                                <button className="nav-arrow-modern prev" onClick={(e) => { e.stopPropagation(); setCurrentImgIndex(prev => (prev > 0 ? prev - 1 : selectedProduct.images.length - 1)); }}>‹</button>
+                                <button className="nav-arrow-modern next" onClick={(e) => { e.stopPropagation(); setCurrentImgIndex(prev => (prev < selectedProduct.images.length - 1 ? prev + 1 : 0)); }}>›</button>
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
         </section>
