@@ -17,14 +17,16 @@
 }
 
 .gallery-title {
-    font-size: clamp(2rem, 5vw, 2.5rem);
-    color: var(--dark-brown);
-    margin-bottom: 1.5rem;
+    font-size: clamp(2.5rem, 6vw, 3.5rem);
+    /* Increased size for new font */
+    color: var(--white);
+    /* White text for glass bg */
+    margin-bottom: 2rem;
     font-weight: 800;
     text-align: center;
-    /* Center title */
-    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
-    /* Add shadow for readability against glass */
+    text-shadow: 2px 2px 0px var(--pink), 4px 4px 10px rgba(0, 0, 0, 0.2);
+    /* Pop effect */
+    letter-spacing: 1px;
 }
 
 /* SEARCH BAR STYLES (v5.2.0) */
@@ -351,6 +353,11 @@
 .section-title {
     text-align: center !important;
     justify-content: center !important;
+    color: var(--white) !important;
+    /* Force white */
+    text-shadow: 2px 2px 0px var(--pink), 3px 3px 8px rgba(0, 0, 0, 0.15) !important;
+    font-size: 2.2rem !important;
+    /* Adjust for new font */
 }
 
 .empty-state {
