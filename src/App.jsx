@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Hero from './components/Hero';
 import EntranceOverlay from './components/EntranceOverlay';
@@ -9,6 +9,15 @@ import AdminDashboard from './components/AdminDashboard';
 
 function App() {
   const [showEntrance, setShowEntrance] = useState(true);
+  const [isMainContentReady, setIsMainContentReady] = useState(false);
+
+  useEffect(() => {
+    // Delay loading main content by 3 seconds to prioritize Entrance Overlay
+    const timer = setTimeout(() => {
+      setIsMainContentReady(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <BrowserRouter>
@@ -16,9 +25,15 @@ function App() {
         <Route path="/" element={
           <div className="app">
             {showEntrance && <EntranceOverlay onEnter={() => setShowEntrance(false)} />}
-            <Hero />
-            <TikTokSection />
-            <ProductGallery />
+
+            {/* Main content loads after 3 seconds */}
+            {isMainContentReady && (
+              <>
+                <Hero />
+                <TikTokSection />
+                <ProductGallery />
+              </>
+            )}
           </div>
         } />
         <Route path="/AdminLulucake" element={<AdminLogin />} />
