@@ -511,13 +511,15 @@
 .product-price {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--brown);
-    /* Dark brown for price */
-    background: rgba(255, 255, 255, 0.5);
+    color: var(--pink);
+    /* Pink text */
+    background: rgba(255, 255, 255, 0.8);
+    /* Glass bg */
+    backdrop-filter: blur(5px);
     padding: 6px 16px;
     border-radius: 12px;
     box-shadow: none;
-    border: 1px solid var(--glass-border);
+    border: 1px solid white;
     display: inline-flex;
     align-items: center;
     gap: 5px;
