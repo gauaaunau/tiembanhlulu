@@ -11,15 +11,28 @@ function App() {
   const [showEntrance, setShowEntrance] = useState(true);
   const [isMainContentReady, setIsMainContentReady] = useState(false);
 
-  // Day/Night Logic - LOCKED TO DAY PER USER REQUEST
-  const isDayTime = true;
+  // Day/Night Background Logic - Automatic switching
+  const [isDayTime, setIsDayTime] = useState(() => {
+    const hour = new Date().getHours();
+    return hour >= 6 && hour < 18;
+  });
 
   useEffect(() => {
-    // Delay loading main content by 3 seconds to prioritize Entrance Overlay
+    // Check background time every minute
+    const interval = setInterval(() => {
+      const hour = new Date().getHours();
+      setIsDayTime(hour >= 6 && hour < 18);
+    }, 60000);
+
+    // Delay loading main content by 3 seconds
     const timer = setTimeout(() => {
       setIsMainContentReady(true);
     }, 3000);
-    return () => clearTimeout(timer);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
   }, []);
 
   // Background Image Path

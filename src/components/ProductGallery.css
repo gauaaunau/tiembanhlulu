@@ -154,7 +154,10 @@
     top: 20px;
     z-index: 1001;
     padding: 0.5rem 0;
-    /* Padding to prevent clipping on some browsers */
+    /* Added glass bg for sticky picker */
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
 }
 
 .picker-main-actions {

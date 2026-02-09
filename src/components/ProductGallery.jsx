@@ -57,8 +57,8 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
     );
 });
 
-const ITEMS_PER_PAGE = 20;
-const GROUPS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 40;
+const GROUPS_PER_PAGE = 5;
 
 export default function ProductGallery() {
     const [filter, setFilter] = useState('All');

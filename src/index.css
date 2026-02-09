@@ -41,8 +41,10 @@
   --brown: #795548;
   --beige: #fdfbf7;
   --white: #ffffff;
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-bg: rgba(0, 0, 0, 0.25);
+  /* Moody dark glass */
+  --white: #ffffff;
 
   --font-body: 'Nunito', system-ui, sans-serif;
 
