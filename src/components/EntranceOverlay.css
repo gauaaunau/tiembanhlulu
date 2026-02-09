@@ -15,11 +15,11 @@
 }
 
 .entrance-overlay.day-theme {
-    background-image: url('/bakery-day.jpg');
+    background-image: url('/bakery-day.jpg?v=2');
 }
 
 .entrance-overlay.night-theme {
-    background-image: url('/bakery-night.jpg');
+    background-image: url('/bakery-night.jpg?v=2');
 }
 
 .entrance-overlay.fade-out {
