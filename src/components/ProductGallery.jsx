@@ -285,18 +285,49 @@ export default function ProductGallery() {
         setShowContactOptions(false); // Reset reveal when changing image
     };
 
-    // PAGINATION LOGIC
-    const totalPages = filter !== 'All'
-        ? Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
-        : Math.ceil(groupedProducts.length / GROUPS_PER_PAGE);
+    // PAGINATION LOGIC (v10.0.0 - Strict Product Limit)
+    // Always paginate based on products, not groups
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
-    const paginatedProducts = filter !== 'All'
-        ? filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-        : [];
+    const paginatedProducts = filteredProducts.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
-    const paginatedGroups = filter === 'All'
-        ? groupedProducts.slice((currentPage - 1) * GROUPS_PER_PAGE, currentPage * GROUPS_PER_PAGE)
-        : [];
+    // Group the PAGINATED products for the "All" view to keep headers
+    const paginatedGroups = useMemo(() => {
+        if (filter !== 'All') return [];
+
+        const groupsMap = {};
+        paginatedProducts.forEach(product => {
+            const catId = product.categoryId || 'uncategorized';
+            const catName = getCategoryName(product.categoryId) || 'Sản phẩm mới';
+
+            if (!groupsMap[catId]) {
+                groupsMap[catId] = {
+                    id: catId,
+                    name: catName,
+                    items: []
+                };
+            }
+            groupsMap[catId].items.push(product);
+        });
+
+        // Maintain original category order if possible
+        const orderedGroups = [];
+        rawCategories.forEach(cat => {
+            if (groupsMap[cat.id]) {
+                orderedGroups.push(groupsMap[cat.id]);
+            }
+        });
+
+        // Add uncategorized if present in this page
+        if (groupsMap['uncategorized']) {
+            orderedGroups.push(groupsMap['uncategorized']);
+        }
+
+        return orderedGroups;
+    }, [paginatedProducts, filter, rawCategories]);
 
     // LOADING SCREEN REMOVED - using EntranceOverlay instead
     // if (isLoading) return <LoadingScreen />;
