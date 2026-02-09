@@ -688,15 +688,12 @@
     height: auto;
     max-height: 90vh;
     padding: 60px 20px 40px;
-    background: rgba(255, 255, 255, 0.1);
-    /* Glass effect */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    /* Remove redundant glass layer */
     border-radius: 30px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: none;
+    /* Let image shadow handle depth */
     cursor: default;
-    /* Disable zoom-out cursor on the card itself */
 }
 
 .lightbox-image-container {

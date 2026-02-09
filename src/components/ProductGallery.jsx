@@ -515,7 +515,7 @@ export default function ProductGallery() {
                         title="Đóng (Esc)"
                     >✕</button>
 
-                    <div className="lightbox-content-outer" onClick={(e) => e.stopPropagation()}>
+                    <div className="lightbox-content-outer">
                         <div className="carousel-window">
                             <div
                                 className="carousel-track"
@@ -527,9 +527,16 @@ export default function ProductGallery() {
                                     <div
                                         key={i}
                                         className={`carousel-slide ${i === currentImgIndex ? 'active' : ''}`}
-                                        onClick={() => i !== currentImgIndex && setCurrentImgIndex(i)}
+                                        onClick={(e) => {
+                                            // Only handle navigation if clicking the slide but NOT the card
+                                            if (i !== currentImgIndex) {
+                                                e.stopPropagation();
+                                                setCurrentImgIndex(i);
+                                            }
+                                            // Otherwise let click bubble to overlay to close
+                                        }}
                                     >
-                                        <div className="modern-lightbox-card">
+                                        <div className="modern-lightbox-card" onClick={(e) => e.stopPropagation()}>
                                             <div className="lightbox-image-container">
                                                 <img src={img} alt={`${selectedProduct.name} ${i}`} className="lightbox-img" />
                                             </div>
