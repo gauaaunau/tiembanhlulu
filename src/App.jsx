@@ -40,15 +40,41 @@ function App() {
       <Routes>
         <Route path="/" element={
           <div className="app">
-            {showEntrance && <EntranceOverlay onEnter={() => setShowEntrance(false)} />}
+            {/* Fixed Background Layer */}
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                backgroundImage: `url(${getBackgroundImage()})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                zIndex: -1,
+                transition: 'background-image 1s ease-in-out'
+              }}
+            />
+
+            {showEntrance && (
+              <EntranceOverlay
+                onEnter={() => setShowEntrance(false)}
+                isDayTime={isDayTime} // Pass state down
+              />
+            )}
 
             {/* Main content loads after 3 seconds */}
             {isMainContentReady && (
-              <>
+              <div className="main-content-glass" style={{
+                position: 'relative',
+                zIndex: 1,
+                // Add padding to ensure content doesn't stick to edges if needed, 
+                // but components like Hero handle their own layout.
+              }}>
                 <Hero />
                 <TikTokSection />
                 <ProductGallery />
-              </>
+              </div>
             )}
           </div>
         } />
