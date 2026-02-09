@@ -342,10 +342,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     /* Adjusted for better fit */
-    gap: 2.5rem;
-    justify-content: center;
-    /* Center grid items */
+    gap: 1.5rem;
+    /* Reduced gap for mobile fit */
+    justify-items: center;
     width: 100%;
+    padding: 0 1rem;
+    box-sizing: border-box;
 }
 
 /* Ensure Category Headers are centered too */
@@ -605,17 +607,21 @@
     width: 50px;
     height: 50px;
     background: white;
-    border: none;
+    border: 3.5px solid var(--pink);
+    /* Restore thick border */
     border-radius: 50%;
-    font-size: 1.8rem;
-    color: #333;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--pink);
     cursor: pointer;
     z-index: 10001;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 0;
+    line-height: 1;
 }
 
 .lightbox-close-fixed:hover {
@@ -693,6 +699,8 @@
     object-fit: contain;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    /* Added border back */
 }
 
 .lightbox-caption {
