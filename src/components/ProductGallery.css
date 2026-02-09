@@ -746,12 +746,54 @@
     justify-content: center;
     width: 90vw;
     max-width: 800px;
-    height: 90vh;
-    /* Fixed viewport constraint */
-    gap: 0.5rem;
-    padding: 10px;
+    height: 94vh;
+    /* Maximize height usage */
+    max-height: 94vh;
+    gap: 10px;
+    padding: 0;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
+    /* CRITICAL FOR OUTSIDE X */
+    position: relative;
+}
+
+.carousel-card {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    /* ALlows image to shrink */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: transparent;
+}
+
+.lightbox-close-card {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    background: white;
+    border: 3px solid var(--pink);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    color: var(--pink);
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-weight: 900;
+}
+
+.lightbox-close-card:hover {
+    transform: scale(1.1) rotate(90deg);
+    background: var(--pink);
+    color: white;
 }
 
 .carousel-img {
