@@ -22,6 +22,10 @@
   font-display: swap;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 :root {
   font-family: 'Nunito', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
