@@ -10,15 +10,18 @@
     transition: background-image 1s ease-in-out;
     overflow: hidden;
     padding: 2rem;
-    color: white;
+    color: var(--dark-brown);
 }
 
+/* Background removed per user request */
 .hero.day-theme {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('/bakery-day.jpg?v=3');
+    background-image: none;
+    background: transparent;
 }
 
 .hero.night-theme {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/bakery-night.jpg?v=3');
+    background-image: none;
+    background: transparent;
 }
 
 /* Logo styling */
@@ -54,31 +57,33 @@
 
 .hero-card {
     padding: 3rem 2rem;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.6);
+    /* More opaque white for better contrast */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 35px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 40px rgba(139, 90, 60, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
 .hero.night-theme .hero-card {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Even in night mode, we want a clean look, maybe slightly different but user said "no background" */
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.9);
 }
 
 .hero-subtitle {
     font-family: 'Dancing Script', cursive;
     font-size: clamp(1.5rem, 3vw, 2.5rem);
-    color: #fff;
+    color: var(--dark-brown);
     margin-bottom: 1.5rem;
     font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: none;
 }
 
 .hero-description {
     font-size: clamp(1rem, 2vw, 1.2rem);
-    color: #f0f0f0;
+    color: var(--brown);
     margin-bottom: 2rem;
     line-height: 1.8;
 }
@@ -101,13 +106,13 @@
     gap: 0.8rem;
     font-size: 1rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--dark-brown);
 }
 
 .distance-info {
     font-size: 1.1rem;
-    color: #ffd700;
-    /* Gold color for visibility */
+    color: #d35400;
+    /* Darker orange instead of gold for light bg */
     font-weight: 600;
 }
 
@@ -118,7 +123,7 @@
     gap: 1rem;
     margin-bottom: 2.5rem;
     padding: 0.8rem 1.2rem;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(139, 90, 60, 0.1);
     backdrop-filter: blur(5px);
     border-radius: 20px;
     width: fit-content;
