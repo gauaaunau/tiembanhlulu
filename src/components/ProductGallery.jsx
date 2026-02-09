@@ -335,7 +335,7 @@ export default function ProductGallery() {
     return (
         <section className="gallery" ref={galleryRef}>
 
-            <div className="gallery-container" style={{ position: 'relative', zIndex: 1, padding: '2rem', marginTop: '1rem' }}>
+            <div className="gallery-container">
                 <h2 className="gallery-title">Mẫu Bánh</h2>
                 <div className="gallery-divider"></div>
 

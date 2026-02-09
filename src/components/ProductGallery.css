@@ -11,9 +11,14 @@
 }
 
 .gallery-container {
-    max-width: 1200px;
+    max-width: 1400px;
+    /* Increased to allow more room for 320px cards */
     margin: 0 auto;
     width: 100%;
+    padding: 2rem 1rem;
+    /* Control padding here, not inline */
+    position: relative;
+    z-index: 1;
 }
 
 .gallery-title {
@@ -343,14 +348,12 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    /* Increased min-width for larger cards */
-    gap: 2rem;
-    /* Larger gap for premium feel */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+    /* Force the large size */
+    gap: 2.5rem;
+    /* Spacious feel */
     justify-items: center;
     width: 100%;
-    padding: 0;
-    /* Let container handle padding */
     box-sizing: border-box;
 }
 
