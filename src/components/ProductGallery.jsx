@@ -39,6 +39,17 @@ const ProductCard = memo(function ProductCard({ product, index, onOpenLightbox }
             <div className="product-info">
                 <h3 className="product-name">
                     {product.name.match(/^Bánh \d+$/) ? product.name.replace('Bánh ', 'Mã: ') : product.name}
+                    <div className="product-tags-row">
+                        {(product.tags || [])
+                            .filter(tag => {
+                                if (tag.includes('_') && !isNaN(tag.split('_')[0])) return false;
+                                if (!isNaN(tag) && tag.length > 8) return false;
+                                return true;
+                            })
+                            .map((tag, i) => (
+                                <span key={i} className="product-tag-badge">#{tag}</span>
+                            ))}
+                    </div>
                 </h3>
                 <p className="product-description">{product.description}</p>
                 <div className="product-footer">
