@@ -75,7 +75,10 @@
 .enter-shop-container {
     cursor: pointer;
     transition: transform 0.3s ease, filter 0.3s ease;
-    animation: float 3s ease-in-out infinite;
+    /* Slide up animation on enter */
+    animation: buttonSlideUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.5s;
+    opacity: 0;
 }
 
 .enter-shop-btn {
@@ -85,6 +88,8 @@
     display: block;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
     transition: all 0.3s ease;
+    /* Float animation moved here */
+    animation: float 3s ease-in-out infinite;
 }
 
 .enter-shop-container:hover .enter-shop-btn {
@@ -121,16 +126,6 @@
 }
 
 /* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
 @keyframes buttonSlideUp {
     from {
         opacity: 0;
@@ -141,16 +136,4 @@
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-.entrance-overlay.loaded {
-    animation: fadeIn 1.5s ease-out forwards;
-}
-
-.entrance-overlay.loaded .enter-shop-container {
-    animation: buttonSlideUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: 0.5s;
-    /* Delay button slightly after BG starts fading in */
-    opacity: 0;
-    /* Start hidden */
 }
