@@ -159,9 +159,9 @@
     top: 20px;
     z-index: 1001;
     padding: 0.5rem 0;
-    /* Added glass bg for sticky picker */
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
+    /* Static dark bar removed to prevent "leaking" when collapsed */
+    background: transparent;
+    backdrop-filter: none;
     border-radius: 50px;
 }
 
@@ -226,10 +226,10 @@
     opacity: 0;
     pointer-events: none;
     transform: translateY(-10px);
-    margin-bottom: -10rem;
-    /* Hide space when collapsed */
-    height: 0;
+    max-height: 0;
     overflow: hidden;
+    margin-top: -1.5rem;
+    /* Pull back the gap from container */
 }
 
 .filter-tabs {
