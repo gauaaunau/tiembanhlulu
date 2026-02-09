@@ -4,6 +4,10 @@ import './Hero.css';
 export default function Hero() {
   const [logoUrl, setLogoUrl] = useState('');
   const [distance, setDistance] = useState(null);
+  const [isDayTime, setIsDayTime] = useState(() => {
+    const currentHour = new Date().getHours();
+    return currentHour >= 6 && currentHour < 18;
+  });
   const bakeryCoords = { lat: 10.817505, lng: 106.634351 }; // Estimated coordinates for 66/17 Tổ 23 KP.2A
 
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="hero">
+    <section className={`hero ${isDayTime ? 'day-theme' : 'night-theme'}`}>
       <div className="hero-content">
         <div className="hero-card">
           {logoUrl && (
@@ -89,23 +93,32 @@ export default function Hero() {
               Chỉ Đường Đến Tiệm
             </a>
 
-            <div className="scroll-indicator" onClick={() => {
+            {/* Nút VÀO TIỆM mới */}
+            <div className="enter-shop-container" onClick={() => {
               const gallery = document.querySelector('.gallery');
               if (gallery) {
                 gallery.scrollIntoView({ behavior: 'smooth' });
               }
             }}>
-              <span className="scroll-text">Xem mẫu bánh</span>
-              <div className="mouse-wheel">
-                <div className="wheel"></div>
-              </div>
-              <div className="arrow-down">
-                <span></span>
-                <span></span>
-              </div>
+              <img
+                src="/enter-shop-button.png"
+                alt="Vào Tiệm"
+                className="enter-shop-btn"
+              />
             </div>
+
           </div>
 
+          <div className="theme-toggle-container">
+            <button
+              className="theme-toggle-btn"
+              onClick={() => setIsDayTime(!isDayTime)}
+              title={isDayTime ? "Chuyển sang Đêm" : "Chuyển sang Ngày"}
+            >
+              <span className="toggle-icon">{isDayTime ? '☀️' : '🌙'}</span>
+              <span className="toggle-label">{isDayTime ? 'Ban Ngày' : 'Ban Đêm'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
